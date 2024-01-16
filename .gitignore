@@ -19,14 +19,17 @@ bin/
 
 ### IntelliJ IDEA ###
 .idea
-*.iws
+*.iwsggi
 *.iml
 *.ipr
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
-*.properties
-compose.yaml
+
+### properties,compose
+**/application.properties
+**/compose.yaml
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
