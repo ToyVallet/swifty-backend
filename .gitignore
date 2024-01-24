@@ -39,3 +39,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Environment file ###
+.env
+
+### Docker files ###
+Dockerfile
+docker-compose.yaml
