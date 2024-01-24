@@ -28,7 +28,7 @@ out/
 
 ### properties,compose
 **/application.properties
-**/compose.yaml
+**/compose.yml
 
 ### NetBeans ###
 /nbproject/private/
