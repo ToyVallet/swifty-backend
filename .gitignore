@@ -42,6 +42,7 @@ out/
 
 ### Environment file ###
 .env
+.yml
 
 ### Docker files ###
 Dockerfile
