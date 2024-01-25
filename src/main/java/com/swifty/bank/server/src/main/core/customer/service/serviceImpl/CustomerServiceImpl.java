@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
+    @Transactional
     @Override
     public void join(CustomerJoinDto customerJoinDto) {
         Customer customer = Customer.builder()
