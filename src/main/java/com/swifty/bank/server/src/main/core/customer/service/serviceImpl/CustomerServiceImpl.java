@@ -29,6 +29,6 @@ public class CustomerServiceImpl implements CustomerService {
                 .phoneNumber(customerJoinDto.getPhoneNumber())
                 .build();
 
-        customerRepository.customSave(customer);
+        customerRepository.save(customer);
     }
 }
