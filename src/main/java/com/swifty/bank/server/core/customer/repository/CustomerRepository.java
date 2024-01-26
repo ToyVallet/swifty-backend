@@ -1,11 +1,13 @@
-package com.swifty.bank.server.src.main.core.customer.repository;
+package com.swifty.bank.server.core.customer.repository;
 
-import com.swifty.bank.server.src.main.core.customer.Customer;
-import java.util.List;
+import com.swifty.bank.server.core.customer.Customer;
+
 import java.util.UUID;
+
+import com.swifty.bank.server.core.customer.repository.CustomerJPQLRepository.CustomerJPQLRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CustomerRepository extends JpaRepository<Customer, UUID> {
+public interface CustomerRepository extends JpaRepository<Customer, UUID>, CustomerJPQLRepository {
     @Override
     <S extends Customer> S save(S entity);
 }
