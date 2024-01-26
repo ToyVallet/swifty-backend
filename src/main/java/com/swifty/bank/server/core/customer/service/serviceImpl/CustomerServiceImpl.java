@@ -1,12 +1,13 @@
-package com.swifty.bank.server.src.main.core.customer.service.serviceImpl;
+package com.swifty.bank.server.core.customer.service.serviceImpl;
 
-import com.swifty.bank.server.src.main.core.customer.Customer;
-import com.swifty.bank.server.src.main.core.customer.constant.CustomerStatus;
-import com.swifty.bank.server.src.main.core.customer.constant.Nationality;
-import com.swifty.bank.server.src.main.core.customer.dto.CustomerJoinDto;
-import com.swifty.bank.server.src.main.core.customer.repository.CustomerRepository;
-import com.swifty.bank.server.src.main.core.customer.service.CustomerService;
-import java.util.Optional;
+import com.swifty.bank.server.core.customer.Customer;
+import com.swifty.bank.server.core.customer.constant.CustomerStatus;
+import com.swifty.bank.server.core.customer.dto.CustomerFindDto;
+import com.swifty.bank.server.core.customer.dto.CustomerJoinDto;
+import com.swifty.bank.server.core.customer.repository.CustomerRepository;
+import com.swifty.bank.server.core.customer.service.CustomerService;
+
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,5 +31,35 @@ public class CustomerServiceImpl implements CustomerService {
                 .build();
 
         customerRepository.save(customer);
+    }
+
+    // 순수 UUID로의 조회를 1원칙으로 삼는다
+    // Principle 1. Retrieve with User's own UUID (PK)
+    // Something to exchange with Frontend as user identification
+    // Send access token(JWT) to frontend with encrypted UUID
+    // Condition of Retrieval : JPQL
+    @Override
+    public Customer find(CustomerFindDto uuid) {
+        return customerRepository.findOneByUUID(uuid.getUuid())
+                .orElseThrow(() -> new NoSuchElementException("Customer not found"));
+    }
+
+    @Transactional
+    @Override
+    public Customer updatePhoneNumber(CustomerJoinDto customerJoinDto) {
+        Customer customer = customerRepository.findOneByUUID(customerJoinDto.getUuid())
+                .orElseThrow(() -> new NoSuchElementException("Customer not found"));
+
+        customer.updatePhoneNumber(customerJoinDto.getPhoneNumber());
+        return customer;
+    }
+
+    @Transactional
+    @Override
+    public void withdrawCustomer(CustomerFindDto uuid) {
+        Customer customer = customerRepository.findOneByUUID(uuid.getUuid())
+                .orElseThrow(() -> new NoSuchElementException("No such Customer"));
+
+        customerRepository.deleteCustomer(customer);
     }
 }
