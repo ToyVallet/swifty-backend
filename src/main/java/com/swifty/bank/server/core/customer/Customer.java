@@ -1,8 +1,8 @@
-package com.swifty.bank.server.src.main.core.customer;
+package com.swifty.bank.server.core.customer;
 
-import com.swifty.bank.server.src.main.core.common.BaseEntity;
-import com.swifty.bank.server.src.main.core.customer.constant.CustomerStatus;
-import com.swifty.bank.server.src.main.core.customer.constant.Nationality;
+import com.swifty.bank.server.core.common.BaseEntity;
+import com.swifty.bank.server.core.customer.constant.CustomerStatus;
+import com.swifty.bank.server.core.customer.constant.Nationality;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -18,7 +18,6 @@ import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UuidGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Getter
