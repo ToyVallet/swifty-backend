@@ -1,4 +1,4 @@
-package com.swifty.bank.server.src.main.utils;
+package com.swifty.bank.server.utils;
 
 import java.util.UUID;
 
