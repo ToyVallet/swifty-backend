@@ -30,6 +30,7 @@ public class CustomerController {
         }
     }
 
+    // @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
     @GetMapping(value = "find")
     public ResponseEntity find(@RequestBody CustomerFindDto uuid) {
         try {
@@ -40,15 +41,15 @@ public class CustomerController {
         }
     }
 
-    @GetMapping(value = "update")
-    public ResponseEntity update(@RequestBody CustomerJoinDto customerJoinDto) {
-        try {
-            return new ResponseEntity(customerService.updatePhoneNumber(customerJoinDto), HttpStatus.OK);
-        }
-        catch (Exception e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
-        }
-    }
+//    @GetMapping(value = "update")
+//    public ResponseEntity update(@RequestBody CustomerJoinDto customerJoinDto) {
+//        try {
+//            return new ResponseEntity(customerService.updatePhoneNumber(customerJoinDto), HttpStatus.OK);
+//        }
+//        catch (Exception e) {
+//            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
+//        }
+//    }
 
     @GetMapping(value = "delete")
     public ResponseEntity delete(@RequestBody CustomerFindDto customerFindDto) {
@@ -60,4 +61,5 @@ public class CustomerController {
             return new ResponseEntity(e.getMessage(), HttpStatus.OK);
         }
     }
+
 }
