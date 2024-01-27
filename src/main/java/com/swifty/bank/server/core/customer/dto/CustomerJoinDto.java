@@ -7,8 +7,11 @@ import java.util.UUID;
 
 @Getter
 public class CustomerJoinDto {
-    private UUID uuid;
     private String name;
     private Nationality nationality;
+    private String bod;
+    private String sex;
+    private String password;
     private String phoneNumber;
+    private String deviceId;
 }
