@@ -50,6 +50,8 @@ public class SpringSecurityConfig {
                 .exceptionHandling((ex) ->
                         ex.accessDeniedPage("/access-denied")
                 );
+        http.cors((cors) -> cors.disable());
+        http.csrf((csrf) -> csrf.disable());
         return http.build();
     }
 
