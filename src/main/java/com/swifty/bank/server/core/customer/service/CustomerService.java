@@ -9,6 +9,6 @@ import java.util.UUID;
 public interface CustomerService {
     void join(CustomerJoinDto customerJoinDto);
     Customer find(CustomerFindDto uuid);
-    Customer updatePhoneNumber(CustomerJoinDto customerJoinDto);
+//    Customer updatePhoneNumber(CustomerJoinDto customerJoinDto);
     void withdrawCustomer(CustomerFindDto uuid);
 }
