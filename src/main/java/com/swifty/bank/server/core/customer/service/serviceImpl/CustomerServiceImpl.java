@@ -23,11 +23,14 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void join(CustomerJoinDto customerJoinDto) {
         Customer customer = Customer.builder()
-                .id(UUID.randomUUID())
                 .name(customerJoinDto.getName())
                 .customerStatus(CustomerStatus.ACTIVE)  // 일단 default
                 .nationality(customerJoinDto.getNationality())
                 .phoneNumber(customerJoinDto.getPhoneNumber())
+                .sex(customerJoinDto.getSex())
+                .bod(customerJoinDto.getBod())
+                .deviceId(customerJoinDto.getDeviceId())
+                .password(customerJoinDto.getPassword())
                 .build();
 
         customerRepository.save(customer);
@@ -44,15 +47,15 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new NoSuchElementException("Customer not found"));
     }
 
-    @Transactional
-    @Override
-    public Customer updatePhoneNumber(CustomerJoinDto customerJoinDto) {
-        Customer customer = customerRepository.findOneByUUID(customerJoinDto.getUuid())
-                .orElseThrow(() -> new NoSuchElementException("Customer not found"));
-
-        customer.updatePhoneNumber(customerJoinDto.getPhoneNumber());
-        return customer;
-    }
+//    @Transactional
+//    @Override
+//    public Customer updatePhoneNumber(CustomerJoinDto customerJoinDto) {
+//        Customer customer = customerRepository.findOneByUUID(customerDto.getUuid())
+//                .orElseThrow(() -> new NoSuchElementException("Customer not found"));
+//
+//        customer.updatePhoneNumber(customerJoinDto.getPhoneNumber());
+//        return customer;
+//    }
 
     @Transactional
     @Override
