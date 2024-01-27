@@ -69,4 +69,5 @@ public class Customer extends BaseEntity {
     public void updatePhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
+    // for commit
 }
