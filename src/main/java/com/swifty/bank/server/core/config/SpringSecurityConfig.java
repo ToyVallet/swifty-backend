@@ -1,5 +1,6 @@
 package com.swifty.bank.server.core.config;
 
+import com.swifty.bank.server.core.customer.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,9 +24,11 @@ import javax.sql.DataSource;
 public class SpringSecurityConfig {
     // After Spring Security 6.0 You need to register bean of component-based security settings
 
-    // Datasource
-    @Autowired
-    private DataSource dataSource;  // replacement of Autowired (Field injection)
+    private final CustomerRepository customerRepository;
+
+    public SpringSecurityConfig(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
+    }
 
     // HttpSecurity
     @Bean
@@ -61,21 +64,21 @@ public class SpringSecurityConfig {
         return (web) -> web.ignoring().requestMatchers("/ignore1", "ignore2");
     }
 
-    // JDBC Settings
-    @Bean
-    public UserDetailsManager users(DataSource dataSource) {
-        UserDetails user = User
-                .withUsername("user")
-                .password(passwordEncoder().encode("password"))
-                .roles("USER")
-                .build();
-        JdbcUserDetailsManager users = new JdbcUserDetailsManager(dataSource);
-        users.createUser(user);
-        return users;
-    }
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder( ) {
-        return new BCryptPasswordEncoder( );
-    }
+//    // JDBC Settings
+//    @Bean
+//    public UserDetailsManager users(DataSource dataSource) {
+//        UserDetails user = User
+//                .withUsername("user")
+//                .password(passwordEncoder().encode("password"))
+//                .roles("USER")
+//                .build();
+//        JdbcUserDetailsManager users = new JdbcUserDetailsManager(dataSource);
+//        users.createUser(user);
+//        return users;
+//    }
+//
+//    @Bean
+//    public BCryptPasswordEncoder passwordEncoder( ) {
+//        return new BCryptPasswordEncoder( );
+//    }
 }
