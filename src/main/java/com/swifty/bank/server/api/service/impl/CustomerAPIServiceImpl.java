@@ -15,4 +15,9 @@ public class CustomerAPIServiceImpl implements CustomerAPIService {
     public ResponseResult<?> login(CustomerLoginWithDeviceIDDto dto) {
         return null;
     }
+
+    @Override
+    public ResponseResult<?> logout() {
+        return null;
+    }
 }

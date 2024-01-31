@@ -2,7 +2,6 @@ package com.swifty.bank.server.core.domain.customer.service.impl;
 
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
-import com.swifty.bank.server.core.customer.dto.*;
 import com.swifty.bank.server.core.domain.customer.dto.*;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByDeviceID;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPhoneNumberAndNationality;
@@ -45,7 +44,7 @@ public class CustomerServiceImpl implements CustomerService {
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
     @Override
-    public Customer find(CustomerFindDto uuid) {
+    public Customer findById(CustomerFindDto uuid) {
         return customerRepository.findOneByUUID(uuid.getUuid())
                 .orElseThrow(() -> new NoSuchElementException("Customer not found"));
     }
@@ -78,6 +77,7 @@ public class CustomerServiceImpl implements CustomerService {
         return customer;
     }
 
+    @Transactional
     @Override
     public Customer updateDeviceID(CustomerUpdateDeviceIDDto dto) {
         Customer customer = customerRepository.findOneByUUID(dto.getUuid( ))

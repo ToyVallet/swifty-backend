@@ -8,4 +8,5 @@ import com.swifty.bank.server.core.domain.customer.dto.CustomerLoginWithDeviceID
 public interface CustomerAPIService {
     ResponseResult<?> join(CustomerJoinDto dto);
     ResponseResult<?> login(CustomerLoginWithDeviceIDDto dto);
+    ResponseResult<?> logout( );
 }
