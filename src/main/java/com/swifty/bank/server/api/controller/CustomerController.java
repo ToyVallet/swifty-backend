@@ -14,6 +14,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -145,24 +147,4 @@ public class CustomerController {
 //        }
 //    }
 //
-//    @GetMapping(value = "update")
-//    public ResponseEntity update(@RequestBody CustomerJoinDto customerJoinDto) {
-//        try {
-//            return new ResponseEntity(customerService.updatePhoneNumber(customerJoinDto), HttpStatus.OK);
-//        }
-//        catch (Exception e) {
-//            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
-//        }
-//    }
-//
-//    @GetMapping(value = "delete")
-//    public ResponseEntity delete(@RequestBody CustomerFindDto customerFindDto) {
-//        try {
-//            customerService.withdrawCustomer(customerFindDto);
-//            return new ResponseEntity("Successfully deleted", HttpStatus.OK);
-//        }
-//        catch (Exception e) {
-//            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
-//        }
-//    }
 }

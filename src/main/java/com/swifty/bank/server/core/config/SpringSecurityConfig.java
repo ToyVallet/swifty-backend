@@ -1,5 +1,6 @@
 package com.swifty.bank.server.core.config;
 
+
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import org.springframework.context.annotation.Bean;
