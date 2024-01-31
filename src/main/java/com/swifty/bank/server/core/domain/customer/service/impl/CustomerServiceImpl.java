@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.customer.service.serviceImpl;
+package com.swifty.bank.server.core.domain.customer.service.impl;
 
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
