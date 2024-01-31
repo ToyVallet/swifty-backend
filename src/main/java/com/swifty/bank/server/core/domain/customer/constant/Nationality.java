@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.customer.constant;
+package com.swifty.bank.server.core.domain.customer.constant;
 
 public enum Nationality {
     KOREA("한국");

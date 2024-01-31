@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.common;
+package com.swifty.bank.server.core.domain;
 
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;

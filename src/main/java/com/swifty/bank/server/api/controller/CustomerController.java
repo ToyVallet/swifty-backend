@@ -1,63 +1,168 @@
 package com.swifty.bank.server.api.controller;
 
-import com.swifty.bank.server.core.customer.dto.CustomerFindDto;
-import com.swifty.bank.server.core.customer.dto.CustomerJoinDto;
-import com.swifty.bank.server.core.customer.service.CustomerService;
+import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.*;
+import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByDeviceID;
+import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPhoneNumberAndNationality;
+import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-
+import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 @Controller
-@RequestMapping(value = "customer")
 public class CustomerController {
     private final CustomerService customerService;
+    @Autowired
+    private final JwtTokenUtil tokenUtil;
+    private final BCryptPasswordEncoder encoder;
 
-    @PostMapping(value = "")
-    public ResponseEntity join(@RequestBody CustomerJoinDto customerJoinDto) {
-        try {
-            customerService.join(customerJoinDto);
-            return new ResponseEntity("회원가입 성공", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity("회원가입 실패", HttpStatus.OK);
+    @PostMapping(value = "sign_in")
+    public ResponseEntity<?> login(
+            @RequestHeader(value = "Authorization") String token,
+            @RequestBody CustomerLoginWithDeviceIDDto body
+            ) {
+        Map<String, Object> result = new HashMap<>( );
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("[JWT ERROR] JWT Token format is not valid");
         }
+        token = token.substring(7);
+        if (!tokenUtil.validateToken(token)) {
+            return ResponseEntity
+                    .badRequest( )
+                    .body("[JWT ERROR] JWT Token context is not valid");
+        }
+
+        UUID uuid = UUID.fromString(tokenUtil.getUuidFromToken(token));
+        Customer customer = customerService.findByDeviceID(new CustomerFindByDeviceIDDto(body.getDeviceID( )));
+
+        if (uuid.toString( ).equals(customer.getId( ).toString( ))
+         && customer.getDeviceID().equals(encoder.encode(body.getDeviceID( )))) {
+            result.put("token", tokenUtil.generateToken(customer));
+            return ResponseEntity
+                    .ok()
+                    .body(result);
+        }
+
+        return ResponseEntity
+                .badRequest( )
+                .body("[ERROR] Token's UUID and device's original UUID is different");
     }
 
-    @GetMapping(value = "find")
-    public ResponseEntity find(@RequestBody CustomerFindDto uuid) {
+    @PostMapping(value = "auth")
+    public ResponseEntity<?> authWithForm(
+            @RequestBody CustomerJoinDto body
+    ) {
+        Map<String, Object> res = new HashMap<>( );
+
+        String deviceID = encoder.encode(body.getDeviceID( ));
+
+        Customer customerByDeviceID;
+        Customer customerByPhoneNumberAndNationality;
+
         try {
-            return new ResponseEntity(customerService.find(uuid), HttpStatus.OK);
+            customerByDeviceID = customerService
+                    .findByDeviceID(new CustomerFindByDeviceIDDto(deviceID));
         }
-        catch (Exception e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
+        catch (NoSuchCustomerByDeviceID e) {
+            customerByDeviceID = null;
         }
+
+        try {
+            customerByPhoneNumberAndNationality = customerService
+                    .findByPhoneNumberAndNationality(
+                            new CustomerFindByPhoneNumberAndNationality(body.getPhoneNumber( ), body.getNationality( ))
+                    );
+        }
+        catch (NoSuchCustomerByPhoneNumberAndNationality e) {
+            customerByPhoneNumberAndNationality = null;
+        }
+
+        Customer customer = null;
+        if (customerByPhoneNumberAndNationality == null && customerByDeviceID == null) {
+            CustomerJoinDto dto = new CustomerJoinDto(
+                    body.getUuid(),
+                    body.getName(),
+                    body.getNationality(),
+                    body.getPhoneNumber(),
+                    body.getPassword(),
+                    deviceID
+            );
+            customer = customerService.join(dto);
+        }
+        else if (customerByPhoneNumberAndNationality == null) {
+            CustomerUpdatePhoneNumberAndNationalityDto dto = new CustomerUpdatePhoneNumberAndNationalityDto(
+                    body.getUuid(),  body.getNationality( ), body.getPhoneNumber( )
+            );
+            customer = customerService.updatePhoneNumberAndNationality(dto);
+        }
+        else if (customerByDeviceID == null) {
+            CustomerUpdateDeviceIDDto dto = new CustomerUpdateDeviceIDDto(
+                    body.getUuid( ), deviceID
+            );
+            customer = customerService.updateDeviceID(dto);
+        }
+        else {
+            if (customerByDeviceID.getId( ).equals(customerByPhoneNumberAndNationality.getId( ))) {
+                customer = customerByDeviceID;
+            }
+            else {
+
+                customer = customerService.updateDeviceID(new CustomerUpdateDeviceIDDto(
+                        customerByPhoneNumberAndNationality.getId( ),
+                        encoder.encode(customerByPhoneNumberAndNationality.getDeviceID( ))
+                ));
+                customerService.updateDeviceID(new CustomerUpdateDeviceIDDto(
+                        customerByDeviceID.getId( ),
+                        "LOGOUT"
+                ));
+            }
+        }
+
+        res.put("token", tokenUtil.generateToken(customer));
+        return ResponseEntity
+                .ok( )
+                .body(res);
     }
 
-    @GetMapping(value = "update")
-    public ResponseEntity update(@RequestBody CustomerJoinDto customerJoinDto) {
-        try {
-            return new ResponseEntity(customerService.updatePhoneNumber(customerJoinDto), HttpStatus.OK);
-        }
-        catch (Exception e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
-        }
-    }
 
-    @GetMapping(value = "delete")
-    public ResponseEntity delete(@RequestBody CustomerFindDto customerFindDto) {
-        try {
-            customerService.withdrawCustomer(customerFindDto);
-            return new ResponseEntity("Successfully deleted", HttpStatus.OK);
-        }
-        catch (Exception e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
-        }
-    }
+//    @GetMapping(value = "find")
+//    public ResponseEntity find(@RequestBody CustomerFindDto uuid) {
+//        try {
+//            return new ResponseEntity(customerService.find(uuid), HttpStatus.OK);
+//        }
+//        catch (Exception e) {
+//            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
+//        }
+//    }
+//
+//    @GetMapping(value = "update")
+//    public ResponseEntity update(@RequestBody CustomerJoinDto customerJoinDto) {
+//        try {
+//            return new ResponseEntity(customerService.updatePhoneNumber(customerJoinDto), HttpStatus.OK);
+//        }
+//        catch (Exception e) {
+//            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
+//        }
+//    }
+//
+//    @GetMapping(value = "delete")
+//    public ResponseEntity delete(@RequestBody CustomerFindDto customerFindDto) {
+//        try {
+//            customerService.withdrawCustomer(customerFindDto);
+//            return new ResponseEntity("Successfully deleted", HttpStatus.OK);
+//        }
+//        catch (Exception e) {
+//            return new ResponseEntity(e.getMessage(), HttpStatus.OK);
+//        }
+//    }
 }
