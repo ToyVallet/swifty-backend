@@ -4,9 +4,11 @@ import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
+import java.util.UUID;
+
 @Getter
-public class CustomerFindByPhoneNumberAndNationality {
+@AllArgsConstructor
+public class CustomerUpdatePhoneNumberDto {
+    private UUID uuid;
     private String phoneNumber;
-    private Nationality nationality;
 }
