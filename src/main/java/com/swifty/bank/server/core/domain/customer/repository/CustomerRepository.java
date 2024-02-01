@@ -1,10 +1,10 @@
-package com.swifty.bank.server.core.customer.repository;
+package com.swifty.bank.server.core.domain.customer.repository;
 
-import com.swifty.bank.server.core.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.Customer;
 
 import java.util.UUID;
 
-import com.swifty.bank.server.core.customer.repository.CustomerJPQLRepository.CustomerJPQLRepository;
+import com.swifty.bank.server.core.domain.customer.repository.CustomerJPQLRepository.CustomerJPQLRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CustomerRepository extends JpaRepository<Customer, UUID>, CustomerJPQLRepository {
