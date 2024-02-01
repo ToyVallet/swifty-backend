@@ -14,10 +14,11 @@ public interface CustomerService {
     // Condition of Retrieval : JPQL
     Customer findById(CustomerFindDto uuid);
 
-    Customer findByDeviceID(CustomerFindByDeviceIDDto dto);
-    Customer findByPhoneNumberAndNationality(CustomerFindByPhoneNumberAndNationality dto);
+    Customer findByPhoneNumber(CustomerFindByPhoneNumberDto dto);
 
-    Customer updatePhoneNumberAndNationality(CustomerUpdatePhoneNumberAndNationalityDto dto);
+    Customer findByDeviceID(CustomerFindByDeviceIDDto dto);
+
+    Customer updatePhoneNumber(CustomerUpdatePhoneNumberDto dto);
 
     Customer updateDeviceID(CustomerUpdateDeviceIDDto dto);
     void withdrawCustomer(CustomerFindDto uuid);
