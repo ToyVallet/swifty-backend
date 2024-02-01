@@ -32,7 +32,8 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     @Override
     public Optional<Customer> findOneByDeviceID(String deviceID) {
        return em.createQuery(
-               "SELECT C FROM Customer C WHERE C.deviceID = :deviceId AND C.isDeleted = :isDeleted", Customer.class
+               "SELECT C FROM Customer C WHERE C.deviceID = :deviceId AND C.isDeleted = :isDeleted",
+                       Customer.class
        )
                .setParameter("deviceId", deviceID)
                .setParameter("isDeleted", isDeleted)
@@ -42,13 +43,12 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     }
 
     @Override
-    public Optional<Customer> findOneByPhoneNumberAndNationality(String phoneNumber, Nationality nationality) {
+    public Optional<Customer> findOneByPhoneNumber(String phoneNumber) {
         return em.createQuery(
-                "SELECT C FROM Customer C WHERE  C.phoneNumber = :phoneNumber AND C.nationality = " +
-                        ":nationality AND C.isDeleted = :isDeleted", Customer.class
+                "SELECT C FROM Customer C WHERE  C.phoneNumber = :phoneNumber AND C.isDeleted = :isDeleted",
+                        Customer.class
         )
                 .setParameter("phoneNumber", phoneNumber)
-                .setParameter("nationality", nationality)
                 .setParameter("isDeleted", isDeleted)
                 .getResultList( )
                 .stream( )
