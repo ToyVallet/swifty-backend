@@ -1,16 +1,17 @@
 package com.swifty.bank.server.core.config;
 
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
+import com.swifty.bank.server.filter.JwtTokenFilter;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @EnableWebSecurity
 @Configuration
@@ -25,39 +26,26 @@ public class SpringSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((auth) ->
                         auth
-                                .requestMatchers("/").permitAll()
-                                .requestMatchers("/auth").permitAll()
-                                .requestMatchers("/sign_in").permitAll()
-                )
-                .formLogin((login) ->
-                        login.loginPage("/sign_in")
-                                .loginProcessingUrl("/sign_in")
-                                .permitAll()
-
+                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/auth/sign-in").permitAll( )
+                                .anyRequest( ).authenticated( )
                 )
                 .logout((logout) ->
                         logout.logoutSuccessUrl("/")
                                 .permitAll()
-                )
-                .exceptionHandling((ex) ->
-                        ex.accessDeniedPage("/access-denied")
                 )
                 .sessionManagement((sm) ->
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
         http.cors((cors) -> cors.disable());
         http.csrf((csrf) -> csrf.disable());
+        http.addFilterBefore(new JwtTokenFilter(jwtTokenUtil), UsernamePasswordAuthenticationFilter.class);
         return http.build();
-    }
-
-    // Web Security Setting -> ignore or allow specific URL
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer( ) {
-        return (web) -> web.ignoring().requestMatchers("/ignore1", "ignore2");
     }
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder( ) {
         return new BCryptPasswordEncoder( );
     }
+
 }
