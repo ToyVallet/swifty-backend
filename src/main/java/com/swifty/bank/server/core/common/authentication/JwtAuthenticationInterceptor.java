@@ -5,7 +5,6 @@ import com.swifty.bank.server.core.common.authentication.exception.TokenContentN
 import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
-import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,23 +39,20 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
             Customer customer = customerService.findByUuid(uuid);
             res.setStatus(200);
             return true;
-        }
-        catch (TokenFormatNotValidException e) {
+        } catch (TokenFormatNotValidException e) {
             res.sendError(
                     HttpServletResponse.SC_BAD_REQUEST,
                     e.getMessage()
             );
-        }
-        catch (TokenContentNotValidException e) {
+        } catch (TokenContentNotValidException e) {
             res.sendError(
                     HttpServletResponse.SC_BAD_REQUEST,
-                    e.getMessage( )
+                    e.getMessage()
             );
-        }
-        catch (NoSuchCustomerByUUID e) {
+        } catch (NoSuchCustomerByUUID e) {
             res.sendError(
                     HttpServletResponse.SC_OK,
-                    e.getMessage( )
+                    e.getMessage()
             );
         }
         return false;
@@ -70,7 +66,7 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
         HandlerMethod handlerMethod = (HandlerMethod) handler;
 
         if (handlerMethod.getMethodAnnotation(passAuthClass) != null
-         || null != handlerMethod.getBeanType().getAnnotation(passAuthClass)) {
+                || null != handlerMethod.getBeanType().getAnnotation(passAuthClass)) {
             return true;
         }
 

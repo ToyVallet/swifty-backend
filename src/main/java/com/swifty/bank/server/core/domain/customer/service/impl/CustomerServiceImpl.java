@@ -1,21 +1,20 @@
 package com.swifty.bank.server.core.domain.customer.service.impl;
 
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
+import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByDeviceID;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPhoneNumberException;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-
-import java.util.NoSuchElementException;
-import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @Transactional(readOnly = true)
 @Service
@@ -48,7 +47,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer findByUuid(UUID uuid) throws CannotReferCustomerByNullException {
         if (uuid == null) {
-            throw new CannotReferCustomerByNullException( );
+            throw new CannotReferCustomerByNullException();
         }
 
         return customerRepository.findOneByUUID(uuid)
@@ -58,20 +57,20 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer findByDeviceId(String deviceId) throws CannotReferCustomerByNullException {
         if (deviceId == null)
-            throw new CannotReferCustomerByNullException( );
+            throw new CannotReferCustomerByNullException();
 
         return customerRepository.findOneByDeviceId(deviceId)
-                .orElseThrow(( ) -> new NoSuchCustomerByDeviceID("[ERROR] No result as referring with device ID"));
+                .orElseThrow(() -> new NoSuchCustomerByDeviceID("[ERROR] No result as referring with device ID"));
     }
 
     @Override
     public Customer findByPhoneNumber(String phoneNumber) throws CannotReferCustomerByNullException {
         if (phoneNumber == null) {
-            throw new CannotReferCustomerByNullException( );
+            throw new CannotReferCustomerByNullException();
         }
 
         return customerRepository.findOneByPhoneNumber(phoneNumber)
-                .orElseThrow(( ) ->
+                .orElseThrow(() ->
                         new NoSuchCustomerByPhoneNumberException("[ERROR] No Result as referring with phone " +
                                 "number and nationality")
                 );
@@ -93,7 +92,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer updateDeviceId(UUID uuid, String deviceId) {
         Customer customer = customerRepository.findOneByUUID(uuid)
-                .orElseThrow(( ) -> new NoSuchCustomerByUUID("[ERROR] : No customer found by the device id"));
+                .orElseThrow(() -> new NoSuchCustomerByUUID("[ERROR] : No customer found by the device id"));
 
         customer.updateDeviceId(deviceId);
         return customer;

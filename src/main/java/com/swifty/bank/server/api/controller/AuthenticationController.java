@@ -5,15 +5,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
+import com.swifty.bank.server.core.common.authentication.dto.LoginWithFormRequest;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
-import com.swifty.bank.server.core.common.authentication.dto.LoginWithFormRequest;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 import java.util.UUID;
@@ -29,8 +27,8 @@ public class AuthenticationController {
     public ResponseResult<?> signInWithJwt(
             @RequestHeader(value = "Authorization") String token,
             @RequestBody String body
-            ) {
-        ObjectMapper mapper = new ObjectMapper( );
+    ) {
+        ObjectMapper mapper = new ObjectMapper();
         try {
             Map<String, String> map = mapper.readValue(body, Map.class);
             String deviceId = map.get("deviceId");

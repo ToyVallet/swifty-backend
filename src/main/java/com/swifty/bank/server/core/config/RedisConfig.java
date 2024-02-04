@@ -17,16 +17,16 @@ public class RedisConfig {
     private int redisPort;
 
     @Bean
-    public RedisConnectionFactory redisConnectionFactory( ) {
+    public RedisConnectionFactory redisConnectionFactory() {
         LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisHost, redisPort);
         return lettuceConnectionFactory;
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate( ) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>( );
-        redisTemplate.setConnectionFactory(redisConnectionFactory( ));
-        redisTemplate.setKeySerializer(new StringRedisSerializer( ));
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
         return redisTemplate;
     }
 }

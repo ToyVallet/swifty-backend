@@ -3,8 +3,8 @@ package com.swifty.bank.server.api.service.impl;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByDeviceID;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPhoneNumberException;
@@ -25,21 +25,19 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
-        Map<String, Object> result = new HashMap<>( );
+        Map<String, Object> result = new HashMap<>();
 
         try {
             customerService
-                    .findByPhoneNumber(dto.getPhoneNumber( ));
+                    .findByPhoneNumber(dto.getPhoneNumber());
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] enrolled user with this phone number exists, cannot sign up",
                     result
             );
-        }
-        catch (NoSuchCustomerByPhoneNumberException e) {
+        } catch (NoSuchCustomerByPhoneNumberException e) {
             // pass if there is no user enrolled with this phone number
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -51,12 +49,10 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         try {
             customerByDeviceId = customerService
-                    .findByDeviceId(dto.getDeviceId( ));
-        }
-        catch (NoSuchCustomerByDeviceID e) {
+                    .findByDeviceId(dto.getDeviceId());
+        } catch (NoSuchCustomerByDeviceID e) {
             customerByDeviceId = null;
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -82,19 +78,17 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> loginWithJwt(UUID uuid, String deviceId) {
-        Map<String, Object> result = new HashMap<>( );
+        Map<String, Object> result = new HashMap<>();
         Customer customer;
         try {
             customer = customerService.findByDeviceId(deviceId);
-        }
-        catch (NoSuchCustomerByDeviceID e) {
+        } catch (NoSuchCustomerByDeviceID e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] there is no device logged in with device " + deviceId,
                     result
             );
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -102,11 +96,11 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (uuid.toString( ).equals(customer.getId( ).toString( ))
+        if (uuid.toString().equals(customer.getId().toString())
                 && customer.getDeviceId().equals(deviceId)) {
             result.put("token", jwtTokenUtil.generateToken(customer));
             return new ResponseResult(Result.SUCCESS,
-                    "[INFO] " + customer.getId( ) + "issued Token",
+                    "[INFO] " + customer.getId() + "issued Token",
                     result
             );
         }
@@ -119,7 +113,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
-        Map<String, Object> res = new HashMap<>( );
+        Map<String, Object> res = new HashMap<>();
 
 
         Customer customerByDeviceID;
@@ -128,11 +122,9 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         try {
             customerByDeviceID = customerService
                     .findByDeviceId(deviceId);
-        }
-        catch (NoSuchCustomerByDeviceID e) {
+        } catch (NoSuchCustomerByDeviceID e) {
             customerByDeviceID = null;
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -143,15 +135,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         try {
             customerByPhoneNumber = customerService
                     .findByPhoneNumber(phoneNumber);
-        }
-        catch (NoSuchCustomerByPhoneNumberException e) {
+        } catch (NoSuchCustomerByPhoneNumberException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] No registered user with phone number, cannot login",
                     res
             );
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -164,15 +154,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     customerByPhoneNumber.getId(),
                     deviceId
             );
-        }
-        else {
-            if (!customerByDeviceID.getId( ).equals(customerByPhoneNumber.getId( ))) {
+        } else {
+            if (!customerByDeviceID.getId().equals(customerByPhoneNumber.getId())) {
                 customerService.updateDeviceId(
-                        customerByPhoneNumber.getId( ),
+                        customerByPhoneNumber.getId(),
                         deviceId
                 );
                 customerService.updateDeviceId(
-                        customerByDeviceID.getId( ),
+                        customerByDeviceID.getId(),
                         null
                 );
             }
