@@ -5,8 +5,9 @@ import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 
 import java.util.UUID;
 
-public interface CustomerAPIService {
+public interface AuthenticationApiService {
     ResponseResult<?> join(JoinRequest dto);
-    ResponseResult<?> login(UUID uuid, String deviceId);
-    ResponseResult<?> logout( );
+    ResponseResult<?> loginWithJwt(UUID uuid, String deviceId);
+    ResponseResult<?> loginWithForm(String deviceId, String phoneNumber);
+    ResponseResult<?> logout(UUID uuid);
 }
