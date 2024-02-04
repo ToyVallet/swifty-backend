@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.customer.dto;
+package com.swifty.bank.server.core.domain.authentication.dto;
 
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,11 @@ import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
-public class CustomerUpdatePhoneNumberDto {
+public class JoinRequest {
     private UUID uuid;
+    private String name;
+    private Nationality nationality;
     private String phoneNumber;
+    private String password;
+    private String deviceID;
 }
