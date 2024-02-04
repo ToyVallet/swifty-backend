@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.authentication.dto;
+package com.swifty.bank.server.core.domain.customer.dto;
 
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import lombok.AllArgsConstructor;
