@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -27,9 +28,9 @@ public class JwtTokenUtil implements Serializable {
     private String secretKey;
     private int expiration = 15 * 60;
 
-    public String getUuidFromToken(String token) {
+    public UUID getUuidFromToken(String token) {
         Claims claims = getClaimFromToken(token);
-        return claims.get("id").toString();
+        return UUID.fromString(claims.get("id").toString( ));
     }
 
     public Date getExpirationDateFromToken(String token) {
@@ -79,8 +80,8 @@ public class JwtTokenUtil implements Serializable {
     }
 
     public Boolean validateToken(String token) {
-        final String uuid = getUuidFromToken(token);
-        return !uuid.isEmpty();
+        Claims claims = getClaimFromToken(token);
+        return claims.get("id").toString( ).isEmpty( );
     }
 
     public Authentication getAuthentication(String accessToken) {
