@@ -14,5 +14,5 @@ public class JoinRequest {
     private Nationality nationality;
     private String phoneNumber;
     private String password;
-    private String deviceID;
+    private String deviceId;
 }
