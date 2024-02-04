@@ -1,5 +1,6 @@
 package com.swifty.bank.server.utils;
 
+import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -17,6 +18,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -27,9 +29,11 @@ public class JwtTokenUtil implements Serializable {
     private String secretKey;
     private int expiration = 15 * 60;
 
-    public String getUuidFromToken(String token) {
-        Claims claims = getClaimFromToken(token);
-        return claims.get("id").toString();
+    public UUID getUuidFromToken(String token) {
+        if (token == null || token.isEmpty( ))
+            throw new TokenFormatNotValidException("[ERROR]: Token content cannot be empty");
+        Claims claims = getClaimFromToken(token.split(" ")[1].trim( ));
+        return UUID.fromString(claims.get("id").toString( ));
     }
 
     public Date getExpirationDateFromToken(String token) {
@@ -79,8 +83,8 @@ public class JwtTokenUtil implements Serializable {
     }
 
     public Boolean validateToken(String token) {
-        final String uuid = getUuidFromToken(token);
-        return !uuid.isEmpty();
+        Claims claims = getClaimFromToken(token);
+        return claims.get("id").toString( ).isEmpty( );
     }
 
     public Authentication getAuthentication(String accessToken) {

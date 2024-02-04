@@ -18,7 +18,10 @@ import jakarta.persistence.Table;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -26,13 +29,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-@Getter
+@Data
 @Entity
 @Table(name = "tb_customer")
 @NoArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
 @EntityListeners(AuditingEntityListener.class)
-public class Customer extends BaseEntity implements UserDetails {
+public class Customer extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "BINARY(16)")
     @Id
@@ -45,11 +48,11 @@ public class Customer extends BaseEntity implements UserDetails {
     private CustomerStatus customerStatus;  // 휴면 상태, 정지된 사용자 등
     private String password;
     private GrantedAuthority roles;
-    private String deviceID;
+    private String deviceId;
 
     @Builder
-    public Customer(UUID id, String name, String socialToken, String phoneNumber, Nationality nationality,
-                    CustomerStatus customerStatus, String password, String deviceID) {
+    public Customer(UUID id, String name, String phoneNumber, Nationality nationality,
+                    CustomerStatus customerStatus, String password, String deviceId) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
@@ -57,7 +60,7 @@ public class Customer extends BaseEntity implements UserDetails {
         this.customerStatus = customerStatus;
         this.password = password;
         this.roles = new SimpleGrantedAuthority("CUSTOMER");
-        this.deviceID = deviceID;
+        this.deviceId = deviceId;
     }
 
     public void updatePhoneNumber(String phoneNumber) {
@@ -68,42 +71,8 @@ public class Customer extends BaseEntity implements UserDetails {
         this.nationality = nationality;
     }
 
-    public void updateDeviceID(String deviceID) {
-        this.deviceID = deviceID;
+    public void updateDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(this.roles);
-    }
-
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-    @Override
-    public String getUsername() {
-        return null;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return false;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return false;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return false;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return false;
-    }
 }

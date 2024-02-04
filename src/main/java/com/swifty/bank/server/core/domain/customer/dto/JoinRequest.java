@@ -8,7 +8,11 @@ import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
-public class CustomerUpdatePhoneNumberDto {
+public class JoinRequest {
     private UUID uuid;
+    private String name;
+    private Nationality nationality;
     private String phoneNumber;
+    private String password;
+    private String deviceId;
 }

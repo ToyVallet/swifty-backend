@@ -26,20 +26,14 @@ public class SpringSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((auth) ->
                         auth
-                                .requestMatchers("/auth/**").permitAll()
-                                .requestMatchers("/auth/sign-in").permitAll( )
-                                .anyRequest( ).authenticated( )
+                                .anyRequest( ).permitAll( )
                 )
-                .logout((logout) ->
-                        logout.logoutSuccessUrl("/")
-                                .permitAll()
-                )
-                .sessionManagement((sm) ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                .formLogin((l) -> l.disable( ))
+                        .httpBasic((hb) -> hb.disable( ))
+                                .logout((l) -> l.disable( )
+                                );
         http.cors((cors) -> cors.disable());
         http.csrf((csrf) -> csrf.disable());
-        http.addFilterBefore(new JwtTokenFilter(jwtTokenUtil), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

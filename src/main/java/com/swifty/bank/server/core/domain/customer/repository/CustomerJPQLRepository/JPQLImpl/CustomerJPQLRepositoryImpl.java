@@ -30,12 +30,12 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     }
 
     @Override
-    public Optional<Customer> findOneByDeviceID(String deviceID) {
+    public Optional<Customer> findOneByDeviceId(String deviceId) {
        return em.createQuery(
-               "SELECT C FROM Customer C WHERE C.deviceID = :deviceId AND C.isDeleted = :isDeleted",
+               "SELECT C FROM Customer C WHERE C.deviceId = :deviceId AND C.isDeleted = :isDeleted",
                        Customer.class
        )
-               .setParameter("deviceId", deviceID)
+               .setParameter("deviceId", deviceId)
                .setParameter("isDeleted", isDeleted)
                .getResultList( )
                .stream( )
