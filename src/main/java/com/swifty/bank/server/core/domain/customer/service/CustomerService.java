@@ -2,6 +2,7 @@ package com.swifty.bank.server.core.domain.customer.service;
 
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 
 import java.util.UUID;
 
@@ -13,14 +14,14 @@ public interface CustomerService {
     // Something to exchange with Frontend as user identification
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
-    Customer findByUuid(UUID uuid);
+    Customer findByUuid(UUID uuid) throws CannotReferCustomerByNullException;
 
-    Customer findByPhoneNumber(String phoneNumber);
+    Customer findByPhoneNumber(String phoneNumber) throws CannotReferCustomerByNullException;
 
-    Customer findByDeviceID(String deviceId);
+    Customer findByDeviceId(String deviceId) throws CannotReferCustomerByNullException;
 
     Customer updatePhoneNumber(UUID uuid, String phoneNumber);
 
-    Customer updateDeviceID(UUID uuid, String deviceId);
+    Customer updateDeviceId(UUID uuid, String deviceId);
     void withdrawCustomer(UUID uuid);
 }
