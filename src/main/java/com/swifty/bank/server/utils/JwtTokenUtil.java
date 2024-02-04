@@ -1,5 +1,6 @@
 package com.swifty.bank.server.utils;
 
+import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -29,7 +30,9 @@ public class JwtTokenUtil implements Serializable {
     private int expiration = 15 * 60;
 
     public UUID getUuidFromToken(String token) {
-        Claims claims = getClaimFromToken(token);
+        if (token == null || token.isEmpty( ))
+            throw new TokenFormatNotValidException("[ERROR]: Token content cannot be empty");
+        Claims claims = getClaimFromToken(token.split(" ")[1].trim( ));
         return UUID.fromString(claims.get("id").toString( ));
     }
 
