@@ -5,6 +5,7 @@ import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByDeviceID;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPhoneNumberException;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
@@ -38,25 +39,38 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         catch (NoSuchCustomerByPhoneNumberException e) {
             // pass if there is no user enrolled with this phone number
         }
-
-        Customer customer = customerService.join(dto);
-        Customer customerByDeviceID;
-
-        try {
-            customerByDeviceID = customerService
-                    .findByDeviceID(dto.getDeviceID( ));
-        }
-        catch (NoSuchCustomerByDeviceID e) {
-            customerByDeviceID = null;
-        }
-
-        if (customerByDeviceID != null) {
-            customer = customerService.updateDeviceID(
-                    customerByDeviceID.getId(),
+        catch (CannotReferCustomerByNullException e) {
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    e.getMessage(),
                     null
             );
         }
 
+        Customer customerByDeviceId;
+
+        try {
+            customerByDeviceId = customerService
+                    .findByDeviceId(dto.getDeviceId( ));
+        }
+        catch (NoSuchCustomerByDeviceID e) {
+            customerByDeviceId = null;
+        }
+        catch (CannotReferCustomerByNullException e) {
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        Customer customer = customerService.join(dto);
+        if (customerByDeviceId != null) {
+            customerService.updateDeviceId(
+                    customerByDeviceId.getId(),
+                    null
+            );
+        }
 
         result.put("token", jwtTokenUtil.generateToken(customer));
         return new ResponseResult<>(
@@ -71,7 +85,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         Map<String, Object> result = new HashMap<>( );
         Customer customer;
         try {
-            customer = customerService.findByDeviceID(deviceId);
+            customer = customerService.findByDeviceId(deviceId);
         }
         catch (NoSuchCustomerByDeviceID e) {
             return new ResponseResult<>(
@@ -80,10 +94,16 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     result
             );
         }
-
+        catch (CannotReferCustomerByNullException e) {
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    e.getMessage(),
+                    null
+            );
+        }
 
         if (uuid.toString( ).equals(customer.getId( ).toString( ))
-                && customer.getDeviceID().equals(deviceId)) {
+                && customer.getDeviceId().equals(deviceId)) {
             result.put("token", jwtTokenUtil.generateToken(customer));
             return new ResponseResult(Result.SUCCESS,
                     "[INFO] " + customer.getId( ) + "issued Token",
@@ -107,10 +127,17 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         try {
             customerByDeviceID = customerService
-                    .findByDeviceID(deviceId);
+                    .findByDeviceId(deviceId);
         }
         catch (NoSuchCustomerByDeviceID e) {
             customerByDeviceID = null;
+        }
+        catch (CannotReferCustomerByNullException e) {
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    e.getMessage(),
+                    null
+            );
         }
 
         try {
@@ -124,20 +151,27 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     res
             );
         }
+        catch (CannotReferCustomerByNullException e) {
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    e.getMessage(),
+                    null
+            );
+        }
 
         if (customerByDeviceID == null) {
-            customerByPhoneNumber = customerService.updateDeviceID(
+            customerByPhoneNumber = customerService.updateDeviceId(
                     customerByPhoneNumber.getId(),
                     deviceId
             );
         }
         else {
             if (!customerByDeviceID.getId( ).equals(customerByPhoneNumber.getId( ))) {
-                customerService.updateDeviceID(
+                customerService.updateDeviceId(
                         customerByPhoneNumber.getId( ),
                         deviceId
                 );
-                customerService.updateDeviceID(
+                customerService.updateDeviceId(
                         customerByDeviceID.getId( ),
                         null
                 );
