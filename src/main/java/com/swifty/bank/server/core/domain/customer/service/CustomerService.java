@@ -1,7 +1,7 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 
 import java.util.UUID;
@@ -23,5 +23,6 @@ public interface CustomerService {
     Customer updatePhoneNumber(UUID uuid, String phoneNumber);
 
     Customer updateDeviceId(UUID uuid, String deviceId);
+
     void withdrawCustomer(UUID uuid);
 }
