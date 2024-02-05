@@ -2,6 +2,7 @@ package com.swifty.bank.server.core.common.authentication;
 
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
+import com.swifty.bank.server.core.common.authentication.exception.TokenExpiredException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
@@ -31,7 +32,6 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
         }
 
         try {
-            String uri = req.getRequestURI();
             UUID uuid = jwtTokenUtil.getUuidFromToken(
                     req.getHeader("Authorization")
             );
@@ -45,8 +45,16 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
                     e.getMessage()
             );
         } catch (TokenContentNotValidException e) {
+            if (jwtTokenUtil.validateToken(req.getHeader("RefreshToken"))) {
+                res.sendRedirect("/auth/reissue");
+            }
             res.sendError(
                     HttpServletResponse.SC_BAD_REQUEST,
+                    "[ERROR] Both of token are not valid, try log in or sign up"
+            );
+        } catch (TokenExpiredException e) {
+            res.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
                     e.getMessage()
             );
         } catch (NoSuchCustomerByUUID e) {

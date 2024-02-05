@@ -12,5 +12,7 @@ public interface AuthenticationApiService {
 
     ResponseResult<?> loginWithForm(String deviceId, String phoneNumber);
 
+    ResponseResult<?> reissue(UUID uuid);
+
     ResponseResult<?> logout(UUID uuid);
 }

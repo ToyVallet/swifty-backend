@@ -1,6 +1,9 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
+import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
+import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.Customer;
@@ -8,6 +11,7 @@ import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByDeviceID;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPhoneNumberException;
+import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
@@ -22,18 +26,17 @@ import java.util.UUID;
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final JwtTokenUtil jwtTokenUtil;
+    private final AuthenticationService authenticationService;
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
-        Map<String, Object> result = new HashMap<>();
-
         try {
             customerService
                     .findByPhoneNumber(dto.getPhoneNumber());
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] enrolled user with this phone number exists, cannot sign up",
-                    result
+                    null
             );
         } catch (NoSuchCustomerByPhoneNumberException e) {
             // pass if there is no user enrolled with this phone number
@@ -68,17 +71,11 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        result.put("token", jwtTokenUtil.generateToken(customer));
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] New user enrolled with user id: " + customer.getId(),
-                result
-        );
+        return this.storeRefreshToken(customer);
     }
 
     @Override
     public ResponseResult<?> loginWithJwt(UUID uuid, String deviceId) {
-        Map<String, Object> result = new HashMap<>();
         Customer customer;
         try {
             customer = customerService.findByDeviceId(deviceId);
@@ -86,7 +83,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] there is no device logged in with device " + deviceId,
-                    result
+                    null
             );
         } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
@@ -98,24 +95,17 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         if (uuid.toString().equals(customer.getId().toString())
                 && customer.getDeviceId().equals(deviceId)) {
-            result.put("token", jwtTokenUtil.generateToken(customer));
-            return new ResponseResult(Result.SUCCESS,
-                    "[INFO] " + customer.getId() + "issued Token",
-                    result
-            );
+            return this.storeRefreshToken(customer);
         }
 
         return new ResponseResult(Result.FAIL,
                 "[ERROR] Latest user of device is not match with token. It might be hijacked",
-                result
+                null
         );
     }
 
     @Override
     public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
-        Map<String, Object> res = new HashMap<>();
-
-
         Customer customerByDeviceID;
         Customer customerByPhoneNumber;
 
@@ -139,7 +129,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] No registered user with phone number, cannot login",
-                    res
+                    null
             );
         } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
@@ -167,16 +157,56 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             }
         }
 
-        res.put("token", jwtTokenUtil.generateToken(customerByPhoneNumber));
+        return this.storeRefreshToken(customerByPhoneNumber);
+    }
+
+    @Override
+    public ResponseResult<?> reissue(UUID uuid) {
+        try {
+            Customer customer = customerService.findByUuid(uuid);
+            this.storeRefreshToken(customer);
+        } catch (CannotReferCustomerByNullException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        } catch (NoSuchCustomerByUUID e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
         return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] " + customerByPhoneNumber.getId() + " login with form",
-                res
+                Result.FAIL,
+                "[ERROR] Server error occurred in reissue service",
+                null
         );
     }
 
     @Override
     public ResponseResult<?> logout(UUID uuid) {
         return null;
+    }
+
+    private ResponseResult<?> storeRefreshToken(Customer customer) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            TokenDto tokens = authenticationService.generateTokenWithCustomer(customer);
+            result.put("token", tokens);
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    "[INFO] Authentication succeed with user id: " + customer.getId(),
+                    result
+            );
+        } catch (AuthenticationException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] Authentication failed building some tokens",
+                    null
+            );
+        }
     }
 }
