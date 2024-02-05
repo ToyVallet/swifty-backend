@@ -223,6 +223,25 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         );
     }
 
+    @Override
+    public ResponseResult<?> signOut(UUID uuid) {
+        logout(uuid);
+        try {
+            customerService.withdrawCustomer(uuid);
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    "[INFO] " + uuid.toString() + " successfully withdraw",
+                    null
+            );
+        } catch (NoSuchCustomerByUUID e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] " + uuid.toString() + " not exist",
+                    null
+            );
+        }
+    }
+
     private ResponseResult<?> storeRefreshToken(Customer customer) {
         Map<String, Object> result = new HashMap<>();
 
