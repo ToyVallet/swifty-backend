@@ -164,7 +164,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> reissue(UUID uuid) {
         try {
             Customer customer = customerService.findByUuid(uuid);
-            this.storeRefreshToken(customer);
+            return this.storeRefreshToken(customer);
         } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -178,11 +178,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     null
             );
         }
-        return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] Server error occurred in reissue service",
-                null
-        );
     }
 
     @Override

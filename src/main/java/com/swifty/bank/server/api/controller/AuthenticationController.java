@@ -65,6 +65,7 @@ public class AuthenticationController {
         return authenticationApiService.join(body);
     }
 
+    @PassAuth
     @PostMapping("/reissue")
     public ResponseResult<?> reissueTokens(
             @RequestBody String refToken

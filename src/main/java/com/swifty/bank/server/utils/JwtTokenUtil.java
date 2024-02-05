@@ -38,7 +38,10 @@ public class JwtTokenUtil implements Serializable {
     public UUID getUuidFromToken(String token) {
         if (token == null || token.isEmpty())
             throw new TokenFormatNotValidException("[ERROR] Token content cannot be empty");
-        Claims claims = getClaimFromToken(token.split(" ")[1].trim());
+        if (token.startsWith("Bearer ")) {
+            token = token.split(" ")[1].trim();
+        }
+        Claims claims = getClaimFromToken(token);
         if (isTokenExpired(token))
             throw new TokenExpiredException("[ERROR] Token is expired, reissue it");
         if (!validateToken(token))
@@ -62,7 +65,7 @@ public class JwtTokenUtil implements Serializable {
 
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parser()
-                .setSigningKey(secretKey)
+                .setSigningKey(secretKey.getBytes())
                 .parseClaimsJws(token)
                 .getBody();
     }
@@ -77,18 +80,18 @@ public class JwtTokenUtil implements Serializable {
 
     public TokenDto generateToken(Customer customer) {
         String accessToken = doGenerateToken(customer,
-                "customer",
+                "ACCESS",
                 new Date(new Date().getTime() + accessTokenExpiration * 1000)
         );
         String refreshToken = doGenerateToken(
                 customer,
-                "customer",
+                "REFRESH",
                 new Date(new Date().getTime() + refreshTokenExpiration * 1000)
         );
         return new TokenDto(accessToken, refreshToken);
     }
 
-    private String doGenerateToken(Customer customer, String subject, Date expir) {
+    private String doGenerateToken(Customer customer, String subject, Date expire) {
         Claims claims = Jwts.claims();
         claims.put("id", customer.getId());
         claims.put("scopes", Arrays.asList(new SimpleGrantedAuthority("CUSTOMER")));
@@ -97,32 +100,41 @@ public class JwtTokenUtil implements Serializable {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(expir)
-                .signWith(SignatureAlgorithm.HS512, secretKey)
+                .setExpiration(expire)
+                .signWith(SignatureAlgorithm.HS512, secretKey.getBytes())
                 .compact();
     }
 
     public Boolean validateToken(String token) {
         Claims claims = getClaimFromToken(token);
-        return !isTokenExpired(token) && claims.get("id").toString().isEmpty();
+        return !isTokenExpired(token) && !claims.get("id").toString().isEmpty();
     }
 
     public Authentication getAuthentication(String accessToken) {
         Claims claims = getClaimFromToken(accessToken);
 
         if (claims.get("id").toString().isBlank() || claims.get("id").toString().isEmpty()) {
-            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+            throw new TokenContentNotValidException("[ERROR] No authentication info in token");
         }
 
-        // 클레임에서 권한 정보 가져오기
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claims.get("scopes").toString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        // UserDetails 객체를 만들어서 Authentication 리턴
         String subject = claims.getSubject();
         UserDetails principal = new User(claims.getSubject(), "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
+
+    public String getSubject(String accessToken) {
+        Claims claims = getClaimFromToken(accessToken);
+
+        if (claims.get("id").toString().isBlank() || claims.get("id").toString().isEmpty()) {
+            throw new TokenContentNotValidException("[ERROR] No authentication info in token");
+        }
+
+        return claims.getSubject();
+    }
+
 }

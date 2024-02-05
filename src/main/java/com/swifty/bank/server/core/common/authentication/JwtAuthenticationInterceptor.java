@@ -32,6 +32,15 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
         }
 
         try {
+            if (!jwtTokenUtil.getSubject(
+                    req.getHeader("Authorization").split(" ")[1].trim()
+            ).equals("ACCESS")) {
+                res.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "[ERROR] token is not valid -> not access token value"
+                );
+            }
+
             UUID uuid = jwtTokenUtil.getUuidFromToken(
                     req.getHeader("Authorization")
             );
@@ -60,6 +69,11 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
         } catch (NoSuchCustomerByUUID e) {
             res.sendError(
                     HttpServletResponse.SC_OK,
+                    e.getMessage()
+            );
+        } catch (IndexOutOfBoundsException e) {
+            res.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
                     e.getMessage()
             );
         }

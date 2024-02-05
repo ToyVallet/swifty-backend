@@ -19,7 +19,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private void saveRefreshTokenInRedis(String token) {
         UUID uuid = jwtTokenUtil.getUuidFromToken(token);
         String previousRefreshToken = redisUtil.getRedisValue(uuid.toString());
-        if (previousRefreshToken != null || !previousRefreshToken.isEmpty()) {
+        if (previousRefreshToken != null && !previousRefreshToken.isEmpty()) {
             UUID prevUuid = jwtTokenUtil.getUuidFromToken(previousRefreshToken);
             redisUtil.saveRedis(previousRefreshToken, "Refresh Token Deprecated: " + prevUuid.toString());
         }
