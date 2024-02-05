@@ -6,6 +6,7 @@ public enum CustomerStatus {
     WITHDRAWAL("탈퇴된 상태");
 
     private final String description;
+
     CustomerStatus(String description) {
         this.description = description;
     }
