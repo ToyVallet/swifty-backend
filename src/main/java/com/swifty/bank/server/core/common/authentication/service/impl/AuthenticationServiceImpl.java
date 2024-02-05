@@ -1,6 +1,8 @@
 package com.swifty.bank.server.core.common.authentication.service.impl;
 
+import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
+import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.utils.JwtTokenUtil;
@@ -18,12 +20,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private void saveRefreshTokenInRedis(String token) {
         UUID uuid = jwtTokenUtil.getUuidFromToken(token);
-        String previousRefreshToken = redisUtil.getRedisValue(uuid.toString());
-        if (previousRefreshToken != null && !previousRefreshToken.isEmpty()) {
-            UUID prevUuid = jwtTokenUtil.getUuidFromToken(previousRefreshToken);
-            redisUtil.saveRedis(previousRefreshToken, "Refresh Token Deprecated: " + prevUuid.toString());
+        Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
+        Auth newAuth;
+
+        if (previousAuth != null) {
+            newAuth = new Auth(token, previousAuth.isLoggedOut());
+            UUID prevUuid = jwtTokenUtil.getUuidFromToken(previousAuth.getRefreshToken());
+
+            if (!uuid.toString().equals(prevUuid.toString())) {
+                throw new TokenContentNotValidException("[ERROR] Two token's owner is different");
+            }
+        } else {
+            newAuth = new Auth(token, false);
         }
-        redisUtil.saveRedis(uuid.toString(), token);
+        redisUtil.saveAuthRedis(uuid.toString(), newAuth);
     }
 
     @Override

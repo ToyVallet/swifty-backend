@@ -1,6 +1,7 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
@@ -14,6 +15,7 @@ import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPh
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.JwtTokenUtil;
+import com.swifty.bank.server.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final JwtTokenUtil jwtTokenUtil;
     private final AuthenticationService authenticationService;
+    private final RedisUtil redisUtil;
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
@@ -161,8 +164,25 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
-    public ResponseResult<?> reissue(UUID uuid) {
+    public ResponseResult<?> reissue(UUID uuid, String refreshToken) {
         try {
+            if (redisUtil.isLoggedOut(uuid.toString())) {
+                return new ResponseResult<>(
+                        Result.FAIL,
+                        "[ERROR] Logged out user tried reissue",
+                        null
+                );
+            }
+            if (redisUtil.getRedisStringValue(refreshToken) != null) {
+                logout(uuid);
+
+                return new ResponseResult<>(
+                        Result.FAIL,
+                        "[ERROR] Already used fresh token",
+                        null
+                );
+            }
+
             Customer customer = customerService.findByUuid(uuid);
             return this.storeRefreshToken(customer);
         } catch (CannotReferCustomerByNullException e) {
@@ -182,7 +202,25 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> logout(UUID uuid) {
-        return null;
+        if (!redisUtil.isLoggedOut(uuid.toString())) {
+            String key = uuid.toString();
+            Auth prevAuth = redisUtil.getRedisAuthValue(key);
+            Auth newAuth = new Auth("", true);
+
+            redisUtil.setRedisStringValue(prevAuth.getRefreshToken(), key);
+            redisUtil.saveAuthRedis(key, newAuth);
+
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    "[INFO] " + uuid.toString() + "logged out successfully",
+                    null
+            );
+        }
+        return new ResponseResult<>(
+                Result.FAIL,
+                "[ERROR] " + uuid.toString() + "'s token information does not exist",
+                null
+        );
     }
 
     private ResponseResult<?> storeRefreshToken(Customer customer) {

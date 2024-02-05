@@ -102,7 +102,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void withdrawCustomer(UUID uuid) {
         Customer customer = customerRepository.findOneByUUID(uuid)
-                .orElseThrow(() -> new NoSuchElementException("No such Customer"));
+                .orElseThrow(() -> new NoSuchCustomerByUUID("No such Customer"));
 
         customerRepository.deleteCustomer(customer);
     }

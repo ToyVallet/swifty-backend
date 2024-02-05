@@ -8,6 +8,7 @@ import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.JwtTokenUtil;
+import com.swifty.bank.server.utils.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class JwtAuthenticationInterceptor implements HandlerInterceptor {
     private final JwtTokenUtil jwtTokenUtil;
+    private final RedisUtil redisUtil;
     private final CustomerService customerService;
 
     @Override
@@ -31,12 +33,14 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        String token = req.getHeader("Authorization").split(" ")[1].trim();
+
         try {
             if (!jwtTokenUtil.getSubject(
-                    req.getHeader("Authorization").split(" ")[1].trim()
+                    token
             ).equals("ACCESS")) {
                 res.sendError(
-                        HttpServletResponse.SC_BAD_REQUEST,
+                        HttpServletResponse.SC_UNAUTHORIZED,
                         "[ERROR] token is not valid -> not access token value"
                 );
             }
@@ -45,12 +49,20 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
                     req.getHeader("Authorization")
             );
 
+            if (redisUtil.isLoggedOut(uuid.toString())) {
+                res.sendError(
+                        HttpServletResponse.SC_OK,
+                        "[ERROR] Tried with token which is logged out"
+                );
+                return false;
+            }
+
             Customer customer = customerService.findByUuid(uuid);
             res.setStatus(200);
             return true;
         } catch (TokenFormatNotValidException e) {
             res.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    HttpServletResponse.SC_UNAUTHORIZED,
                     e.getMessage()
             );
         } catch (TokenContentNotValidException e) {
@@ -58,12 +70,12 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
                 res.sendRedirect("/auth/reissue");
             }
             res.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST,
+                    HttpServletResponse.SC_OK,
                     "[ERROR] Both of token are not valid, try log in or sign up"
             );
         } catch (TokenExpiredException e) {
             res.sendError(
-                    HttpServletResponse.SC_FORBIDDEN,
+                    HttpServletResponse.SC_OK,
                     e.getMessage()
             );
         } catch (NoSuchCustomerByUUID e) {

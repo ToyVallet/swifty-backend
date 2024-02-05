@@ -76,7 +76,7 @@ public class AuthenticationController {
             String token = map.get("RefreshToken");
 
             UUID uuid = jwtTokenUtil.getUuidFromToken(token);
-            return authenticationApiService.reissue(uuid);
+            return authenticationApiService.reissue(uuid, token);
         } catch (JsonProcessingException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -87,6 +87,23 @@ public class AuthenticationController {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Authentication is not valid",
+                    null
+            );
+        }
+    }
+
+    @PostMapping("/log-out")
+    public ResponseResult<?> logOut(
+            @RequestHeader("Authorization") String token
+    ) {
+        try {
+            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
+
+            return authenticationApiService.logout(uuid);
+        } catch (AuthenticationException e) {
+            return new ResponseResult(
+                    Result.FAIL,
+                    e.getMessage(),
                     null
             );
         }
