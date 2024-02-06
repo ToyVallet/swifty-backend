@@ -1,5 +1,8 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
+import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
@@ -20,9 +23,17 @@ public interface CustomerService {
 
     Customer findByDeviceId(String deviceId) throws CannotReferCustomerByNullException;
 
-    Customer updatePhoneNumber(UUID uuid, String phoneNumber);
+    Customer updatePhoneNumber(UUID uuid, String newPhoneNumber);
 
-    Customer updateDeviceId(UUID uuid, String deviceId);
+    Customer updateDeviceId(UUID uuid, String newDeviceId);
 
+    Customer updateCustomerInfo(UUID customerUuid, CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
+
+    CustomerInfoResponse findCustomerInfoDtoByUuid(UUID uuid);
+
+    void updatePassword(UUID uuid, String newPassword);
+
+    boolean isSamePassword(Customer customer, String password);
+  
     void withdrawCustomer(UUID uuid);
 }
