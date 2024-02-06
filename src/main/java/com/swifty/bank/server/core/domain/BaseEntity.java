@@ -25,4 +25,8 @@ public class BaseEntity {
     public void onPreUpdate() {
         this.lastModifiedDate = LocalDate.now();
     }
+
+    public void delete() {
+        this.isDeleted = true;
+    }
 }

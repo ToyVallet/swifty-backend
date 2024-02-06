@@ -1,5 +1,7 @@
 package com.swifty.bank.server.core.domain.customer.service.impl;
 
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
@@ -9,6 +11,7 @@ import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPh
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,6 +81,24 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
+    public Customer updateCustomerInfo(UUID customerUuid, CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest) {
+
+        Customer customer = customerRepository.findOneByUUID(customerUuid)
+                .orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다"));
+
+        if(Objects.nonNull(customerInfoUpdateConditionRequest.getName())) customer.updateName(customerInfoUpdateConditionRequest.getName());
+
+        if(Objects.nonNull(customerInfoUpdateConditionRequest.getPhoneNumber())) customer.updatePhoneNumber(customerInfoUpdateConditionRequest.getPhoneNumber());
+
+        if(Objects.nonNull(customerInfoUpdateConditionRequest.getBirthDate())) customer.updateBirthDate(customerInfoUpdateConditionRequest.getBirthDate());
+
+        if(Objects.nonNull(customerInfoUpdateConditionRequest.getNationality())) customer.updateNationality(customerInfoUpdateConditionRequest.getNationality());
+
+        return customer;
+    }
+
+    @Transactional
+    @Override
     public Customer updatePhoneNumber(UUID uuid, String phoneNumber) {
         Customer customer = customerRepository.findOneByUUID(uuid)
                 .orElseThrow(() -> new NoSuchCustomerByPhoneNumberException("[ERROR] No customer " +
@@ -104,6 +125,27 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findOneByUUID(uuid)
                 .orElseThrow(() -> new NoSuchCustomerByUUID("No such Customer"));
 
-        customerRepository.deleteCustomer(customer);
+        customer.delete();
+    }
+
+    @Override
+    public CustomerInfoResponse findCustomerInfoDtoByUuid(UUID uuid) {
+        CustomerInfoResponse customerInfoResponse = customerRepository.findCustomerInfoResponseByUUID(uuid)
+                .orElseThrow(() -> new NoSuchElementException("No such Customer"));
+
+        return customerInfoResponse;
+    }
+
+    @Override
+    public void updatePassword(UUID uuid, String newPassword) {
+        Customer customer = customerRepository.findOneByUUID(uuid)
+                .orElseThrow(() -> new NoSuchElementException("No such Customer"));
+
+        customer.resetPassword(newPassword);
+    }
+
+    @Override
+    public boolean isSamePassword(Customer customer, String password) {
+        return false;
     }
 }

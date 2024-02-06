@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class MessageServiceImpl implements MessageService {
+public class TwilioMessageService implements MessageService {
     @Value("${TWILIO_ACCOUNT_SID}")
     private String ACCOUNT_SID;
 
