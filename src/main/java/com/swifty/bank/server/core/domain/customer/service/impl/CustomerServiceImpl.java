@@ -1,9 +1,9 @@
 package com.swifty.bank.server.core.domain.customer.service.impl;
 
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByDeviceID;
@@ -11,12 +11,12 @@ import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPh
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.UUID;
 
 @Transactional(readOnly = true)
@@ -36,6 +36,9 @@ public class CustomerServiceImpl implements CustomerService {
                 .phoneNumber(joinRequest.getPhoneNumber())
                 .password(joinRequest.getPassword())
                 .deviceId(joinRequest.getDeviceId())
+                .birthDate(joinRequest.getBirthDate())
+                .gender(joinRequest.getGender())
+                .roles(joinRequest.getRoles())
                 .build();
 
         customerRepository.save(customer);
@@ -86,13 +89,17 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findOneByUUID(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다"));
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getName())) customer.updateName(customerInfoUpdateConditionRequest.getName());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getName()))
+            customer.updateName(customerInfoUpdateConditionRequest.getName());
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getPhoneNumber())) customer.updatePhoneNumber(customerInfoUpdateConditionRequest.getPhoneNumber());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getPhoneNumber()))
+            customer.updatePhoneNumber(customerInfoUpdateConditionRequest.getPhoneNumber());
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getBirthDate())) customer.updateBirthDate(customerInfoUpdateConditionRequest.getBirthDate());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getBirthDate()))
+            customer.updateBirthDate(customerInfoUpdateConditionRequest.getBirthDate());
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getNationality())) customer.updateNationality(customerInfoUpdateConditionRequest.getNationality());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getNationality()))
+            customer.updateNationality(customerInfoUpdateConditionRequest.getNationality());
 
         return customer;
     }

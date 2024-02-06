@@ -1,8 +1,10 @@
 package com.swifty.bank.server.core.domain.customer.dto;
 
+import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.util.UUID;
 
@@ -15,4 +17,7 @@ public class JoinRequest {
     private String phoneNumber;
     private String password;
     private String deviceId;
+    private Gender gender;
+    private String birthDate;
+    private GrantedAuthority roles;
 }
