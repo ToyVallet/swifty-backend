@@ -108,4 +108,20 @@ public class AuthenticationController {
             );
         }
     }
+
+    @PostMapping("/sign-out")
+    public ResponseResult<?> signOut(
+            @RequestHeader("Authorization") String token
+    ) {
+        try {
+            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
+            return authenticationApiService.signOut(uuid);
+        } catch (AuthenticationException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+    }
 }
