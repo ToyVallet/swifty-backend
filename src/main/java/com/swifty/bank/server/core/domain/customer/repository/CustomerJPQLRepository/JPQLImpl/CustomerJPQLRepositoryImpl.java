@@ -1,7 +1,7 @@
 package com.swifty.bank.server.core.domain.customer.repository.CustomerJPQLRepository.JPQLImpl;
 
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.constant.Nationality;
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerJPQLRepository.CustomerJPQLRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +49,28 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
                         Customer.class
         )
                 .setParameter("phoneNumber", phoneNumber)
+                .setParameter("isDeleted", isDeleted)
+                .getResultList( )
+                .stream( )
+                .findAny( );
+    }
+
+    @Override
+    public Optional<CustomerInfoResponse> findCustomerInfoResponseByUUID(UUID uuid) {
+        return em.createQuery(
+                        "SELECT new com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse(" +
+                                "c.name" +
+                                ",c.phoneNumber" +
+                                ",c.birthDate" +
+                                ",c.nationality" +
+                                ",c.customerStatus" +
+                                ") " +
+                                "FROM Customer C " +
+                                "WHERE  C.uuid = :uuid " +
+                                "AND C.isDeleted = :isDeleted",
+                        CustomerInfoResponse.class
+                )
+                .setParameter("uuid", uuid)
                 .setParameter("isDeleted", isDeleted)
                 .getResultList( )
                 .stream( )
