@@ -20,8 +20,8 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     public Optional<Customer> findOneByUUID(UUID uuid) {
 
         return em.createQuery(
-                "SELECT C FROM Customer C WHERE C.id = :uuid AND C.isDeleted = :isDeleted", Customer.class
-        )
+                        "SELECT C FROM Customer C WHERE C.id = :uuid AND C.isDeleted = :isDeleted", Customer.class
+                )
                 .setParameter("uuid", uuid)
                 .setParameter("isDeleted", isDeleted)
                 .getResultList()
@@ -31,28 +31,28 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
 
     @Override
     public Optional<Customer> findOneByDeviceId(String deviceId) {
-       return em.createQuery(
-               "SELECT C FROM Customer C WHERE C.deviceId = :deviceId AND C.isDeleted = :isDeleted",
-                       Customer.class
-       )
-               .setParameter("deviceId", deviceId)
-               .setParameter("isDeleted", isDeleted)
-               .getResultList( )
-               .stream( )
-               .findAny( );
+        return em.createQuery(
+                        "SELECT C FROM Customer C WHERE C.deviceId = :deviceId AND C.isDeleted = :isDeleted",
+                        Customer.class
+                )
+                .setParameter("deviceId", deviceId)
+                .setParameter("isDeleted", isDeleted)
+                .getResultList()
+                .stream()
+                .findAny();
     }
 
     @Override
     public Optional<Customer> findOneByPhoneNumber(String phoneNumber) {
         return em.createQuery(
-                "SELECT C FROM Customer C WHERE  C.phoneNumber = :phoneNumber AND C.isDeleted = :isDeleted",
+                        "SELECT C FROM Customer C WHERE  C.phoneNumber = :phoneNumber AND C.isDeleted = :isDeleted",
                         Customer.class
-        )
+                )
                 .setParameter("phoneNumber", phoneNumber)
                 .setParameter("isDeleted", isDeleted)
-                .getResultList( )
-                .stream( )
-                .findAny( );
+                .getResultList()
+                .stream()
+                .findAny();
     }
 
     @Override

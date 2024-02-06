@@ -1,15 +1,21 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.core.common.authentication.Auth;
+import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
+import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
+import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByDeviceID;
 import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByPhoneNumberException;
+import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.JwtTokenUtil;
+import com.swifty.bank.server.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,24 +28,22 @@ import java.util.UUID;
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final JwtTokenUtil jwtTokenUtil;
+    private final AuthenticationService authenticationService;
+    private final RedisUtil redisUtil;
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
-        Map<String, Object> result = new HashMap<>( );
-
         try {
             customerService
-                    .findByPhoneNumber(dto.getPhoneNumber( ));
+                    .findByPhoneNumber(dto.getPhoneNumber());
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] enrolled user with this phone number exists, cannot sign up",
-                    result
+                    null
             );
-        }
-        catch (NoSuchCustomerByPhoneNumberException e) {
+        } catch (NoSuchCustomerByPhoneNumberException e) {
             // pass if there is no user enrolled with this phone number
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -51,12 +55,10 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         try {
             customerByDeviceId = customerService
-                    .findByDeviceId(dto.getDeviceId( ));
-        }
-        catch (NoSuchCustomerByDeviceID e) {
+                    .findByDeviceId(dto.getDeviceId());
+        } catch (NoSuchCustomerByDeviceID e) {
             customerByDeviceId = null;
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -72,29 +74,21 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        result.put("token", jwtTokenUtil.generateToken(customer));
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] New user enrolled with user id: " + customer.getId(),
-                result
-        );
+        return this.storeRefreshToken(customer);
     }
 
     @Override
     public ResponseResult<?> loginWithJwt(UUID uuid, String deviceId) {
-        Map<String, Object> result = new HashMap<>( );
         Customer customer;
         try {
             customer = customerService.findByDeviceId(deviceId);
-        }
-        catch (NoSuchCustomerByDeviceID e) {
+        } catch (NoSuchCustomerByDeviceID e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] there is no device logged in with device " + deviceId,
-                    result
+                    null
             );
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -102,37 +96,28 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (uuid.toString( ).equals(customer.getId( ).toString( ))
+        if (uuid.toString().equals(customer.getId().toString())
                 && customer.getDeviceId().equals(deviceId)) {
-            result.put("token", jwtTokenUtil.generateToken(customer));
-            return new ResponseResult(Result.SUCCESS,
-                    "[INFO] " + customer.getId( ) + "issued Token",
-                    result
-            );
+            return this.storeRefreshToken(customer);
         }
 
         return new ResponseResult(Result.FAIL,
                 "[ERROR] Latest user of device is not match with token. It might be hijacked",
-                result
+                null
         );
     }
 
     @Override
     public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
-        Map<String, Object> res = new HashMap<>( );
-
-
         Customer customerByDeviceID;
         Customer customerByPhoneNumber;
 
         try {
             customerByDeviceID = customerService
                     .findByDeviceId(deviceId);
-        }
-        catch (NoSuchCustomerByDeviceID e) {
+        } catch (NoSuchCustomerByDeviceID e) {
             customerByDeviceID = null;
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -143,15 +128,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         try {
             customerByPhoneNumber = customerService
                     .findByPhoneNumber(phoneNumber);
-        }
-        catch (NoSuchCustomerByPhoneNumberException e) {
+        } catch (NoSuchCustomerByPhoneNumberException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[ERROR] No registered user with phone number, cannot login",
-                    res
+                    null
             );
-        }
-        catch (CannotReferCustomerByNullException e) {
+        } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(
                     Result.SUCCESS,
                     e.getMessage(),
@@ -164,30 +147,118 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     customerByPhoneNumber.getId(),
                     deviceId
             );
-        }
-        else {
-            if (!customerByDeviceID.getId( ).equals(customerByPhoneNumber.getId( ))) {
+        } else {
+            if (!customerByDeviceID.getId().equals(customerByPhoneNumber.getId())) {
                 customerService.updateDeviceId(
-                        customerByPhoneNumber.getId( ),
+                        customerByPhoneNumber.getId(),
                         deviceId
                 );
                 customerService.updateDeviceId(
-                        customerByDeviceID.getId( ),
+                        customerByDeviceID.getId(),
                         null
                 );
             }
         }
 
-        res.put("token", jwtTokenUtil.generateToken(customerByPhoneNumber));
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] " + customerByPhoneNumber.getId() + " login with form",
-                res
-        );
+        return this.storeRefreshToken(customerByPhoneNumber);
+    }
+
+    @Override
+    public ResponseResult<?> reissue(UUID uuid, String refreshToken) {
+        try {
+            if (redisUtil.isLoggedOut(uuid.toString())) {
+                return new ResponseResult<>(
+                        Result.FAIL,
+                        "[ERROR] Logged out user tried reissue",
+                        null
+                );
+            }
+            if (redisUtil.getRedisStringValue(refreshToken) != null) {
+                logout(uuid);
+
+                return new ResponseResult<>(
+                        Result.FAIL,
+                        "[ERROR] Already used fresh token",
+                        null
+                );
+            }
+
+            Customer customer = customerService.findByUuid(uuid);
+            return this.storeRefreshToken(customer);
+        } catch (CannotReferCustomerByNullException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        } catch (NoSuchCustomerByUUID e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
     }
 
     @Override
     public ResponseResult<?> logout(UUID uuid) {
-        return null;
+        if (!redisUtil.isLoggedOut(uuid.toString())) {
+            String key = uuid.toString();
+            Auth prevAuth = redisUtil.getRedisAuthValue(key);
+            Auth newAuth = new Auth("", true);
+
+            redisUtil.setRedisStringValue(prevAuth.getRefreshToken(), key);
+            redisUtil.saveAuthRedis(key, newAuth);
+
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    "[INFO] " + uuid.toString() + "logged out successfully",
+                    null
+            );
+        }
+        return new ResponseResult<>(
+                Result.FAIL,
+                "[ERROR] " + uuid.toString() + "'s token information does not exist",
+                null
+        );
+    }
+
+    @Override
+    public ResponseResult<?> signOut(UUID uuid) {
+        logout(uuid);
+        try {
+            customerService.withdrawCustomer(uuid);
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    "[INFO] " + uuid.toString() + " successfully withdraw",
+                    null
+            );
+        } catch (NoSuchCustomerByUUID e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] " + uuid.toString() + " not exist",
+                    null
+            );
+        }
+    }
+
+    private ResponseResult<?> storeRefreshToken(Customer customer) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            TokenDto tokens = authenticationService.generateTokenWithCustomer(customer);
+            result.put("token", tokens);
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    "[INFO] Authentication succeed with user id: " + customer.getId(),
+                    result
+            );
+        } catch (AuthenticationException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] Authentication failed building some tokens",
+                    null
+            );
+        }
     }
 }

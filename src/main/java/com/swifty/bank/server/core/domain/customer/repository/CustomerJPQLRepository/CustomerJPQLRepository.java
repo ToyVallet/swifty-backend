@@ -8,7 +8,9 @@ import java.util.UUID;
 
 public interface CustomerJPQLRepository {
     Optional<Customer> findOneByUUID(UUID uuid);
+
     Optional<Customer> findOneByDeviceId(String deviceId);
+
     Optional<Customer> findOneByPhoneNumber(String phoneNumber);
     Optional<CustomerInfoResponse> findCustomerInfoResponseByUUID(UUID uuid);
     void deleteCustomer(Customer customer);

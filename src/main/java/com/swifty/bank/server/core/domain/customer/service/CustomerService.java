@@ -4,6 +4,7 @@ import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 
 import java.util.UUID;
@@ -33,5 +34,6 @@ public interface CustomerService {
     void updatePassword(UUID uuid, String newPassword);
 
     boolean isSamePassword(Customer customer, String password);
+  
     void withdrawCustomer(UUID uuid);
 }

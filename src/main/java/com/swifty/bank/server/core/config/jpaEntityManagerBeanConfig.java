@@ -15,6 +15,6 @@ public class jpaEntityManagerBeanConfig {
 
     @Bean
     public CustomerJPQLRepositoryImpl customerJPQLRepository(EntityManager entityManager) {
-       return new CustomerJPQLRepositoryImpl(entityManager);
+        return new CustomerJPQLRepositoryImpl(entityManager);
     }
 }
