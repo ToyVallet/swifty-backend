@@ -3,7 +3,6 @@ package com.swifty.bank.server.api.controller;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.dto.LoginWithFormRequest;
-import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
@@ -18,52 +17,61 @@ public class AuthenticationController {
     private final JwtTokenUtil jwtTokenUtil;
 
     @PostMapping(value = "sign-in-with-jwt")
-    public ResponseResult<?> signInWithJwt(
+    public ResponseEntity<?> signInWithJwt(
             @RequestHeader(value = "Authorization") String token,
             @RequestBody String body
     ) {
-        return authenticationApiService.loginWithJwt(body, token);
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.loginWithJwt(body, token));
     }
 
     @PassAuth
     @PostMapping("sign-in-with-form")
-    public ResponseResult<?> signInWithForm(
+    public ResponseEntity<?> signInWithForm(
             @RequestBody LoginWithFormRequest body
     ) {
-        return authenticationApiService.loginWithForm(body.getDeviceId(), body.getPhoneNumber());
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.loginWithForm(body.getDeviceId(), body.getPhoneNumber()));
     }
 
     @PassAuth
     @PostMapping("sign-up-with-form")
-    public ResponseResult<?> signUpWithForm(
+    public ResponseEntity<?> signUpWithForm(
             @RequestBody JoinRequest body
     ) {
-        return authenticationApiService.join(body);
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.join(body));
     }
 
     @PassAuth
     @PostMapping("/reissue")
-    public ResponseResult<?> reissueTokens(
+    public ResponseEntity<?> reissueTokens(
             @RequestBody String refToken
     ) {
         return ResponseEntity
                 .ok()
                 .body(authenticationApiService.reissue(refToken)
-                )
-                .getBody();
+                );
     }
 
     @PostMapping("/log-out")
-    public ResponseResult<?> logOut(
+    public ResponseEntity<?> logOut(
             @RequestHeader("Authorization") String token
     ) {
-        return authenticationApiService.logout(token);
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.logout(token));
     }
 
     @PostMapping("/sign-out")
-    public ResponseResult<?> signOut(
+    public ResponseEntity<?> signOut(
             @RequestHeader("Authorization") String token
     ) {
-        return authenticationApiService.signOut(token);
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.signOut(token));
     }
 }
