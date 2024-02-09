@@ -1,20 +1,14 @@
 package com.swifty.bank.server.api.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.dto.LoginWithFormRequest;
-import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
-import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,25 +22,7 @@ public class AuthenticationController {
             @RequestHeader(value = "Authorization") String token,
             @RequestBody String body
     ) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            String deviceId = map.get("deviceId");
-            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
-            return authenticationApiService.loginWithJwt(uuid, deviceId);
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Authentication is not valid",
-                    null
-            );
-        }
+        return authenticationApiService.loginWithJwt(body, token);
     }
 
     @PassAuth
@@ -70,58 +46,24 @@ public class AuthenticationController {
     public ResponseResult<?> reissueTokens(
             @RequestBody String refToken
     ) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            Map<String, String> map = mapper.readValue(refToken, Map.class);
-            String token = map.get("RefreshToken");
-
-            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
-            return authenticationApiService.reissue(uuid, token);
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Authentication is not valid",
-                    null
-            );
-        }
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.reissue(refToken)
+                )
+                .getBody();
     }
 
     @PostMapping("/log-out")
     public ResponseResult<?> logOut(
             @RequestHeader("Authorization") String token
     ) {
-        try {
-            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
-
-            return authenticationApiService.logout(uuid);
-        } catch (AuthenticationException e) {
-            return new ResponseResult(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
+        return authenticationApiService.logout(token);
     }
 
     @PostMapping("/sign-out")
     public ResponseResult<?> signOut(
             @RequestHeader("Authorization") String token
     ) {
-        try {
-            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
-            return authenticationApiService.signOut(uuid);
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
+        return authenticationApiService.signOut(token);
     }
 }
