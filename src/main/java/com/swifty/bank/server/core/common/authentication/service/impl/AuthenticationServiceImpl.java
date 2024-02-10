@@ -43,7 +43,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         claims.put("id", customer.getId());
         claims.put("scopes", List.of(new SimpleGrantedAuthority("CUSTOMER")));
         claims.setSubject("ACCESS");
-        claims.setExpiration(new Date(now.getTime() + accessTokenExpiration * 1000L));
+        claims.setExpiration(DateUtil.millisToDate(now.getTime() + accessTokenExpiration * 1000L));
         return jwtUtil.generateToken(claims);
     }
 
@@ -54,7 +54,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         claims.put("id", customer.getId());
         claims.put("scopes", List.of(new SimpleGrantedAuthority("CUSTOMER")));
         claims.setSubject("REFRESH");
-        claims.setExpiration(new Date(now.getTime() + refreshTokenExpiration * 1000L));
+        claims.setExpiration(DateUtil.millisToDate(now.getTime() + refreshTokenExpiration * 1000L));
         return jwtUtil.generateToken(claims);
     }
 
