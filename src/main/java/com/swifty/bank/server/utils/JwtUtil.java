@@ -58,7 +58,7 @@ public class JwtUtil implements Serializable {
             token = token.split(" ")[1].trim();
         }
         // check if expired
-        if (!isTokenExpired(token)) {
+        if (isTokenExpired(token)) {
             throw new TokenExpiredException("[ERROR] Token is expired, reissue it");
         }
 
