@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PhoneAuthenticationController {
     @Autowired
     private final PhoneAuthenticationServiceImpl phoneAuthenticationService;
-    
+
     @PostMapping(value = "/sendMessage")
     public ResponseEntity<?> sendMessage(@RequestBody SendMessageRequest sendMessageRequest) {
         log.info("sendMessage() Started: " + sendMessageRequest.toString());
@@ -41,6 +41,7 @@ public class PhoneAuthenticationController {
         log.info("sendVerificationCodeRequest() Started: " + sendVerificationCodeRequest.toString());
         ResponseResult<?> responseResult = phoneAuthenticationService.sendVerificationCode(
                 sendVerificationCodeRequest);
+        // TODO: redis에 저장
 
         return ResponseEntity
                 .ok()

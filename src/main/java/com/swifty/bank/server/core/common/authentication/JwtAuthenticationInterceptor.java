@@ -1,6 +1,7 @@
 package com.swifty.bank.server.core.common.authentication;
 
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
+import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenExpiredException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
@@ -46,7 +47,7 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
                     req.getHeader("Authorization")
             ).toString());
 
-            if (redisUtil.isLoggedOut(uuid.toString())) {
+            if (isLoggedOut(uuid.toString())) {
                 res.sendError(
                         HttpServletResponse.SC_OK,
                         "[ERROR] Tried with token which is logged out"
@@ -90,5 +91,13 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
         }
 
         return false;
+    }
+
+    private boolean isLoggedOut(String key) {
+        Auth res = redisUtil.getRedisAuthValue(key);
+        if (res == null) {
+            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
+        }
+        return res.isLoggedOut();
     }
 }
