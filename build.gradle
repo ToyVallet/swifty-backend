@@ -17,6 +17,14 @@ configurations {
     }
 }
 
+tasks.register('copyPrivate', Copy) {
+    copy {
+        from './submodule-config'
+        include "*.yaml"
+        into 'src/main/resources/config'
+    }
+}
+
 repositories {
     mavenCentral()
 }
