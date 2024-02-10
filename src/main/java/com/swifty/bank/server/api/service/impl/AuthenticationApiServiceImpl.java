@@ -1,7 +1,5 @@
 package com.swifty.bank.server.api.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
@@ -31,10 +29,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
-
-        Customer customerByDeviceId = customerService.findByPhoneNumber(dto.getPhoneNumber());
-
-        if (customerByDeviceId == null) {
+        if (customerService.findByPhoneNumber(dto.getPhoneNumber()) != null) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Customer retrieval is not valid",
@@ -42,7 +37,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
+        Customer customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
 
         Customer customer = customerService.join(dto);
         if (customerByDeviceId != null) {
@@ -56,20 +51,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
-    public ResponseResult<?> loginWithJwt(String body, String token) {
-        ObjectMapper mapper = new ObjectMapper();
-        String deviceId;
-        try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            deviceId = map.get("deviceId");
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        }
-
+    public ResponseResult<?> loginWithJwt(String deviceId, String token) {
         if (deviceId == null) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -146,20 +128,10 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> reissue(String body) {
-        ObjectMapper mapper = new ObjectMapper();
         UUID uuid;
         String refreshToken;
         try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            refreshToken = map.get("RefreshToken");
-
-            uuid = jwtTokenUtil.getUuidFromToken(refreshToken);
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
+            uuid = jwtTokenUtil.getUuidFromToken(body);
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -175,8 +147,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     null
             );
         }
-        if (redisUtil.getRedisStringValue(refreshToken) != null) {
-            logout(refreshToken);
+        if (redisUtil.getRedisStringValue(body) != null) {
+            logout(body);
 
             return new ResponseResult<>(
                     Result.FAIL,

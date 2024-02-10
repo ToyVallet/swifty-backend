@@ -23,7 +23,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
         Auth newAuth;
 
-        if (previousAuth != null) {
+        if (previousAuth != null && !previousAuth.getRefreshToken().isEmpty()) {
             newAuth = new Auth(token, previousAuth.isLoggedOut());
             UUID prevUuid = jwtTokenUtil.getUuidFromToken(previousAuth.getRefreshToken());
 

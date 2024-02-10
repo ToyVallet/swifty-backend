@@ -1,11 +1,9 @@
 package com.swifty.bank.server.core.common.authentication;
 
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
-import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenExpiredException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.exceptions.NoSuchCustomerByUUID;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import com.swifty.bank.server.utils.RedisUtil;
@@ -33,14 +31,14 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String token = req.getHeader("Authorization").split(" ")[1].trim();
-
         try {
+            String token = req.getHeader("Authorization").split(" ")[1].trim();
+
             if (!jwtTokenUtil.getSubject(
                     token
             ).equals("ACCESS")) {
                 res.sendError(
-                        HttpServletResponse.SC_UNAUTHORIZED,
+                        HttpServletResponse.SC_BAD_REQUEST,
                         "[ERROR] token is not valid -> not access token value"
                 );
             }
@@ -51,36 +49,29 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
 
             if (redisUtil.isLoggedOut(uuid.toString())) {
                 res.sendError(
-                        HttpServletResponse.SC_OK,
+                        HttpServletResponse.SC_FORBIDDEN,
                         "[ERROR] Tried with token which is logged out"
                 );
                 return false;
             }
 
             Customer customer = customerService.findByUuid(uuid);
+            if (customer == null) {
+                res.sendError(
+                        HttpServletResponse.SC_FORBIDDEN,
+                        "[ERROR] No such customer in DB"
+                );
+            }
             res.setStatus(200);
             return true;
         } catch (TokenFormatNotValidException e) {
             res.sendError(
-                    HttpServletResponse.SC_UNAUTHORIZED,
+                    HttpServletResponse.SC_BAD_REQUEST,
                     e.getMessage()
-            );
-        } catch (TokenContentNotValidException e) {
-            if (jwtTokenUtil.validateToken(req.getHeader("RefreshToken"))) {
-                res.sendRedirect("/auth/reissue");
-            }
-            res.sendError(
-                    HttpServletResponse.SC_OK,
-                    "[ERROR] Both of token are not valid, try log in or sign up"
             );
         } catch (TokenExpiredException e) {
             res.sendError(
-                    HttpServletResponse.SC_OK,
-                    e.getMessage()
-            );
-        } catch (NoSuchCustomerByUUID e) {
-            res.sendError(
-                    HttpServletResponse.SC_OK,
+                    HttpServletResponse.SC_UNAUTHORIZED,
                     e.getMessage()
             );
         } catch (IndexOutOfBoundsException e) {
