@@ -51,3 +51,6 @@ out/
 ### Docker files ###
 Dockerfile
 docker-compose.yaml
+
+### Submodule ###
+./submodule-config/*
