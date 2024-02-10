@@ -1,4 +1,4 @@
-[submodule "project/submodule-config"]
-	path = project/submodule-config
+[submodule "submodule-config"]
+	path = submodule-config
 	url = https://github.com/ToyVallet/submodule-config.git
 	branch = development
