@@ -13,9 +13,11 @@ import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.utils.HashUtil;
 import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -39,15 +41,28 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        Customer customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
+        String phoneVerified = redisUtil.getRedisStringValue(
+                HashUtil.createStringHash(
+                        List.of(dto.getDeviceId(),
+                                dto.getPhoneNumber()))
+        );
+        if (phoneVerified == null || !phoneVerified.equals("true")) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] not verified phone number",
+                    null
+            );
+        }
+
         Customer customer = customerService.join(dto);
+
+        Customer customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
         if (customerByDeviceId != null) {
             customerService.updateDeviceId(
                     customerByDeviceId.getId(),
                     null
             );
         }
-
         return this.storeRefreshToken(customer);
     }
 
