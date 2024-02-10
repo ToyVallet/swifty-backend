@@ -101,7 +101,14 @@ jobs:
       - name: Set up Docker buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
-        
+
+      # repository owner 이름 소문자로 치환
+      - name: set owner's name to lower case 
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
+          
       # Docker 이미지 빌드 및 Github Container Registry에 push
       - name: Build and Push
         uses: docker/build-push-action@v5
@@ -111,8 +118,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/github-actions-practice:latest
-            ghcr.io/${{ github.repository_owner }}/github-actions-practice:${{ steps.tag_version.outputs.new_tag }}
+            ghcr.io/${{ env.OWNER_LC }}/swifty-backend:latest
+            ghcr.io/${{ env.OWNER_LC }}/swifty-backend:${{ steps.tag_version.outputs.new_tag }}
       
       # Github에 release 생성
       - name: Create a GitHub release
