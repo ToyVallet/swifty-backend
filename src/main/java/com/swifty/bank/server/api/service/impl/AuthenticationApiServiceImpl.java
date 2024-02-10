@@ -6,6 +6,7 @@ import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
+import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
@@ -30,10 +31,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
-
-        Customer customerByDeviceId = customerService.findByPhoneNumber(dto.getPhoneNumber());
-
-        if (customerByDeviceId == null) {
+        if (customerService.findByPhoneNumber(dto.getPhoneNumber()) != null) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Customer retrieval is not valid",
@@ -41,8 +39,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
-
+        Customer customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
         Customer customer = customerService.join(dto);
         if (customerByDeviceId != null) {
             customerService.updateDeviceId(
@@ -166,7 +163,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (redisUtil.isLoggedOut(uuid.toString())) {
+        if (isLoggedOut(uuid.toString())) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Logged out user tried reissue",
@@ -207,7 +204,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (!redisUtil.isLoggedOut(uuid.toString())) {
+        if (!isLoggedOut(uuid.toString())) {
             String key = uuid.toString();
             Auth prevAuth = redisUtil.getRedisAuthValue(key);
             Auth newAuth = new Auth("", true);
@@ -272,9 +269,17 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] Authentication failed building some tokens",
+                    e.getMessage(),
                     null
             );
         }
+    }
+
+    private boolean isLoggedOut(String key) {
+        Auth res = redisUtil.getRedisAuthValue(key);
+        if (res == null) {
+            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
+        }
+        return res.isLoggedOut();
     }
 }
