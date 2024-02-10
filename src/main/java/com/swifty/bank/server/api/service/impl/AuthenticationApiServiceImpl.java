@@ -12,20 +12,19 @@ import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.utils.JwtTokenUtil;
+import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
-    private final JwtTokenUtil jwtTokenUtil;
+    private final JwtUtil jwtUtil;
     private final AuthenticationService authenticationService;
     private final RedisUtil redisUtil;
 
@@ -80,7 +79,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         UUID uuid;
         try {
-            uuid = jwtTokenUtil.getUuidFromToken(token);
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
         } catch (AuthenticationException e) {
             return new ResponseResult(
                     Result.FAIL,
@@ -88,7 +87,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     null
             );
         }
-
 
         Customer customer = customerService.findByDeviceId(deviceId);
         if (customer == null) {
@@ -153,7 +151,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Map<String, String> map = mapper.readValue(body, Map.class);
             refreshToken = map.get("RefreshToken");
 
-            uuid = jwtTokenUtil.getUuidFromToken(refreshToken);
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", refreshToken).toString());
         } catch (JsonProcessingException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -200,7 +198,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> logout(String token) {
         UUID uuid;
         try {
-            uuid = jwtTokenUtil.getUuidFromToken(token);
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -234,7 +232,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> signOut(String token) {
         UUID uuid;
         try {
-            uuid = jwtTokenUtil.getUuidFromToken(token);
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -255,7 +253,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         return new ResponseResult<>(
                 Result.SUCCESS,
-                "[INFO] " + uuid.toString() + " successfully withdraw",
+                "[INFO] " + uuid + " successfully withdraw",
                 null
         );
     }
@@ -264,7 +262,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            TokenDto tokens = authenticationService.generateTokenWithCustomer(customer);
+            TokenDto tokens = authenticationService.generateTokenDtoWithCustomer(customer);
             result.put("token", tokens);
             return new ResponseResult<>(
                     Result.SUCCESS,
