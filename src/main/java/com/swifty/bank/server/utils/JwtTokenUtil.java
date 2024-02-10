@@ -3,7 +3,6 @@ package com.swifty.bank.server.utils;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenExpiredException;
-import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -37,7 +36,7 @@ public class JwtTokenUtil implements Serializable {
 
     public UUID getUuidFromToken(String token) {
         if (token == null || token.isEmpty())
-            throw new TokenFormatNotValidException("[ERROR] Token content cannot be empty");
+            return null;
         if (token.startsWith("Bearer ")) {
             token = token.split(" ")[1].trim();
         }

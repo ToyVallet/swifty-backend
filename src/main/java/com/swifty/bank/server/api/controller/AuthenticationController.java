@@ -1,20 +1,13 @@
 package com.swifty.bank.server.api.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.dto.LoginWithFormRequest;
-import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
-import com.swifty.bank.server.core.common.constant.Result;
-import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -24,88 +17,61 @@ public class AuthenticationController {
     private final JwtTokenUtil jwtTokenUtil;
 
     @PostMapping(value = "sign-in-with-jwt")
-    public ResponseResult<?> signInWithJwt(
+    public ResponseEntity<?> signInWithJwt(
             @RequestHeader(value = "Authorization") String token,
             @RequestBody String body
     ) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            String deviceId = map.get("deviceId");
-            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
-            return authenticationApiService.loginWithJwt(uuid, deviceId);
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Authentication is not valid",
-                    null
-            );
-        }
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.loginWithJwt(body, token));
     }
 
     @PassAuth
     @PostMapping("sign-in-with-form")
-    public ResponseResult<?> signInWithForm(
+    public ResponseEntity<?> signInWithForm(
             @RequestBody LoginWithFormRequest body
     ) {
-        return authenticationApiService.loginWithForm(body.getDeviceId(), body.getPhoneNumber());
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.loginWithForm(body.getDeviceId(), body.getPhoneNumber()));
     }
 
     @PassAuth
     @PostMapping("sign-up-with-form")
-    public ResponseResult<?> signUpWithForm(
+    public ResponseEntity<?> signUpWithForm(
             @RequestBody JoinRequest body
     ) {
-        return authenticationApiService.join(body);
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.join(body));
     }
 
     @PassAuth
     @PostMapping("/reissue")
-    public ResponseResult<?> reissueTokens(
+    public ResponseEntity<?> reissueTokens(
             @RequestBody String refToken
     ) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            Map<String, String> map = mapper.readValue(refToken, Map.class);
-            String token = map.get("RefreshToken");
-
-            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
-            return authenticationApiService.reissue(uuid, token);
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Authentication is not valid",
-                    null
-            );
-        }
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.reissue(refToken)
+                );
     }
 
     @PostMapping("/log-out")
-    public ResponseResult<?> logOut(
+    public ResponseEntity<?> logOut(
             @RequestHeader("Authorization") String token
     ) {
-        try {
-            UUID uuid = jwtTokenUtil.getUuidFromToken(token);
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.logout(token));
+    }
 
-            return authenticationApiService.logout(uuid);
-        } catch (AuthenticationException e) {
-            return new ResponseResult(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
+    @PostMapping("/sign-out")
+    public ResponseEntity<?> signOut(
+            @RequestHeader("Authorization") String token
+    ) {
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.signOut(token));
     }
 }

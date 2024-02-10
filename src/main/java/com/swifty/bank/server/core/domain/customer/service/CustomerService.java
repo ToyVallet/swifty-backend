@@ -1,11 +1,9 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
+import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
-import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
-import com.swifty.bank.server.core.domain.customer.exceptions.CannotReferCustomerByNullException;
 
 import java.util.UUID;
 
@@ -17,11 +15,11 @@ public interface CustomerService {
     // Something to exchange with Frontend as user identification
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
-    Customer findByUuid(UUID uuid) throws CannotReferCustomerByNullException;
+    Customer findByUuid(UUID uuid);
 
-    Customer findByPhoneNumber(String phoneNumber) throws CannotReferCustomerByNullException;
+    Customer findByPhoneNumber(String phoneNumber);
 
-    Customer findByDeviceId(String deviceId) throws CannotReferCustomerByNullException;
+    Customer findByDeviceId(String deviceId);
 
     Customer updatePhoneNumber(UUID uuid, String newPhoneNumber);
 
@@ -34,6 +32,6 @@ public interface CustomerService {
     void updatePassword(UUID uuid, String newPassword);
 
     boolean isSamePassword(Customer customer, String password);
-  
-    void withdrawCustomer(UUID uuid);
+
+    Customer withdrawCustomer(UUID uuid);
 }

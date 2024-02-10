@@ -3,18 +3,16 @@ package com.swifty.bank.server.api.service;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 
-import java.util.UUID;
-
 public interface AuthenticationApiService {
     ResponseResult<?> join(JoinRequest dto);
 
-    ResponseResult<?> loginWithJwt(UUID uuid, String deviceId);
+    ResponseResult<?> loginWithJwt(String body, String token);
 
     ResponseResult<?> loginWithForm(String deviceId, String phoneNumber);
 
-    ResponseResult<?> reissue(UUID uuid, String refreshToken);
+    ResponseResult<?> reissue(String body);
 
-    ResponseResult<?> logout(UUID uuid);
+    ResponseResult<?> logout(String token);
 
-    ResponseResult<?> signOut(UUID uuid);
+    ResponseResult<?> signOut(String token);
 }
