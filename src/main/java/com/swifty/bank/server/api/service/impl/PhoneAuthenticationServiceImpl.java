@@ -11,6 +11,9 @@ import com.swifty.bank.server.core.domain.sms.service.dto.SendMessageRequest;
 import com.swifty.bank.server.core.domain.sms.service.dto.SendVerificationCodeRequest;
 import com.swifty.bank.server.core.domain.sms.service.impl.TwilioMessageService;
 import com.swifty.bank.server.core.domain.sms.service.impl.TwilioVerifyService;
+import com.swifty.bank.server.utils.HashUtil;
+import com.swifty.bank.server.utils.RedisUtil;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Service;
 public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationService {
     private final TwilioMessageService smsService;
     private final TwilioVerifyService verifyService;
+    private final RedisUtil redisUtil;
 
     @Override
     public ResponseResult<?> sendMessage(SendMessageRequest sendMessageRequest) {
@@ -47,7 +51,12 @@ public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationServic
     public ResponseResult<?> sendVerificationCode(SendVerificationCodeRequest sendVerificationCodeRequest) {
         SendVerificationStatus sendVerificationStatus = verifyService.sendVerificationCode(
                 sendVerificationCodeRequest.getPhoneNumber());
-        
+
+        redisUtil.setRedisStringValue(
+                sendVerificationCodeRequest.getDeviceId() + sendVerificationCodeRequest.getPhoneNumber(),
+                "false"
+        );
+
         if (sendVerificationStatus.equals(SendVerificationStatus.CANCELED)) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -74,7 +83,30 @@ public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationServic
                     "canceled",
                     null
             );
+        } else if (checkVerificationStatus.equals(CheckVerificationStatus.PENDING)) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "invalid verification code",
+                    null
+            );
         }
+
+        String phoneAuthHash = HashUtil.createStringHash(
+                List.of(checkVerificationCodeRequest.getDeviceId(),
+                        checkVerificationCodeRequest.getPhoneNumber()));
+        String isVerified = redisUtil.getRedisStringValue(phoneAuthHash);
+        if (isVerified == null || isVerified.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "invalid deviceId or phoneNumber",
+                    null
+            );
+        }
+
+        redisUtil.setRedisStringValue(
+                HashUtil.createStringHash(
+                        List.of(checkVerificationCodeRequest.getDeviceId(),
+                                checkVerificationCodeRequest.getPhoneNumber())), "true");
         return new ResponseResult<>(
                 Result.SUCCESS,
                 checkVerificationStatus.getStatus(),

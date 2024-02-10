@@ -6,6 +6,7 @@ import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.sms.service.dto.CheckVerificationCodeRequest;
 import com.swifty.bank.server.core.domain.sms.service.dto.SendMessageRequest;
 import com.swifty.bank.server.core.domain.sms.service.dto.SendVerificationCodeRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,9 @@ public class PhoneAuthenticationController {
     private final PhoneAuthenticationServiceImpl phoneAuthenticationService;
     
     @PostMapping(value = "/sendMessage")
-    public ResponseEntity<?> sendMessage(@RequestBody SendMessageRequest sendMessageRequest) {
+    public ResponseEntity<?> sendMessage(
+            @RequestBody @Valid SendMessageRequest sendMessageRequest
+    ) {
         log.info("sendMessage() Started: " + sendMessageRequest.toString());
         ResponseResult<?> responseResult = phoneAuthenticationService.sendMessage(sendMessageRequest);
 
@@ -37,7 +40,7 @@ public class PhoneAuthenticationController {
     @PassAuth
     @PostMapping(value = "/sendVerificationCode")
     public ResponseEntity<?> sendVerificationCode(
-            @RequestBody SendVerificationCodeRequest sendVerificationCodeRequest) {
+            @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
         log.info("sendVerificationCodeRequest() Started: " + sendVerificationCodeRequest.toString());
         ResponseResult<?> responseResult = phoneAuthenticationService.sendVerificationCode(
                 sendVerificationCodeRequest);
@@ -50,7 +53,7 @@ public class PhoneAuthenticationController {
     @PassAuth
     @PostMapping(value = "/checkVerificationCode")
     public ResponseEntity<?> checkVerificationCode(
-            @RequestBody CheckVerificationCodeRequest checkVerificationCodeRequest) {
+            @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         log.info("checkVerificationCode() Started: " + checkVerificationCodeRequest.toString());
         ResponseResult<?> responseResult = phoneAuthenticationService.checkVerificationCode(
                 checkVerificationCodeRequest);

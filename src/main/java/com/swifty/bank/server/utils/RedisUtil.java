@@ -1,7 +1,6 @@
 package com.swifty.bank.server.utils;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,13 +31,5 @@ public class RedisUtil {
 
     public void setRedisStringValue(String key, String value) {
         redisStringTemplate.opsForValue().set(key, value);
-    }
-
-    public boolean isLoggedOut(String key) {
-        Auth res = getRedisAuthValue(key);
-        if (res == null) {
-            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
-        }
-        return res.isLoggedOut();
     }
 }

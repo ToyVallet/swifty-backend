@@ -6,35 +6,34 @@ import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
+import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.utils.JwtTokenUtil;
+import com.swifty.bank.server.utils.HashUtil;
+import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
-    private final JwtTokenUtil jwtTokenUtil;
+    private final JwtUtil jwtUtil;
     private final AuthenticationService authenticationService;
     private final RedisUtil redisUtil;
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
-
-        Customer customerByDeviceId = customerService.findByPhoneNumber(dto.getPhoneNumber());
-
-        if (customerByDeviceId == null) {
+        if (customerService.findByPhoneNumber(dto.getPhoneNumber()) != null) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Customer retrieval is not valid",
@@ -42,16 +41,28 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
+        String phoneVerified = redisUtil.getRedisStringValue(
+                HashUtil.createStringHash(
+                        List.of(dto.getDeviceId(),
+                                dto.getPhoneNumber()))
+        );
+        if (phoneVerified == null || !phoneVerified.equals("true")) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] not verified phone number",
+                    null
+            );
+        }
 
         Customer customer = customerService.join(dto);
+
+        Customer customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
         if (customerByDeviceId != null) {
             customerService.updateDeviceId(
                     customerByDeviceId.getId(),
                     null
             );
         }
-
         return this.storeRefreshToken(customer);
     }
 
@@ -80,7 +91,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         UUID uuid;
         try {
-            uuid = jwtTokenUtil.getUuidFromToken(token);
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
         } catch (AuthenticationException e) {
             return new ResponseResult(
                     Result.FAIL,
@@ -88,7 +99,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     null
             );
         }
-
 
         Customer customer = customerService.findByDeviceId(deviceId);
         if (customer == null) {
@@ -153,7 +163,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Map<String, String> map = mapper.readValue(body, Map.class);
             refreshToken = map.get("RefreshToken");
 
-            uuid = jwtTokenUtil.getUuidFromToken(refreshToken);
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", refreshToken).toString());
         } catch (JsonProcessingException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -168,7 +178,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (redisUtil.isLoggedOut(uuid.toString())) {
+        if (isLoggedOut(uuid.toString())) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Logged out user tried reissue",
@@ -200,7 +210,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> logout(String token) {
         UUID uuid;
         try {
-            uuid = jwtTokenUtil.getUuidFromToken(token);
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -209,7 +219,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (!redisUtil.isLoggedOut(uuid.toString())) {
+        if (!isLoggedOut(uuid.toString())) {
             String key = uuid.toString();
             Auth prevAuth = redisUtil.getRedisAuthValue(key);
             Auth newAuth = new Auth("", true);
@@ -234,7 +244,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> signOut(String token) {
         UUID uuid;
         try {
-            uuid = jwtTokenUtil.getUuidFromToken(token);
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -255,7 +265,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         return new ResponseResult<>(
                 Result.SUCCESS,
-                "[INFO] " + uuid.toString() + " successfully withdraw",
+                "[INFO] " + uuid + " successfully withdraw",
                 null
         );
     }
@@ -264,7 +274,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            TokenDto tokens = authenticationService.generateTokenWithCustomer(customer);
+            TokenDto tokens = authenticationService.generateTokenDtoWithCustomer(customer);
             result.put("token", tokens);
             return new ResponseResult<>(
                     Result.SUCCESS,
@@ -274,9 +284,17 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] Authentication failed building some tokens",
+                    e.getMessage(),
                     null
             );
         }
+    }
+
+    private boolean isLoggedOut(String key) {
+        Auth res = redisUtil.getRedisAuthValue(key);
+        if (res == null) {
+            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
+        }
+        return res.isLoggedOut();
     }
 }
