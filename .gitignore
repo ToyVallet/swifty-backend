@@ -1,10 +1,8 @@
 HELP.md
 .gradle
-*.rdb
-*.rds
 
-redis/*
-mysql/*
+redis
+mysql
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -52,3 +50,4 @@ out/
 ### Docker files ###
 Dockerfile
 docker-compose.yaml
+/redis/
