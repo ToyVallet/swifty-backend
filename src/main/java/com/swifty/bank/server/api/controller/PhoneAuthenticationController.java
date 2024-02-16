@@ -6,6 +6,8 @@ import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.sms.service.dto.CheckVerificationCodeRequest;
 import com.swifty.bank.server.core.domain.sms.service.dto.SendMessageRequest;
 import com.swifty.bank.server.core.domain.sms.service.dto.SendVerificationCodeRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/sms")
 @Slf4j
+@Tag(name = "API for phone authentication")
 public class PhoneAuthenticationController {
     @Autowired
     private final PhoneAuthenticationServiceImpl phoneAuthenticationService;
-    
+
+    @Operation(summary = "request to send a message to putted in phone number")
     @PostMapping(value = "/sendMessage")
     public ResponseEntity<?> sendMessage(
             @RequestBody @Valid SendMessageRequest sendMessageRequest
@@ -38,6 +42,7 @@ public class PhoneAuthenticationController {
     }
 
     @PassAuth
+    @Operation(summary = "request to send a verification code message to putted in phone number")
     @PostMapping(value = "/sendVerificationCode")
     public ResponseEntity<?> sendVerificationCode(
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
@@ -51,6 +56,7 @@ public class PhoneAuthenticationController {
     }
 
     @PassAuth
+    @Operation(summary = "method to check if verification code is equal to sent one")
     @PostMapping(value = "/checkVerificationCode")
     public ResponseEntity<?> checkVerificationCode(
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
