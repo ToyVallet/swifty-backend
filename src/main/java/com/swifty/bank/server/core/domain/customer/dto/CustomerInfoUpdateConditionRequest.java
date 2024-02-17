@@ -19,9 +19,9 @@ public class CustomerInfoUpdateConditionRequest {
     private String name;
 
     @NotNull
-    @Size(max = 11, min = 3)
-    @Pattern(regexp = "^\\d+$\n")
-    @Schema(description = "Plain String for phone number, only digits")
+    @Size(max = 14, min = 3)
+    @Schema(description = "start with +82 and only digits 0-9 without dash", example = "+8201012345678",
+            required = true)
     private String phoneNumber;
 
     @NotNull

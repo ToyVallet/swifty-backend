@@ -10,9 +10,11 @@ import lombok.Getter;
 @Getter
 @Schema(description = "request with phone number and device id to identification")
 public class LoginWithFormRequest {
-    @Size(max = 11, min = 3)
+    @NotNull
+    @Size(max = 14, min = 3)
     @Pattern(regexp = "^\\d+$\n")
-    @Schema(description = "3~11 size digits", example = "01012345678")
+    @Schema(description = "start with +82 and only digits 0-9 without dash", example = "+8201012345678",
+            required = true)
     private String phoneNumber;
     @NotNull
     @NotBlank

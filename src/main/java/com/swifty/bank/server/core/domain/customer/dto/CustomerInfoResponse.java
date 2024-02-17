@@ -3,6 +3,7 @@ package com.swifty.bank.server.core.domain.customer.dto;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -17,8 +18,9 @@ public class CustomerInfoResponse {
     private String name;
 
     @NotNull
-    @Size(max = 11, min = 3)
-    @Pattern(regexp = "^\\d+$\n")
+    @Size(max = 14, min = 3)
+    @Schema(description = "start with +82 and only digits 0-9 without dash", example = "+8201012345678",
+            required = true)
     private String phoneNumber;
 
     @NotNull

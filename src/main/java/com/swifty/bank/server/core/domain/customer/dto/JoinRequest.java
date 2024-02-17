@@ -30,9 +30,8 @@ public class JoinRequest {
     private Nationality nationality;
 
     @NotNull
-    @Size(max = 11, min = 3)
-    @Pattern(regexp = "^\\d+$\n")
-    @Schema(description = "only digits 0-9 without dash", example = "01012345678",
+    @Size(max = 14, min = 3)
+    @Schema(description = "start with +82 and only digits 0-9 without dash", example = "+8201012345678",
             required = true)
     private String phoneNumber;
 
