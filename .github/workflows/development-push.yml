@@ -80,12 +80,11 @@ jobs:
           repository: ${{ env.OWNER_LC }}/submodule-config
           branch: main
 
-
-      - name: Update Image Tag in Manifests
-        run: |
-          ls
-          sed -i "s|swifty-backend:.*|swifty-backend:${{ github.sha }}|" ./manifests/bases/application/app-deployment.yaml
-          cd ./manifests
-          git config user.name ${{ github.actor }}
-          git commit -am "Update image tag to ${{ github.sha }}"
-          git push -u origin main
+      # - name: Update Image Tag in Manifests
+      #   run: |
+      #     ls
+      #     sed -i "s|swifty-backend:.*|swifty-backend:${{ github.sha }}|" ./manifests/bases/application/app-deployment.yaml
+      #     cd ./manifests
+      #     git config user.name ${{ github.actor }}
+      #     git commit -am "Update image tag to ${{ github.sha }}"
+      #     git push -u origin main
