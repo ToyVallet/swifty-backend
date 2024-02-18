@@ -80,4 +80,4 @@ jobs:
           cd ./manifests
           git config user.name ${{ github.actor }}
           git commit -am "Update image tag to ${{ github.sha }}"
-          git push origin main
+          git push -u origin main
