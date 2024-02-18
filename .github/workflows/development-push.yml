@@ -72,12 +72,18 @@ jobs:
             ghcr.io/${{ env.OWNER_LC }}/swifty-backend:development-latest
             ghcr.io/${{ env.OWNER_LC }}/swifty-backend:${{ steps.tag_version.outputs.new_tag }}
 
-      - name: Checkout Correct Branch for Updates
-        run: |
-          git checkout main
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # submodule로부터 환경변수 가져오기
+          token: ${{ secrets.PAT }}
+          repository: ${{ env.OWNER_LC }}/submodule-config
+          branch: main
+
 
       - name: Update Image Tag in Manifests
         run: |
+          ls
           cd ./submodule-config
           ls
           sed -i "s|swifty-backend:.*|swifty-backend:${{ github.sha }}|" ./manifests/bases/application/app-deployment.yaml
