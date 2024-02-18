@@ -28,6 +28,7 @@ public class CustomerController {
                 .ok( )
                 .body(customerInfo);
     }
+
     @PatchMapping("")
     public ResponseEntity<?> customerInfoUpdate(@RequestHeader("Authorization") String token, @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
         UUID customerUuid = jwtTokenUtil.getUuidFromToken(token);

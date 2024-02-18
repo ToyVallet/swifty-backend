@@ -36,6 +36,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     @Transactional
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
+
         Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(dto.getPhoneNumber());
         if (mayBeCustomerByPhoneNumber.isPresent()) return new ResponseResult<>(
                 Result.SUCCESS,

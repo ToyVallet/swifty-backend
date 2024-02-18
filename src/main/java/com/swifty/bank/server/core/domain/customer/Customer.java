@@ -42,7 +42,7 @@ public class Customer extends BaseEntity {
     private String deviceId;
 
     private String name;
-
+    @Column(unique = true)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
