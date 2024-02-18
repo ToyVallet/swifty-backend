@@ -72,6 +72,10 @@ jobs:
             ghcr.io/${{ env.OWNER_LC }}/swifty-backend:development-latest
             ghcr.io/${{ env.OWNER_LC }}/swifty-backend:${{ steps.tag_version.outputs.new_tag }}
 
+      - name: Checkout Correct Branch for Updates
+        run: |
+          git checkout main
+
       - name: Update Image Tag in Manifests
         run: |
           cd ./submodule-config
