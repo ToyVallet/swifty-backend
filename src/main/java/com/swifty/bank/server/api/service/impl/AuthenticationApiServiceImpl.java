@@ -18,9 +18,11 @@ import com.swifty.bank.server.utils.JwtTokenUtil;
 import com.swifty.bank.server.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,75 +33,52 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final AuthenticationService authenticationService;
     private final RedisUtil redisUtil;
 
+    @Transactional
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
-        try {
-            customerService
-                    .findByPhoneNumber(dto.getPhoneNumber());
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "[ERROR] enrolled user with this phone number exists, cannot sign up",
-                    null
-            );
-        } catch (NoSuchCustomerByPhoneNumberException e) {
-            // pass if there is no user enrolled with this phone number
-        } catch (CannotReferCustomerByNullException e) {
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    e.getMessage(),
-                    null
-            );
-        }
+        Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(dto.getPhoneNumber());
+        if (mayBeCustomerByPhoneNumber.isPresent()) return new ResponseResult<>(
+                Result.SUCCESS,
+                "[ERROR] enrolled user with this phone number exists, cannot sign up",
+                null
+        );
 
-        Customer customerByDeviceId;
 
-        try {
-            customerByDeviceId = customerService
-                    .findByDeviceId(dto.getDeviceId());
-        } catch (NoSuchCustomerByDeviceID e) {
-            customerByDeviceId = null;
-        } catch (CannotReferCustomerByNullException e) {
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    e.getMessage(),
-                    null
-            );
-        }
+        Optional<Customer> maybeCustomerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
+        if (maybeCustomerByDeviceId.isPresent()) return new ResponseResult<>(
+                Result.SUCCESS,
+               "디바이스아이디가 중복됩니다.",
+                null
+        );
 
         Customer customer = customerService.join(dto);
-        if (customerByDeviceId != null) {
-            customerService.updateDeviceId(
-                    customerByDeviceId.getId(),
-                    null
-            );
-        }
 
-        return this.storeRefreshToken(customer);
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "회원가입을 정상적으로 완료하였습니다.",
+                customer
+        );
     }
 
     @Override
     public ResponseResult<?> loginWithJwt(UUID uuid, String deviceId) {
-        Customer customer;
-        try {
-            customer = customerService.findByDeviceId(deviceId);
-        } catch (NoSuchCustomerByDeviceID e) {
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "[ERROR] there is no device logged in with device " + deviceId,
-                    null
-            );
-        } catch (CannotReferCustomerByNullException e) {
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    e.getMessage(),
-                    null
-            );
-        }
+        Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(deviceId);
 
-        if (uuid.toString().equals(customer.getId().toString())
-                && customer.getDeviceId().equals(deviceId)) {
-            return this.storeRefreshToken(customer);
-        }
+        if (mayBeCustomerByDeviceId.isEmpty()) return new ResponseResult<>(
+                Result.SUCCESS,
+                "[ERROR] there is no device logged in with device " + deviceId,
+                null
+        );
+
+        Optional<Customer> mayBeCustomer = customerService.findByUuid(uuid);
+        if (mayBeCustomer.isEmpty()) return new ResponseResult(Result.FAIL,
+                "회원이 존재하지 않습니다.",
+                null
+        );
+
+        Customer customer = mayBeCustomer.get();
+
+        if (customer.getDeviceId().equals(deviceId)) return storeRefreshToken(customer);
 
         return new ResponseResult(Result.FAIL,
                 "[ERROR] Latest user of device is not match with token. It might be hijacked",
@@ -109,58 +88,23 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
-        Customer customerByDeviceID;
-        Customer customerByPhoneNumber;
+        Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(deviceId);
+        if (mayBeCustomerByDeviceId.isEmpty()) return new ResponseResult<>(
+                Result.SUCCESS,
+                "deviceId와 일치하는 회원이 존재하지 않습니다.",
+                null
+        );
 
-        try {
-            customerByDeviceID = customerService
-                    .findByDeviceId(deviceId);
-        } catch (NoSuchCustomerByDeviceID e) {
-            customerByDeviceID = null;
-        } catch (CannotReferCustomerByNullException e) {
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    e.getMessage(),
-                    null
-            );
-        }
+        Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(phoneNumber);
+        if (mayBeCustomerByPhoneNumber.isEmpty()) return new ResponseResult<>(
+                Result.SUCCESS,
+                "[ERROR] No registered user with phone number, cannot login",
+                null
+        );
 
-        try {
-            customerByPhoneNumber = customerService
-                    .findByPhoneNumber(phoneNumber);
-        } catch (NoSuchCustomerByPhoneNumberException e) {
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "[ERROR] No registered user with phone number, cannot login",
-                    null
-            );
-        } catch (CannotReferCustomerByNullException e) {
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    e.getMessage(),
-                    null
-            );
-        }
+        Customer customer = mayBeCustomerByPhoneNumber.get();
 
-        if (customerByDeviceID == null) {
-            customerByPhoneNumber = customerService.updateDeviceId(
-                    customerByPhoneNumber.getId(),
-                    deviceId
-            );
-        } else {
-            if (!customerByDeviceID.getId().equals(customerByPhoneNumber.getId())) {
-                customerService.updateDeviceId(
-                        customerByPhoneNumber.getId(),
-                        deviceId
-                );
-                customerService.updateDeviceId(
-                        customerByDeviceID.getId(),
-                        null
-                );
-            }
-        }
-
-        return this.storeRefreshToken(customerByPhoneNumber);
+        return storeRefreshToken(customer);
     }
 
     @Override
@@ -183,7 +127,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 );
             }
 
-            Customer customer = customerService.findByUuid(uuid);
+            Customer customer = customerService.findByUuid(uuid).orElseThrow(() -> new CannotReferCustomerByNullException());
             return this.storeRefreshToken(customer);
         } catch (CannotReferCustomerByNullException e) {
             return new ResponseResult<>(

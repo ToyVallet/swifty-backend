@@ -65,9 +65,9 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
                                 ",c.nationality" +
                                 ",c.customerStatus" +
                                 ") " +
-                                "FROM Customer C " +
-                                "WHERE  C.uuid = :uuid " +
-                                "AND C.isDeleted = :isDeleted",
+                                "FROM Customer c " +
+                                "WHERE  c.uuid = :uuid " +
+                                "AND c.isDeleted = :isDeleted",
                         CustomerInfoResponse.class
                 )
                 .setParameter("uuid", uuid)

@@ -13,10 +13,12 @@ import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Transactional(readOnly = true)
@@ -24,6 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
+    private final BCryptPasswordEncoder encoder;
 
     @Transactional
     @Override
@@ -48,35 +51,22 @@ public class CustomerServiceImpl implements CustomerService {
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
     @Override
-    public Customer findByUuid(UUID uuid) throws CannotReferCustomerByNullException {
-        if (uuid == null) {
-            throw new CannotReferCustomerByNullException();
-        }
+    public Optional<Customer> findByUuid(UUID uuid) {
 
-        return customerRepository.findOneByUUID(uuid)
-                .orElseThrow(() -> new NoSuchElementException("Customer not found"));
+        return customerRepository.findOneByUUID(uuid);
     }
 
     @Override
-    public Customer findByDeviceId(String deviceId) throws CannotReferCustomerByNullException {
-        if (deviceId == null)
-            throw new CannotReferCustomerByNullException();
+    public Optional<Customer> findByDeviceId(String deviceId) {
 
-        return customerRepository.findOneByDeviceId(deviceId)
-                .orElseThrow(() -> new NoSuchCustomerByDeviceID("[ERROR] No result as referring with device ID"));
+        return customerRepository.findOneByDeviceId(deviceId);
     }
 
     @Override
-    public Customer findByPhoneNumber(String phoneNumber) throws CannotReferCustomerByNullException {
-        if (phoneNumber == null) {
-            throw new CannotReferCustomerByNullException();
-        }
+    public Optional<Customer> findByPhoneNumber(String phoneNumber) {
 
-        return customerRepository.findOneByPhoneNumber(phoneNumber)
-                .orElseThrow(() ->
-                        new NoSuchCustomerByPhoneNumberException("[ERROR] No Result as referring with phone " +
-                                "number and nationality")
-                );
+        return customerRepository.findOneByPhoneNumber(phoneNumber);
+
     }
 
     @Transactional
@@ -129,23 +119,17 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomerInfoResponse findCustomerInfoDtoByUuid(UUID uuid) {
-        CustomerInfoResponse customerInfoResponse = customerRepository.findCustomerInfoResponseByUUID(uuid)
-                .orElseThrow(() -> new NoSuchElementException("No such Customer"));
-
-        return customerInfoResponse;
+    public Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID uuid) {
+        return customerRepository.findCustomerInfoResponseByUUID(uuid);
     }
 
     @Override
     public void updatePassword(UUID uuid, String newPassword) {
+        String encodePassword = encoder.encode(newPassword);
         Customer customer = customerRepository.findOneByUUID(uuid)
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
 
-        customer.resetPassword(newPassword);
+        customer.resetPassword(encodePassword);
     }
 
-    @Override
-    public boolean isSamePassword(Customer customer, String password) {
-        return false;
-    }
 }

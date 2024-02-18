@@ -57,7 +57,7 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-            Customer customer = customerService.findByUuid(uuid);
+            Customer customer = customerService.findByUuid(uuid).get();
             res.setStatus(200);
             return true;
         } catch (TokenFormatNotValidException e) {
