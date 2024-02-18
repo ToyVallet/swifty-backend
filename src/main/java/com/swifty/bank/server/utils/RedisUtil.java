@@ -1,6 +1,7 @@
 package com.swifty.bank.server.utils;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,5 +32,13 @@ public class RedisUtil {
 
     public void setRedisStringValue(String key, String value) {
         redisStringTemplate.opsForValue().set(key, value);
+    }
+
+    public Boolean setRedisStringExpiration(String key, int timeout, TimeUnit timeUnit) {
+        return redisStringTemplate.expire(key, timeout, timeUnit);
+    }
+
+    public void deleteRedisStringValue(String key) {
+        redisStringTemplate.opsForHash().delete(key);
     }
 }
