@@ -14,6 +14,7 @@ import com.swifty.bank.server.core.domain.sms.service.impl.TwilioVerifyService;
 import com.swifty.bank.server.utils.HashUtil;
 import com.swifty.bank.server.utils.RedisUtil;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,11 +52,12 @@ public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationServic
     public ResponseResult<?> sendVerificationCode(SendVerificationCodeRequest sendVerificationCodeRequest) {
         SendVerificationStatus sendVerificationStatus = verifyService.sendVerificationCode(
                 sendVerificationCodeRequest.getPhoneNumber());
-
+        String redisKey = createRedisOtpKey(sendVerificationCodeRequest.getPhoneNumber());
         redisUtil.setRedisStringValue(
-                sendVerificationCodeRequest.getDeviceId() + sendVerificationCodeRequest.getPhoneNumber(),
+                redisKey,
                 "false"
         );
+        redisUtil.setRedisStringExpiration(redisKey, 10, TimeUnit.MINUTES);
 
         if (sendVerificationStatus.equals(SendVerificationStatus.CANCELED)) {
             return new ResponseResult<>(
@@ -91,26 +93,34 @@ public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationServic
             );
         }
 
-        String phoneAuthHash = HashUtil.createStringHash(
-                List.of(checkVerificationCodeRequest.getDeviceId(),
-                        checkVerificationCodeRequest.getPhoneNumber()));
-        String isVerified = redisUtil.getRedisStringValue(phoneAuthHash);
+        String redisKey = createRedisOtpKey(checkVerificationCodeRequest.getPhoneNumber());
+        String isVerified = redisUtil.getRedisStringValue(redisKey);
         if (isVerified == null || isVerified.isEmpty()) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "invalid deviceId or phoneNumber",
+                    "invalid phoneNumber or expired",
                     null
             );
         }
 
         redisUtil.setRedisStringValue(
-                HashUtil.createStringHash(
-                        List.of(checkVerificationCodeRequest.getDeviceId(),
-                                checkVerificationCodeRequest.getPhoneNumber())), "true");
+                redisKey,
+                "true"
+        );
+        log.info(redisKey + ": true");
+        // 인증 성공한 시기로부터 10분간 인증 유효
+        redisUtil.setRedisStringExpiration(redisKey, 10, TimeUnit.MINUTES);
+
         return new ResponseResult<>(
                 Result.SUCCESS,
                 checkVerificationStatus.getStatus(),
                 null
+        );
+    }
+
+    public String createRedisOtpKey(String str) {
+        return HashUtil.createStringHash(
+                List.of("otp-", str)
         );
     }
 }
