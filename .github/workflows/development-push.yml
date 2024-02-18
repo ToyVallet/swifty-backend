@@ -71,4 +71,13 @@ jobs:
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/swifty-backend:development-latest
             ghcr.io/${{ env.OWNER_LC }}/swifty-backend:${{ steps.tag_version.outputs.new_tag }}
-  
+
+      - name: Update Image Tag in Manifests
+        run: |
+          cd ./submodule-config
+          ls
+          sed -i "s|swifty-backend:.*|swifty-backend:${{ github.sha }}|" ./manifests/application/app-deployment.yaml
+          cd ./manifests
+          git config user.name ${{ github.actor }}
+          git commit -am "Update image tag to ${{ github.sha }}"
+          git push
