@@ -28,8 +28,8 @@ public class PhoneAuthenticationController {
     @Autowired
     private final PhoneAuthenticationServiceImpl phoneAuthenticationService;
 
-    @Operation(summary = "request to send a message to putted in phone number")
-    @PostMapping(value = "/sendMessage")
+    @Operation(summary = "request to send a message")
+    @PostMapping(value = "/send-message")
     public ResponseEntity<?> sendMessage(
             @RequestBody @Valid SendMessageRequest sendMessageRequest
     ) {
@@ -43,7 +43,7 @@ public class PhoneAuthenticationController {
 
     @PassAuth
     @Operation(summary = "request to send a verification code message to putted in phone number")
-    @PostMapping(value = "/sendVerificationCode")
+    @PostMapping(value = "/send-verification-code")
     public ResponseEntity<?> sendVerificationCode(
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
         log.info("sendVerificationCodeRequest() Started: " + sendVerificationCodeRequest.toString());
@@ -57,7 +57,7 @@ public class PhoneAuthenticationController {
 
     @PassAuth
     @Operation(summary = "method to check if verification code is equal to sent one")
-    @PostMapping(value = "/checkVerificationCode")
+    @PostMapping(value = "/check-verification-code")
     public ResponseEntity<?> checkVerificationCode(
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         log.info("checkVerificationCode() Started: " + checkVerificationCodeRequest.toString());
