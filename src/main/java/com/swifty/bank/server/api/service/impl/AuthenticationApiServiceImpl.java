@@ -41,10 +41,10 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        String phoneVerified = redisUtil.getRedisStringValue(
+        String isVerified = redisUtil.getRedisStringValue(
                 HashUtil.createStringHash(List.of("otp-", dto.getPhoneNumber()))
         );
-        if (phoneVerified == null || !phoneVerified.equals("true")) {
+        if (isVerified == null || !isVerified.equals("true")) {
             // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
             return new ResponseResult<>(
                     Result.FAIL,
@@ -56,7 +56,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         Customer customer = customerService.join(dto);
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
         redisUtil.deleteRedisStringValue(HashUtil.createStringHash(List.of("otp-", dto.getPhoneNumber())));
-        
+
         Customer customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
         if (customerByDeviceId != null) {
             customerService.updateDeviceId(
