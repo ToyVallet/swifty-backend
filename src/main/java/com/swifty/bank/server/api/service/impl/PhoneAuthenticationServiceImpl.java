@@ -37,8 +37,8 @@ public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationServic
 
         return new ResponseResult<>(
                 Result.SUCCESS,
-                otp,
-                null
+                "otp is",
+                otp
         );
     }
 
