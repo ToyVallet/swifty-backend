@@ -52,5 +52,3 @@ out/
 Dockerfile
 docker-compose.yaml
 
-### Submodule ###
-./submodule-config/*
