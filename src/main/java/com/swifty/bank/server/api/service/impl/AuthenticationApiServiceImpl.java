@@ -16,12 +16,12 @@ import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.HashUtil;
 import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import java.util.*;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,15 +54,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
+        Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
+        if (mayBeCustomerByDeviceId.isPresent()) {
+            Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
+            customerService.updateDeviceId(customerByDeviceId.getId(),null);
+        }
+
         Customer customer = customerService.join(dto);
 
-        Customer customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
-        if (customerByDeviceId != null) {
-            customerService.updateDeviceId(
-                    customerByDeviceId.getId(),
-                    null
-            );
-        }
         return this.storeRefreshToken(customer);
     }
 
@@ -100,18 +99,19 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        Customer customer = customerService.findByDeviceId(deviceId);
-        if (customer == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] there is no device logged in with device " + deviceId,
-                    null
-            );
-        }
+        Optional<Customer> mayBeCustomerByDevice = customerService.findByDeviceId(deviceId);
+        if (mayBeCustomerByDevice.isEmpty()) return new ResponseResult<>(
+                Result.FAIL,
+                "[ERROR] there is no device logged in with device " + deviceId,
+                null
+        );
 
-        if (uuid.toString().equals(customer.getId().toString())
+
+        Customer customer = mayBeCustomerByDevice.get();
+
+        if (uuid.toString().equals(customer.getId())
                 && customer.getDeviceId().equals(deviceId)) {
-            return this.storeRefreshToken(customer);
+            return storeRefreshToken(customer);
         }
 
         return new ResponseResult(Result.FAIL,
@@ -120,38 +120,26 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         );
     }
 
+    @Transactional
     @Override
     public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
-        Customer customerByDeviceID = customerService.findByDeviceId(deviceId);
-        Customer customerByPhoneNumber = customerService.findByPhoneNumber(phoneNumber);
+        Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(phoneNumber);
+        if (mayBeCustomerByPhoneNumber.isEmpty()) return new ResponseResult<>(
+                Result.FAIL,
+                "[ERROR] No registered user with phone number, cannot login",
+                null
+        );
+        Customer customerByPhoneNumber = mayBeCustomerByPhoneNumber.get();
 
-        if (customerByPhoneNumber == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] No registered user with phone number, cannot login",
-                    null
-            );
+        Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(deviceId);
+
+        if (mayBeCustomerByDeviceId.isPresent()) {
+            Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
+            customerService.updateDeviceId(customerByDeviceId.getId(),null);
+            customerService.updateDeviceId(customerByPhoneNumber.getId(),deviceId);
         }
 
-        if (customerByDeviceID == null) {
-            customerByPhoneNumber = customerService.updateDeviceId(
-                    customerByPhoneNumber.getId(),
-                    deviceId
-            );
-        } else {
-            if (!customerByDeviceID.getId().equals(customerByPhoneNumber.getId())) {
-                customerService.updateDeviceId(
-                        customerByPhoneNumber.getId(),
-                        deviceId
-                );
-                customerService.updateDeviceId(
-                        customerByDeviceID.getId(),
-                        null
-                );
-            }
-        }
-
-        return this.storeRefreshToken(customerByPhoneNumber);
+        return storeRefreshToken(customerByPhoneNumber);
     }
 
     @Override
@@ -195,14 +183,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        Customer customer = customerService.findByUuid(uuid);
-        if (customer == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] No Such Customer with the uuid",
-                    null
-            );
-        }
+        Optional<Customer> mayBeCustomer = customerService.findByUuid(uuid);
+        if (mayBeCustomer.isEmpty()) return new ResponseResult<>(
+                Result.FAIL,
+                "[ERROR] No Such Customer with the uuid",
+                null
+        );
+
+        Customer customer = mayBeCustomer.get();
         return this.storeRefreshToken(customer);
     }
 
@@ -253,21 +241,21 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        logout(token);
-        Customer customer = customerService.withdrawCustomer(uuid);
-        if (customer == null) {
+        try {
+            customerService.withdrawCustomer(uuid);
+            logout(token);
+            return new ResponseResult<>(
+                    Result.SUCCESS,
+                    "[INFO] " + uuid + " successfully withdraw",
+                    null
+            );
+        }catch (NoSuchElementException e) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] there is no the customer containing that information",
                     null
             );
         }
-
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] " + uuid + " successfully withdraw",
-                null
-        );
     }
 
     private ResponseResult<?> storeRefreshToken(Customer customer) {
