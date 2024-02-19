@@ -5,6 +5,7 @@ import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface CustomerService {
@@ -15,23 +16,20 @@ public interface CustomerService {
     // Something to exchange with Frontend as user identification
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
-    Customer findByUuid(UUID uuid);
+    Optional<Customer> findByUuid(UUID uuid);
 
-    Customer findByPhoneNumber(String phoneNumber);
+    Optional<Customer> findByPhoneNumber(String phoneNumber);
 
-    Customer findByDeviceId(String deviceId);
-
+    Optional<Customer> findByDeviceId(String deviceId);
     Customer updatePhoneNumber(UUID uuid, String newPhoneNumber);
 
     Customer updateDeviceId(UUID uuid, String newDeviceId);
 
     Customer updateCustomerInfo(UUID customerUuid, CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
 
-    CustomerInfoResponse findCustomerInfoDtoByUuid(UUID uuid);
+    Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID uuid);
 
     void updatePassword(UUID uuid, String newPassword);
 
-    boolean isSamePassword(Customer customer, String password);
-
-    Customer withdrawCustomer(UUID uuid);
+    void withdrawCustomer(UUID uuid);
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -24,22 +25,20 @@ public class CustomerAPIServiceImpl implements CustomerAPIService {
 
     @Override
     public ResponseResult<?> getCustomerInfo(UUID customerUuid) {
-        try {
 
-            CustomerInfoResponse customerInfo = customerService.findCustomerInfoDtoByUuid(customerUuid);
+        Optional<CustomerInfoResponse> mayBeCustomerInfo = customerService.findCustomerInfoDtoByUuid(customerUuid);
+        if (mayBeCustomerInfo.isEmpty()) return ResponseResult.builder()
+                .result(Result.SUCCESS)
+                .message("회원정보가 존재하지 않습니다.")
+                .build();
 
-            return ResponseResult.builder()
-                    .result(Result.SUCCESS)
-                    .message("성공적으로 회원정보를 조회하였습니다.")
-                    .data(customerInfo)
-                    .build();
+        CustomerInfoResponse customerInfoResponse = mayBeCustomerInfo.get();
 
-        }catch (NoSuchElementException e) {
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message(e.getMessage())
-                    .build();
-        }
+        return ResponseResult.builder()
+                .result(Result.SUCCESS)
+                .message("성공적으로 회원정보를 조회하였습니다.")
+                .data(customerInfoResponse)
+                .build();
     }
 
 
@@ -54,7 +53,7 @@ public class CustomerAPIServiceImpl implements CustomerAPIService {
                     .data(customer)
                     .build();
 
-        }catch (Exception e) {
+        }catch (NoSuchElementException e) {
             return ResponseResult.builder()
                     .result(Result.FAIL)
                     .message(e.getMessage())
@@ -65,13 +64,15 @@ public class CustomerAPIServiceImpl implements CustomerAPIService {
     @Override
     public ResponseResult<?> confirmPassword(UUID customerUuid, String password) {
         try {
-            Customer customer = customerService.findByUuid(customerUuid);
+            Optional<Customer> mayBeCustomer = customerService.findByUuid(customerUuid);
+            if (mayBeCustomer.isEmpty()) return ResponseResult.builder()
+                    .result(Result.FAIL)
+                    .message("회원이 존재하지 않습니다.")
+                    .build();
 
-            String encodePassword = encoder.encode(password);
+            Customer customer = mayBeCustomer.get();
 
-            boolean samePassword = customerService.isSamePassword(customer, encodePassword);
-
-            if (samePassword) return ResponseResult.builder()
+            if (encoder.matches(password,customer.getPassword())) return ResponseResult.builder()
                     .result(Result.SUCCESS)
                     .message("비밀번호가 일치합니다.")
                     .build();
