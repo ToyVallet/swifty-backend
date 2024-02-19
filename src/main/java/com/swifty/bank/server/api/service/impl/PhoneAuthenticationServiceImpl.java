@@ -5,6 +5,7 @@ import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.sms.constant.MessageStatus;
 import com.swifty.bank.server.core.domain.sms.service.dto.CheckVerificationCodeRequest;
+import com.swifty.bank.server.core.domain.sms.service.dto.GetVerificationCodeRequest;
 import com.swifty.bank.server.core.domain.sms.service.dto.SendVerificationCodeRequest;
 import com.swifty.bank.server.core.domain.sms.service.impl.TwilioMessageService;
 import com.swifty.bank.server.utils.HashUtil;
@@ -22,6 +23,24 @@ import org.springframework.stereotype.Service;
 public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationService {
     private final TwilioMessageService messageService;
     private final RedisUtil redisUtil;
+
+    @Override
+    public ResponseResult<?> getVerificationCode(GetVerificationCodeRequest getVerificationCodeRequest) {
+        String otp = generateOtp(6);
+
+        String redisKey = createRedisOtpKey(getVerificationCodeRequest.getPhoneNumber());
+        redisUtil.setRedisStringValue(
+                redisKey,
+                otp
+        );
+        redisUtil.setRedisStringExpiration(redisKey, 5, TimeUnit.MINUTES);
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                otp,
+                null
+        );
+    }
 
     @Override
     public ResponseResult<?> sendVerificationCode(SendVerificationCodeRequest sendVerificationCodeRequest) {

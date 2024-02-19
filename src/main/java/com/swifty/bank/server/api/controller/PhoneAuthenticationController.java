@@ -4,6 +4,7 @@ import com.swifty.bank.server.api.service.impl.PhoneAuthenticationServiceImpl;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.sms.service.dto.CheckVerificationCodeRequest;
+import com.swifty.bank.server.core.domain.sms.service.dto.GetVerificationCodeRequest;
 import com.swifty.bank.server.core.domain.sms.service.dto.SendVerificationCodeRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +25,20 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "API for phone authentication")
 public class PhoneAuthenticationController {
     private final PhoneAuthenticationServiceImpl phoneAuthenticationService;
+
+    @PassAuth
+    @Operation(summary = "send verification code in response body")
+    @PostMapping(value = "/get-verification-code")
+    public ResponseEntity<?> getVerificationCode(
+            @RequestBody @Valid GetVerificationCodeRequest getVerificationCodeRequest) {
+        log.info("getVerificationCode() Started: " + getVerificationCodeRequest.toString());
+        ResponseResult<?> responseResult = phoneAuthenticationService.getVerificationCode(
+                getVerificationCodeRequest);
+
+        return ResponseEntity
+                .ok()
+                .body(responseResult);
+    }
 
     @PassAuth
     @Operation(summary = "send a verification code message")
