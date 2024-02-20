@@ -16,12 +16,11 @@ import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.HashUtil;
 import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
-
-import java.util.*;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +55,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
         if (mayBeCustomerByDeviceId.isPresent()) {
             Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
-            customerService.updateDeviceId(customerByDeviceId.getId(),null);
+            customerService.updateDeviceId(customerByDeviceId.getId(), null);
         }
 
         Customer customer = customerService.join(dto);
@@ -112,7 +111,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         if (uuid.toString().equals(customer.getId())
                 && customer.getDeviceId().equals(deviceId)) {
-            return storeRefreshToken(customer);
+            return new ResponseResult<>(Result.SUCCESS, "[INFO] customer join succeed", customer);
         }
 
         return new ResponseResult(Result.FAIL,
@@ -136,8 +135,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         if (mayBeCustomerByDeviceId.isPresent()) {
             Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
-            customerService.updateDeviceId(customerByDeviceId.getId(),null);
-            customerService.updateDeviceId(customerByPhoneNumber.getId(),deviceId);
+            customerService.updateDeviceId(customerByDeviceId.getId(), null);
+            customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
         }
 
         return storeRefreshToken(customerByPhoneNumber);
@@ -250,7 +249,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     "[INFO] " + uuid + " successfully withdraw",
                     null
             );
-        }catch (NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] there is no the customer containing that information",
