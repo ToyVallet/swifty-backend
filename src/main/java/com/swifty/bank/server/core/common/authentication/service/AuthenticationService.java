@@ -8,7 +8,7 @@ import java.util.UUID;
 public interface AuthenticationService {
     TokenDto generateTokenDtoWithCustomer(Customer customer);
 
-    Customer logout(UUID uuid);
+    void logout(UUID uuid);
 
     boolean isLoggedOut(String key);
 }

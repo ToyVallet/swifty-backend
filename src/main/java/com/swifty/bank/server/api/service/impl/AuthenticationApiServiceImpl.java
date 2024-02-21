@@ -64,61 +64,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         return this.storeRefreshToken(customer);
     }
 
-    @Override
-    public ResponseResult<?> loginWithJwt(String body, String token) {
-        ObjectMapper mapper = new ObjectMapper();
-        String deviceId;
-        try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            deviceId = map.get("deviceId");
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        }
-
-        if (deviceId == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Device ID not exist",
-                    null
-            );
-        }
-
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
-
-        Optional<Customer> mayBeCustomerByDevice = customerService.findByDeviceId(deviceId);
-        if (mayBeCustomerByDevice.isEmpty()) return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] there is no device logged in with device " + deviceId,
-                null
-        );
-
-
-        Customer customer = mayBeCustomerByDevice.get();
-
-        if (uuid.toString().equals(customer.getId())
-                && customer.getDeviceId().equals(deviceId)) {
-            return new ResponseResult<>(Result.SUCCESS, "[INFO] customer join succeed", customer);
-        }
-
-        return new ResponseResult(Result.FAIL,
-                "[ERROR] Latest user of device is not match with token. It might be hijacked",
-                null
-        );
-    }
-
     @Transactional
     @Override
     public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
