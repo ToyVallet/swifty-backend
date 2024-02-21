@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.ExpiredRefToken;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
@@ -114,23 +113,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        UUID expired = null;
-        ExpiredRefToken token = authenticationService.findExpiredTokenByRefreshToken(refreshToken)
-                .orElse(null);
-        if (token != null) {
-            expired = token.getUuid();
-        }
-
-        // 토큰 재사용 방지
-        if (expired != null) {
-            authenticationService.logout(expired);
-
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Already used fresh token",
-                    null
-            );
-        }
         // 로그아웃 된 유저가 아니어야 함
         if (authenticationService.isLoggedOut(uuid)) {
             return new ResponseResult<>(
