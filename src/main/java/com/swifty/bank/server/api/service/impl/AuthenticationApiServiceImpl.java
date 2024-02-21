@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.Auth;
+import com.swifty.bank.server.core.common.authentication.ExpiredRefToken;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
@@ -62,7 +63,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
         redisUtil.deleteRedisStringValue(HashUtil.createStringHash(List.of("otp-", dto.getPhoneNumber())));
 
-        return this.storeAndGenerateRefreshToken(customer);
+        return new ResponseResult<>(Result.SUCCESS, "[INFO] 사용자가 성공적으로 등록되었습니다.", null);
     }
 
     @Transactional
@@ -113,6 +114,23 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
+        UUID expired = null;
+        ExpiredRefToken token = authenticationService.findExpiredTokenByRefreshToken(refreshToken)
+                .orElse(null);
+        if (token != null) {
+            expired = token.getUuid();
+        }
+
+        // 토큰 재사용 방지
+        if (expired != null) {
+            authenticationService.logout(expired);
+
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] Already used fresh token",
+                    null
+            );
+        }
         // 로그아웃 된 유저가 아니어야 함
         if (authenticationService.isLoggedOut(uuid)) {
             return new ResponseResult<>(
@@ -121,17 +139,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     null
             );
         }
-        // 토큰 재사용 방지
-        if (redisUtil.getRedisStringValue(refreshToken) != null) {
-            authenticationService.logout(uuid);
-
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Already used fresh token",
-                    null
-            );
-        }
-        // 이전 DB || Redis에 저장된 Ref. 토큰과 같은 값인지 비교
+        // 이전 DB에 저장된 Ref. 토큰과 같은 값인지 비교
         if (!isValidatedRefreshToken(refreshToken)) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -190,7 +198,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         try {
-            logout(token);
+            authenticationService.logout(uuid);
             customerService.withdrawCustomer(uuid);
 
             return new ResponseResult<>(
@@ -236,7 +244,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             previousAuth = authenticationService.findAuthByUuid(uuid)
                     .orElse(null);
         }
-        Auth newAuth;
 
         if (previousAuth != null) {
             // 마지막으로 저장된 ref. 토큰과 현재 토큰이 맞지 않다면 유효하지 않은 토큰임
