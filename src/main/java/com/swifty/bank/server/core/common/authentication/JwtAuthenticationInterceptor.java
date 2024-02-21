@@ -1,81 +1,72 @@
 package com.swifty.bank.server.core.common.authentication;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenExpiredException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
+import com.swifty.bank.server.core.common.constant.Result;
+import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.core.common.service.JwtService;
 import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationInterceptor implements HandlerInterceptor {
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final RedisUtil redisUtil;
 
     @Override
-    public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws Exception {
-        if (checkAnnotation(handler, PassAuth.class)) {
-            res.setStatus(200);
-            return true;
-        }
-
-        // IndexOutOfBound error expected
-        String token = req.getHeader("Authorization").split(" ")[1].trim();
-
+    public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws IOException {
         try {
-            if (!jwtUtil.getSubjectFromToken(
-                    token
-            ).equals("ACCESS")) {
-                res.sendError(
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        "[ERROR] token is not valid -> not access token value"
-                );
+            if (checkAnnotation(handler, PassAuth.class)) {
+                return true;
             }
 
-            UUID uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken(
-                    "id",
-                    req.getHeader("Authorization")
-            ).toString());
+            String jwtAccessToken = jwtService.getAccessToken();
 
-            if (isLoggedOut(uuid.toString())) {
-                res.sendError(
-                        HttpServletResponse.SC_OK,
-                        "[ERROR] Tried with token which is logged out"
-                );
-                return false;
+            if (!jwtService.isValidateToken(jwtAccessToken)) {
+                throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
             }
 
-            res.setStatus(200);
+            if (jwtService.isExpiredToken(jwtAccessToken)) {
+                throw new IllegalArgumentException("만료된 JWT 토큰입니다.");
+            }
+
+            if (isLoggedOut(jwtService.getCustomerId().toString())) {
+                throw new IllegalArgumentException("로그아웃 상태의 토큰입니다.");
+            }
+
             return true;
-        } catch (TokenFormatNotValidException e) {
-            res.sendError(
-                    HttpServletResponse.SC_UNAUTHORIZED,
-                    e.getMessage()
-            );
-        } catch (TokenContentNotValidException e) {
-            res.sendRedirect("/auth/reissue");
-        } catch (TokenExpiredException e) {
-            res.sendError(
-                    HttpServletResponse.SC_OK,
-                    e.getMessage()
-            );
-        } catch (IndexOutOfBoundsException e) {
-            res.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    e.getMessage()
-            );
+        }catch (Exception e) {
+            ObjectMapper mapper = new ObjectMapper();
+
+            String failResult = mapper.writeValueAsString(ResponseResult.builder()
+                    .result(Result.FAIL)
+                    .message(e.getMessage())
+                    .build());
+
+            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            res.setContentType("application/json");
+            res.setCharacterEncoding("utf-8");
+            res.getWriter().write(failResult);
+            return false;
         }
-        return false;
     }
 
     private boolean checkAnnotation(Object handler, Class<PassAuth> passAuthClass) {
@@ -95,7 +86,7 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
 
     private boolean isLoggedOut(String key) {
         Auth res = redisUtil.getRedisAuthValue(key);
-        if (res == null) {
+        if (ObjectUtils.isEmpty(res)) {
             throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
         }
         return res.isLoggedOut();
