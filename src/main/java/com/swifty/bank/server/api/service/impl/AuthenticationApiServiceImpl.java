@@ -3,7 +3,6 @@ package com.swifty.bank.server.api.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
-import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
@@ -135,6 +134,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         if (mayBeCustomerByDeviceId.isPresent()) {
             Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
+
             customerService.updateDeviceId(customerByDeviceId.getId(), null);
             customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
         }
@@ -166,7 +166,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (isLoggedOut(uuid.toString())) {
+        if (authenticationService.isLoggedOut(uuid.toString())) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Logged out user tried reissue",
@@ -207,25 +207,16 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (!isLoggedOut(uuid.toString())) {
-            String key = uuid.toString();
-            Auth prevAuth = redisUtil.getRedisAuthValue(key);
-            Auth newAuth = new Auth("", true);
-
-            redisUtil.setRedisStringValue(prevAuth.getRefreshToken(), key);
-            redisUtil.saveAuthRedis(key, newAuth);
-
+        try {
+            authenticationService.logout(uuid);
+            return new ResponseResult<>(Result.SUCCESS, "[INFO] user " + uuid.toString() + " logged out", null);
+        } catch (StoredAuthValueNotExistException e) {
             return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "[INFO] " + uuid.toString() + "logged out successfully",
+                    Result.FAIL,
+                    "[ERROR] user's logged in information not exist",
                     null
             );
         }
-        return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] " + uuid.toString() + "'s token information does not exist",
-                null
-        );
     }
 
     @Override
@@ -276,13 +267,5 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     null
             );
         }
-    }
-
-    private boolean isLoggedOut(String key) {
-        Auth res = redisUtil.getRedisAuthValue(key);
-        if (res == null) {
-            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
-        }
-        return res.isLoggedOut();
     }
 }

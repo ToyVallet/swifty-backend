@@ -2,6 +2,7 @@ package com.swifty.bank.server.core.common.authentication.service.impl;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
+import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.domain.customer.Customer;
@@ -10,13 +11,14 @@ import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         TokenDto tokens = new TokenDto(createAccessToken(customer), createRefreshToken(customer));
         saveRefreshTokenInRedis(tokens.getRefreshToken());
         return tokens;
+    }
+
+    @Override
+    public void logout(UUID uuid) {
+
+        if (!isLoggedOut(uuid.toString())) {
+            String key = uuid.toString();
+            Auth prevAuth = redisUtil.getRedisAuthValue(key);
+            Auth newAuth = new Auth("", true);
+
+            redisUtil.setRedisStringValue(prevAuth.getRefreshToken(), key);
+            redisUtil.saveAuthRedis(key, newAuth);
+        }
+    }
+
+    public boolean isLoggedOut(String key) {
+        Auth res = redisUtil.getRedisAuthValue(key);
+        if (res == null) {
+            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
+        }
+        return res.isLoggedOut();
     }
 
     private String createAccessToken(Customer customer) {
