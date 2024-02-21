@@ -58,9 +58,7 @@ public class JwtService {
         Key secretKey = getSecretKey();
         String accessToken = getAccessToken();
 
-        boolean isValidateToken = isValidateToken(accessToken);
-
-        if (!isValidateToken) throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
+        if (!isValidateToken(accessToken)) throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
 
         Jws<Claims> claimsJws = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
