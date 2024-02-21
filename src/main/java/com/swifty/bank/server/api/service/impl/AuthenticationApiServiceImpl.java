@@ -189,8 +189,9 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         try {
-            customerService.withdrawCustomer(uuid);
             logout(token);
+            customerService.withdrawCustomer(uuid);
+
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[INFO] " + uuid + " successfully withdraw",
