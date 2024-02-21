@@ -82,6 +82,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
 
             customerService.updateDeviceId(customerByDeviceId.getId(), null);
+            authenticationService.logout(customerByDeviceId.getId());
             customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
         }
 
