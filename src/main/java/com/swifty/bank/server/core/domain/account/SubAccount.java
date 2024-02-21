@@ -2,6 +2,7 @@ package com.swifty.bank.server.core.domain.account;
 
 import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.BaseEntity;
+import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,4 +28,6 @@ public class SubAccount extends BaseEntity {
     private Currency currency;
 
     private double balance;
+
+    private AccountStatus status;
 }
