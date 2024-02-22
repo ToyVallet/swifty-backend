@@ -4,9 +4,7 @@ import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.dto.LoginWithFormRequest;
 import com.swifty.bank.server.core.common.authentication.dto.ReissueRequest;
-import com.swifty.bank.server.core.common.authentication.dto.SignInWithJwtRequest;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
-import com.swifty.bank.server.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,22 +18,6 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authentication API")
 public class AuthenticationController {
     private final AuthenticationApiService authenticationApiService;
-    private final JwtUtil jwtUtil;
-
-    @Operation(summary = "Auto login with Access token (jwt)", description = "Automatically issue new access and refresh token "
-            + "with enveloped access token and device Id")
-    @PostMapping(value = "sign-in-with-jwt")
-    public ResponseEntity<?> signInWithJwt(
-            @Parameter(description = "Access token with Authorization header"
-                    , example = "Bearer ey...", required = true)
-            @RequestHeader(value = "Authorization") String token,
-            @RequestBody SignInWithJwtRequest body
-    ) {
-        return ResponseEntity
-                .ok()
-                .body(authenticationApiService.loginWithJwt(body.getDeviceId(), token)
-                );
-    }
 
     @PassAuth
     @PostMapping("sign-in-with-form")

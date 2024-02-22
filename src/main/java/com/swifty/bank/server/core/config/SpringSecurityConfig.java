@@ -15,7 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SpringSecurityConfig {
     // After Spring Security 6.0 You need to register bean of component-based security settings
     private final CustomerRepository customerRepository;
-    private final JwtUtil jwtUtil;
+
 
     // HttpSecurity
     @Bean
