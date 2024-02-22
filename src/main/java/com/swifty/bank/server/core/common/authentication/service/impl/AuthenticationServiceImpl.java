@@ -2,13 +2,13 @@ package com.swifty.bank.server.core.common.authentication.service.impl;
 
 import com.swifty.bank.server.api.controller.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.exception.NoSuchAuthByUuidException;
-import com.swifty.bank.server.core.common.authentication.exception.NotLoggedInCustomerException;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.service.JwtService;
+import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.exception.NoSuchAuthByUuidException;
+import com.swifty.bank.server.exception.NotLoggedInCustomerException;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final RedisUtil redisUtil;
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
     private final AuthRepository authRepository;
 
 
@@ -63,17 +63,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private String createAccessToken(Customer customer) {
-        return jwtService.createJwtAccessToken(customer.getId());
+        return jwtUtil.createJwtAccessToken(customer.getId());
     }
 
     private String createRefreshToken(Customer customer) {
-        return jwtService.createJwtRefreshToken(customer.getId());
+        return jwtUtil.createJwtRefreshToken(customer.getId());
     }
 
     @Override
     @Transactional
     public void saveRefreshTokenInDataSources(String token) {
-        UUID uuid = jwtService.getCustomerId();
+        UUID uuid = jwtUtil.getCustomerId();
 
         Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
         if (previousAuth == null) {

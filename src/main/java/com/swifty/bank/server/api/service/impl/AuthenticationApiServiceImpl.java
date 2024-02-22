@@ -6,16 +6,16 @@ import com.swifty.bank.server.api.controller.dto.TokenDto;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
-import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.constant.Result;
-import com.swifty.bank.server.core.common.service.JwtService;
+import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.core.common.utils.StringUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.exception.AuthenticationException;
+import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final AuthenticationService authenticationService;
     private final RedisUtil redisUtil;
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
@@ -104,7 +104,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Map<String, String> map = mapper.readValue(body, Map.class);
             refreshToken = map.get("RefreshToken");
 
-            uuid = jwtService.getCustomerId();
+            uuid = jwtUtil.getCustomerId();
         } catch (JsonProcessingException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -153,7 +153,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> logout(String token) {
         UUID uuid;
         try {
-            uuid = jwtService.getCustomerId();
+            uuid = jwtUtil.getCustomerId();
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -178,7 +178,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> signOut(String token) {
         UUID uuid;
         try {
-            uuid = jwtService.getCustomerId();
+            uuid = jwtUtil.getCustomerId();
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -227,7 +227,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     private boolean isValidatedRefreshToken(String token) {
-        UUID uuid = jwtService.getCustomerId();
+        UUID uuid = jwtUtil.getCustomerId();
 
         Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
         if (previousAuth == null) {

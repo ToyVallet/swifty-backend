@@ -1,10 +1,10 @@
 package com.swifty.bank.server.api.controller;
 
+import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.LoginWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
-import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

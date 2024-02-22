@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.common.authentication.exception;
+package com.swifty.bank.server.exception;
 
 public class TokenExpiredException extends AuthenticationException {
     public TokenExpiredException(String msg) {
