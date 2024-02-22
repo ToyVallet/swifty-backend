@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationService {
-    private VerifyServiceImpl verifyService;
+    private final VerifyServiceImpl verifyService;
     private final RedisUtil redisUtil;
 
     @Override

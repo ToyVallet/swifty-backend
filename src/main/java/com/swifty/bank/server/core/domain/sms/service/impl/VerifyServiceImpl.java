@@ -8,7 +8,9 @@ import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 public class VerifyServiceImpl implements VerifyService {
     private final TwilioMessageService messageService;
