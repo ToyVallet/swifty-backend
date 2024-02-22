@@ -1,7 +1,6 @@
-package com.swifty.bank.server.core.common.authentication.repository.custom;
+package com.swifty.bank.server.core.common.authentication.repository.auth;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
-
 import java.util.Optional;
 import java.util.UUID;
 

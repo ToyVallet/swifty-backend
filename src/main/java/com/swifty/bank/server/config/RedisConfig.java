@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.config;
+package com.swifty.bank.server.config;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,7 +11,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-public class RedisAuthConfig {
+public class RedisConfig {
     @Value("${spring.data.redis.host}")
     private String redisHost;
 

@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.common.authentication.exception;
+package com.swifty.bank.server.exception;
 
 public class AuthenticationException extends IllegalArgumentException {
     public AuthenticationException(String msg) {

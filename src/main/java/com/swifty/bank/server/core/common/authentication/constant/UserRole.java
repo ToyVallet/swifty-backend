@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.config.constant;
+package com.swifty.bank.server.core.common.authentication.constant;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

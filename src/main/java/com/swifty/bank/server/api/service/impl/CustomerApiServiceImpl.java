@@ -4,7 +4,7 @@ import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUp
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.service.CustomerAPIService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.core.common.constant.Result;
+import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import java.util.NoSuchElementException;

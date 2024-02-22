@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.config;
+package com.swifty.bank.server.config;
 
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;

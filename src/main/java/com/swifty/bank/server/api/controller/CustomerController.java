@@ -4,7 +4,7 @@ import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUp
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.service.CustomerAPIService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.core.common.service.JwtService;
+import com.swifty.bank.server.core.common.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
@@ -25,12 +25,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Slf4j
 public class CustomerController {
     private final CustomerAPIService customerAPIService;
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
 
     @GetMapping("")
     @Operation(summary = "get customer's whole information in database", description = "no request body needed")
     public ResponseEntity<?> customerInfo() {
-        UUID customerId = jwtService.getCustomerId();
+        UUID customerId = jwtUtil.getCustomerId();
 
         ResponseResult<?> customerInfo = customerAPIService.getCustomerInfo(customerId);
 
@@ -43,7 +43,7 @@ public class CustomerController {
     @Operation(summary = "change customer's whole information in database", description = "specific DTO required")
     public ResponseEntity<?> customerInfoUpdate(
             @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        UUID customerId = jwtService.getCustomerId();
+        UUID customerId = jwtUtil.getCustomerId();
 
         ResponseResult<?> responseResult = customerAPIService.customerInfoUpdate(customerId,
                 customerInfoUpdateCondition);
@@ -56,7 +56,7 @@ public class CustomerController {
     @PostMapping("/password")
     @Operation(summary = "confirm whether input and original password matches", description = "password string needed")
     public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
-        UUID customerId = jwtService.getCustomerId();
+        UUID customerId = jwtUtil.getCustomerId();
 
         ResponseResult responseResult = customerAPIService.confirmPassword(customerId, password.getPasswd());
 
@@ -68,7 +68,7 @@ public class CustomerController {
     @PatchMapping("/password")
     @Operation(summary = "reset password with input", description = "password string needed in body")
     public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
-        UUID customerId = jwtService.getCustomerId();
+        UUID customerId = jwtUtil.getCustomerId();
 
         ResponseResult responseResult = customerAPIService.resetPassword(customerId, newPassword.getPasswd());
 
