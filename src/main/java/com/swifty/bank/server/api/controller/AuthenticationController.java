@@ -5,7 +5,6 @@ import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.dto.LoginWithFormRequest;
 import com.swifty.bank.server.core.common.authentication.dto.ReissueRequest;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
-import com.swifty.bank.server.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authentication API")
 public class AuthenticationController {
     private final AuthenticationApiService authenticationApiService;
-    private final JwtUtil jwtUtil;
 
     @PassAuth
     @PostMapping("sign-in-with-form")

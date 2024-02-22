@@ -59,14 +59,15 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     public Optional<CustomerInfoResponse> findCustomerInfoResponseByUUID(UUID uuid) {
         return em.createQuery(
                         "SELECT new com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse(" +
-                                "c.name" +
-                                ",c.phoneNumber" +
-                                ",c.birthDate" +
-                                ",c.nationality" +
-                                ",c.customerStatus" +
+                                "C.name" +
+                                ",C.phoneNumber" +
+                                ",C.gender" +
+                                ",C.birthDate" +
+                                ",C.nationality" +
+                                ",C.customerStatus" +
                                 ") " +
                                 "FROM Customer C " +
-                                "WHERE  C.uuid = :uuid " +
+                                "WHERE  C.id = :uuid " +
                                 "AND C.isDeleted = :isDeleted",
                         CustomerInfoResponse.class
                 )

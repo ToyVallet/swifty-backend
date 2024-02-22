@@ -10,11 +10,11 @@ import com.swifty.bank.server.core.common.authentication.exception.StoredAuthVal
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.core.common.service.JwtService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.HashUtil;
-import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,9 +26,9 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
-    private final JwtUtil jwtUtil;
     private final AuthenticationService authenticationService;
     private final RedisUtil redisUtil;
+    private final JwtService jwtService;
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
@@ -98,7 +98,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Map<String, String> map = mapper.readValue(body, Map.class);
             refreshToken = map.get("RefreshToken");
 
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", refreshToken).toString());
+            uuid = jwtService.getCustomerId();
         } catch (JsonProcessingException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -145,7 +145,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> logout(String token) {
         UUID uuid;
         try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
+            uuid =jwtService.getCustomerId();
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -170,7 +170,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> signOut(String token) {
         UUID uuid;
         try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
+            uuid = jwtService.getCustomerId();
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -219,7 +219,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     private boolean isValidatedRefreshToken(String token) {
-        UUID uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
+        UUID uuid = jwtService.getCustomerId();
 
         Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
         if (previousAuth == null) {

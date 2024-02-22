@@ -1,7 +1,6 @@
 package com.swifty.bank.server.core.config;
 
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
-import com.swifty.bank.server.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SpringSecurityConfig {
     // After Spring Security 6.0 You need to register bean of component-based security settings
     private final CustomerRepository customerRepository;
-    private final JwtUtil jwtUtil;
+
 
     // HttpSecurity
     @Bean
