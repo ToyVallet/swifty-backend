@@ -4,7 +4,7 @@ name: build test for PR on development branch
 on:
   pull_request:
     branches: [ "development" ]
-    types: [ opened, reopened ]
+    types: [ opened, reopened, edited, synchronize ]
 
 permissions:
   checks: write
