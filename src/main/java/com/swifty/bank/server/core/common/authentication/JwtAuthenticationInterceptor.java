@@ -1,14 +1,15 @@
 package com.swifty.bank.server.core.common.authentication;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.constant.Result;
-import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.common.service.JwtService;
-import com.swifty.bank.server.utils.RedisUtil;
+import com.swifty.bank.server.core.common.utils.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,8 +17,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
-
-import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
@@ -48,7 +47,7 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
             }
 
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             ObjectMapper mapper = new ObjectMapper();
 
             String failResult = mapper.writeValueAsString(ResponseResult.builder()

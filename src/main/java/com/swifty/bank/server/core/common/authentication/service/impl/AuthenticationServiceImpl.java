@@ -1,20 +1,19 @@
 package com.swifty.bank.server.core.common.authentication.service.impl;
 
+import com.swifty.bank.server.api.controller.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.NoSuchAuthByUuidException;
 import com.swifty.bank.server.core.common.authentication.exception.NotLoggedInCustomerException;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.service.JwtService;
+import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.utils.RedisUtil;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -74,7 +73,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public void saveRefreshTokenInDataSources(String token) {
-        UUID uuid = jwtService.getCustomerId();;
+        UUID uuid = jwtService.getCustomerId();
 
         Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
         if (previousAuth == null) {

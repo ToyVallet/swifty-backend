@@ -2,25 +2,29 @@ package com.swifty.bank.server.api.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swifty.bank.server.api.controller.dto.TokenDto;
+import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
-import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.common.service.JwtService;
+import com.swifty.bank.server.core.common.utils.RedisUtil;
+import com.swifty.bank.server.core.common.utils.StringUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.utils.HashUtil;
-import com.swifty.bank.server.utils.RedisUtil;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +45,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         String isVerified = redisUtil.getRedisStringValue(
-                HashUtil.createStringHash(List.of("otp-", dto.getPhoneNumber()))
+                StringUtil.joinString(List.of("otp-", dto.getPhoneNumber()))
         );
         if (isVerified == null || !isVerified.equals("true")) {
             // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
@@ -60,7 +64,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         Customer customer = customerService.join(dto);
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
-        redisUtil.deleteRedisStringValue(HashUtil.createStringHash(List.of("otp-", dto.getPhoneNumber())));
+        redisUtil.deleteRedisStringValue(StringUtil.joinString(List.of("otp-", dto.getPhoneNumber())));
 
         return new ResponseResult<>(Result.SUCCESS, "[INFO] 사용자가 성공적으로 등록되었습니다.", null);
     }
@@ -69,11 +73,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     @Override
     public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
         Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(phoneNumber);
-        if (mayBeCustomerByPhoneNumber.isEmpty()) return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] No registered user with phone number, cannot login",
-                null
-        );
+        if (mayBeCustomerByPhoneNumber.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] No registered user with phone number, cannot login",
+                    null
+            );
+        }
         Customer customerByPhoneNumber = mayBeCustomerByPhoneNumber.get();
 
         Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(deviceId);
@@ -131,11 +137,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         Optional<Customer> mayBeCustomer = customerService.findByUuid(uuid);
-        if (mayBeCustomer.isEmpty()) return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] No Such Customer with the uuid",
-                null
-        );
+        if (mayBeCustomer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] No Such Customer with the uuid",
+                    null
+            );
+        }
 
         Customer customer = mayBeCustomer.get();
         return this.storeAndGenerateRefreshToken(customer);
@@ -145,7 +153,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> logout(String token) {
         UUID uuid;
         try {
-            uuid =jwtService.getCustomerId();
+            uuid = jwtService.getCustomerId();
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,

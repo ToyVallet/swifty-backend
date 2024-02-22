@@ -1,9 +1,12 @@
-package com.swifty.bank.server.core.common.response;
+package com.swifty.bank.server.api.service.dto;
 
 import com.swifty.bank.server.core.common.constant.Result;
 import lombok.Builder;
 import lombok.Getter;
 
+/*
+ * 모든 Service
+ * */
 @Getter
 public class ResponseResult<T> {
     private Result result;

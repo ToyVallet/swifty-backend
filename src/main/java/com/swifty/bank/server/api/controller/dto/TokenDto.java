@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.common.authentication.dto;
+package com.swifty.bank.server.api.controller.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.customer.dto;
+package com.swifty.bank.server.api.controller.dto.customer.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

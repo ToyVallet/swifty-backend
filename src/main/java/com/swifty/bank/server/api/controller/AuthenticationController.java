@@ -1,26 +1,30 @@
 package com.swifty.bank.server.api.controller;
 
+import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.LoginWithFormRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
-import com.swifty.bank.server.core.common.authentication.dto.LoginWithFormRequest;
-import com.swifty.bank.server.core.common.authentication.dto.ReissueRequest;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(value = "auth")
+@RequestMapping(value = "/auth")
 @Tag(name = "Authentication API")
 public class AuthenticationController {
     private final AuthenticationApiService authenticationApiService;
 
     @PassAuth
-    @PostMapping("sign-in-with-form")
+    @PostMapping("/sign-in-with-form")
     @Operation(summary = "sign in with form when user exist but doesn't have an access token to log in",
             description = "operate based on retrieval result of phone number and device id")
     public ResponseEntity<?> signInWithForm(
@@ -32,7 +36,7 @@ public class AuthenticationController {
     }
 
     @PassAuth
-    @PostMapping("sign-up-with-form")
+    @PostMapping("/sign-up-with-form")
     @Operation(summary = "sign up with form which mean 회원가입 in Korean",
             description = "please follow adequate request form")
     public ResponseEntity<?> signUpWithForm(
