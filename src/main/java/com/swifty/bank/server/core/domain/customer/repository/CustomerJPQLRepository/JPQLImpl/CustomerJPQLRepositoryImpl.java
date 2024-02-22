@@ -72,9 +72,9 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
                 )
                 .setParameter("uuid", uuid)
                 .setParameter("isDeleted", isDeleted)
-                .getResultList( )
-                .stream( )
-                .findAny( );
+                .getResultList()
+                .stream()
+                .findAny();
     }
 
     @Override

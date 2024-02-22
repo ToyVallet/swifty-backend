@@ -1,12 +1,13 @@
 package com.swifty.bank.server.utils;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,9 @@ public class RedisUtil {
     }
 
     public void saveAuthRedis(String key, Auth value) {
-        redisTemplate.opsForValue().set(key, value);
+        redisTemplate
+                .opsForValue()
+                .set(key, value, timeout, TimeUnit.HOURS);
     }
 
     public String getRedisStringValue(String key) {
