@@ -1,10 +1,9 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
+import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
+import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
+import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
-
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,11 +20,13 @@ public interface CustomerService {
     Optional<Customer> findByPhoneNumber(String phoneNumber);
 
     Optional<Customer> findByDeviceId(String deviceId);
+
     Customer updatePhoneNumber(UUID uuid, String newPhoneNumber);
 
     Customer updateDeviceId(UUID uuid, String newDeviceId);
 
-    Customer updateCustomerInfo(UUID customerUuid, CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
+    Customer updateCustomerInfo(UUID customerUuid,
+                                CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
 
     Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID uuid);
 

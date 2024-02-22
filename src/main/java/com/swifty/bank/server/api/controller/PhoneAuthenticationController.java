@@ -1,11 +1,11 @@
 package com.swifty.bank.server.api.controller;
 
+import com.swifty.bank.server.api.controller.dto.sms.request.CheckVerificationCodeRequest;
+import com.swifty.bank.server.api.controller.dto.sms.request.GetVerificationCodeRequest;
+import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCodeRequest;
 import com.swifty.bank.server.api.service.impl.PhoneAuthenticationServiceImpl;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.response.ResponseResult;
-import com.swifty.bank.server.core.domain.sms.service.dto.CheckVerificationCodeRequest;
-import com.swifty.bank.server.core.domain.sms.service.dto.GetVerificationCodeRequest;
-import com.swifty.bank.server.core.domain.sms.service.dto.SendVerificationCodeRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

@@ -1,21 +1,20 @@
 package com.swifty.bank.server.core.domain.customer.service.impl;
 
+import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
+import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
+import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
 @Service
@@ -68,18 +67,27 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public Customer updateCustomerInfo(UUID customerUuid, CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest) {
+    public Customer updateCustomerInfo(UUID customerUuid,
+                                       CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest) {
 
         Customer customer = customerRepository.findOneByUUID(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다"));
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getName())) customer.updateName(customerInfoUpdateConditionRequest.getName());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getName())) {
+            customer.updateName(customerInfoUpdateConditionRequest.getName());
+        }
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getPhoneNumber())) customer.updatePhoneNumber(customerInfoUpdateConditionRequest.getPhoneNumber());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getPhoneNumber())) {
+            customer.updatePhoneNumber(customerInfoUpdateConditionRequest.getPhoneNumber());
+        }
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getBirthDate())) customer.updateBirthDate(customerInfoUpdateConditionRequest.getBirthDate());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getBirthDate())) {
+            customer.updateBirthDate(customerInfoUpdateConditionRequest.getBirthDate());
+        }
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getNationality())) customer.updateNationality(customerInfoUpdateConditionRequest.getNationality());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getNationality())) {
+            customer.updateNationality(customerInfoUpdateConditionRequest.getNationality());
+        }
 
         return customer;
     }

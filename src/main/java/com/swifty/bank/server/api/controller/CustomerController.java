@@ -1,23 +1,27 @@
 package com.swifty.bank.server.api.controller;
 
+import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
+import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.service.CustomerAPIService;
 import com.swifty.bank.server.core.common.response.ResponseResult;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
-import com.swifty.bank.server.core.domain.customer.dto.PasswordRequest;
 import com.swifty.bank.server.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequiredArgsConstructor
 @Controller
-@RequestMapping(value = "customer")
+@RequestMapping(value = "/customer")
 @Tag(name = "Customer Information API")
 public class CustomerController {
     private final CustomerAPIService customerAPIService;
@@ -55,7 +59,7 @@ public class CustomerController {
                 .body(responseResult);
     }
 
-    @PostMapping("password")
+    @PostMapping("/password")
     @Operation(summary = "confirm whether input and original password matches", description = "password string needed")
     public ResponseEntity<?> passwordConfirm(
             @Parameter(description = "Access token with Authorization header"
@@ -72,7 +76,7 @@ public class CustomerController {
                 .body(responseResult);
     }
 
-    @PatchMapping("password")
+    @PatchMapping("/password")
     @Operation(summary = "reset password with input", description = "password string needed in body")
     public ResponseEntity<?> passwordReset(
             @Parameter(description = "Access token with Authorization header"

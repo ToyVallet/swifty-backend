@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.customer.dto;
+package com.swifty.bank.server.api.controller.dto.customer.response;
 
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
@@ -40,7 +40,8 @@ public class CustomerInfoResponse {
     @Pattern(regexp = "ACTIVE|SUSPENDED|WITHDRAWL", message = "[ERROR] Invalid Customer Status")
     private CustomerStatus customerStatus;
 
-    public CustomerInfoResponse(String name, String phoneNumber, Gender gender, String birthDate, Nationality nationality, CustomerStatus customerStatus) {
+    public CustomerInfoResponse(String name, String phoneNumber, Gender gender, String birthDate,
+                                Nationality nationality, CustomerStatus customerStatus) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.gender = gender;

@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.customer.dto;
+package com.swifty.bank.server.api.controller.dto.customer.request;
 
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
@@ -40,7 +40,8 @@ public class CustomerInfoUpdateConditionRequest {
     @Schema(description = "'KOREA' only", implementation = Nationality.class)
     private Nationality nationality;
 
-    public CustomerInfoUpdateConditionRequest(String name, String phoneNumber, String birthDate, Nationality nationality) {
+    public CustomerInfoUpdateConditionRequest(String name, String phoneNumber, String birthDate,
+                                              Nationality nationality) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.birthDate = birthDate;

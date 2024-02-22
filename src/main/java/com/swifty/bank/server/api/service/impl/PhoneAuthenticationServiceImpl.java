@@ -1,12 +1,12 @@
 package com.swifty.bank.server.api.service.impl;
 
+import com.swifty.bank.server.api.controller.dto.sms.request.CheckVerificationCodeRequest;
+import com.swifty.bank.server.api.controller.dto.sms.request.GetVerificationCodeRequest;
+import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCodeRequest;
 import com.swifty.bank.server.api.service.PhoneAuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.sms.constant.MessageStatus;
-import com.swifty.bank.server.core.domain.sms.service.dto.CheckVerificationCodeRequest;
-import com.swifty.bank.server.core.domain.sms.service.dto.GetVerificationCodeRequest;
-import com.swifty.bank.server.core.domain.sms.service.dto.SendVerificationCodeRequest;
 import com.swifty.bank.server.core.domain.sms.service.impl.TwilioMessageService;
 import com.swifty.bank.server.utils.HashUtil;
 import com.swifty.bank.server.utils.RedisUtil;

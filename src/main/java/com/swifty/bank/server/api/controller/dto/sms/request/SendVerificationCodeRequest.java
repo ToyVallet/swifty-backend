@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.sms.service.dto;
+package com.swifty.bank.server.api.controller.dto.sms.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;

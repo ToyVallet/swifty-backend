@@ -2,25 +2,29 @@ package com.swifty.bank.server.api.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swifty.bank.server.api.controller.dto.TokenDto;
+import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.HashUtil;
 import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -69,11 +73,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     @Override
     public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
         Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(phoneNumber);
-        if (mayBeCustomerByPhoneNumber.isEmpty()) return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] No registered user with phone number, cannot login",
-                null
-        );
+        if (mayBeCustomerByPhoneNumber.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] No registered user with phone number, cannot login",
+                    null
+            );
+        }
         Customer customerByPhoneNumber = mayBeCustomerByPhoneNumber.get();
 
         Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(deviceId);
@@ -131,11 +137,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         Optional<Customer> mayBeCustomer = customerService.findByUuid(uuid);
-        if (mayBeCustomer.isEmpty()) return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] No Such Customer with the uuid",
-                null
-        );
+        if (mayBeCustomer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] No Such Customer with the uuid",
+                    null
+            );
+        }
 
         Customer customer = mayBeCustomer.get();
         return this.storeAndGenerateRefreshToken(customer);

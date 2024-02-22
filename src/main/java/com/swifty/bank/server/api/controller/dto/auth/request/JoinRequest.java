@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.customer.dto;
+package com.swifty.bank.server.api.controller.dto.auth.request;
 
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
@@ -7,11 +7,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
-
-import java.util.UUID;
 
 @Getter
 @AllArgsConstructor

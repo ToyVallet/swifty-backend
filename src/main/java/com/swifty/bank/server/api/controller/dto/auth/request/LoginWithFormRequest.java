@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.common.authentication.dto;
+package com.swifty.bank.server.api.controller.dto.auth.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

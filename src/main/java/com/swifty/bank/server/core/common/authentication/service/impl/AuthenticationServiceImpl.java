@@ -1,7 +1,7 @@
 package com.swifty.bank.server.core.common.authentication.service.impl;
 
+import com.swifty.bank.server.api.controller.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.exception.NoSuchAuthByUuidException;
 import com.swifty.bank.server.core.common.authentication.exception.NotLoggedInCustomerException;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
@@ -12,16 +12,15 @@ import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
