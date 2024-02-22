@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.common.authentication.exception;
+package com.swifty.bank.server.exception;
 
 public class StoredAuthValueNotExistException extends AuthenticationException {
     public StoredAuthValueNotExistException(String msg) {

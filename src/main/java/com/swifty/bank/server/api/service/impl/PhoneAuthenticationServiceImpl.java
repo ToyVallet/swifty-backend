@@ -5,7 +5,7 @@ import com.swifty.bank.server.api.controller.dto.sms.request.GetVerificationCode
 import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCodeRequest;
 import com.swifty.bank.server.api.service.PhoneAuthenticationService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.core.common.constant.Result;
+import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.utils.RandomUtil;
 import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.core.domain.sms.service.impl.VerifyServiceImpl;

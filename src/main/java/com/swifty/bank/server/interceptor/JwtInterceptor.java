@@ -1,12 +1,13 @@
-package com.swifty.bank.server.core.common.authentication;
+package com.swifty.bank.server.interceptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
-import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
-import com.swifty.bank.server.core.common.constant.Result;
-import com.swifty.bank.server.core.common.service.JwtService;
+import com.swifty.bank.server.api.service.dto.Result;
+import com.swifty.bank.server.core.common.authentication.Auth;
+import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.common.utils.RedisUtil;
+import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -21,8 +22,8 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JwtAuthenticationInterceptor implements HandlerInterceptor {
-    private final JwtService jwtService;
+public class JwtInterceptor implements HandlerInterceptor {
+    private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
 
     @Override
@@ -32,17 +33,17 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
                 return true;
             }
 
-            String jwtAccessToken = jwtService.getAccessToken();
+            String jwtAccessToken = jwtUtil.getAccessToken();
 
-            if (!jwtService.isValidateToken(jwtAccessToken)) {
+            if (!jwtUtil.isValidateToken(jwtAccessToken)) {
                 throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
             }
 
-            if (jwtService.isExpiredToken(jwtAccessToken)) {
+            if (jwtUtil.isExpiredToken(jwtAccessToken)) {
                 throw new IllegalArgumentException("만료된 JWT 토큰입니다.");
             }
 
-            if (isLoggedOut(jwtService.getCustomerId().toString())) {
+            if (isLoggedOut(jwtUtil.getCustomerId().toString())) {
                 throw new IllegalArgumentException("로그아웃 상태의 토큰입니다.");
             }
 

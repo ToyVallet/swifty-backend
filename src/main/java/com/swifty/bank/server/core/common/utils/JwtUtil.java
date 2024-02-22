@@ -1,54 +1,58 @@
-package com.swifty.bank.server.core.common.service;
+package com.swifty.bank.server.core.common.utils;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import java.security.Key;
+import java.time.Duration;
+import java.util.Date;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.security.Key;
-import java.time.Duration;
-import java.util.Date;
-import java.util.UUID;
-
 @Service
 @Slf4j
-public class JwtService {
+public class JwtUtil {
     @Value("${jwt.secret}")
     private String secretKey;
     private final long accessTokenValidTime = Duration.ofMinutes(30).toMillis(); // 만료시간 30분
     private final long refreshTokenValidTime = Duration.ofDays(14).toMillis(); // 만료시간 2주
 
-    public String createJwtAccessToken(UUID customerUUID){
+    public String createJwtAccessToken(UUID customerUUID) {
         Key secretKey = getSecretKey();
 
         return Jwts.builder()
-                .setHeaderParam("type","jwt")
+                .setHeaderParam("type", "jwt")
                 .setSubject("AccessToken")
-                .claim("customerId",customerUUID)
+                .claim("customerId", customerUUID)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+accessTokenValidTime))
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenValidTime))
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String createJwtRefreshToken(UUID customerUUID){
+    public String createJwtRefreshToken(UUID customerUUID) {
         Key secretKey = getSecretKey();
 
         return Jwts.builder()
-                .setHeaderParam("type","jwt")
+                .setHeaderParam("type", "jwt")
                 .setSubject("RefreshToken")
-                .claim("customerId",customerUUID)
+                .claim("customerId", customerUUID)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+refreshTokenValidTime))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenValidTime))
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String getAccessToken(){
+    public String getAccessToken() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
         return request.getHeader("Authorization").split("Bearer ")[1];
@@ -58,7 +62,9 @@ public class JwtService {
         Key secretKey = getSecretKey();
         String accessToken = getAccessToken();
 
-        if (!isValidateToken(accessToken)) throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
+        if (!isValidateToken(accessToken)) {
+            throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
+        }
 
         Jws<Claims> claimsJws = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
@@ -69,14 +75,15 @@ public class JwtService {
     }
 
 
-
     public boolean isValidateToken(String token) {
         try {
             Key secretKey = getSecretKey();
             Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             String customerId = claimsJws.getBody().get("customerId", String.class);
 
-            if (customerId.isEmpty()) throw new IllegalArgumentException();
+            if (customerId.isEmpty()) {
+                throw new IllegalArgumentException();
+            }
 
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
@@ -94,7 +101,7 @@ public class JwtService {
     public boolean isExpiredToken(String accessToken) {
         Key secretKey = getSecretKey();
 
-        return  Jwts.parserBuilder()
+        return Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(accessToken)

@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.config;
+package com.swifty.bank.server.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.models.OpenAPI;

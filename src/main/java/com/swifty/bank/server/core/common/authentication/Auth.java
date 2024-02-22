@@ -16,7 +16,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Getter
 @Entity
-@Table(name = "tb_refresh_token")
+@Table(name = "tb_auth")
 @AllArgsConstructor
 @NoArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
