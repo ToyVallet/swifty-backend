@@ -1,14 +1,11 @@
 package com.swifty.bank.server.api.controller;
 
 import com.swifty.bank.server.api.service.CustomerAPIService;
-import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.common.service.JwtService;
 import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.dto.PasswordRequest;
-import com.swifty.bank.server.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

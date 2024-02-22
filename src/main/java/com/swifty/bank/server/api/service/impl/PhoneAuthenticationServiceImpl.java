@@ -48,7 +48,7 @@ public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationServic
 
         MessageStatus messageStatus = messageService.sendMessage(
                 sendVerificationCodeRequest.getPhoneNumber(),
-                "[SWIFTY 뱅크] 회원가입 인증번호는 [" + otp + "]입니다."
+                "[SWIFTY 뱅크] 회원가입 인증번호는 " + otp + "입니다."
         );
 
         if (messageStatus.equals(MessageStatus.FAILED)) {

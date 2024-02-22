@@ -10,26 +10,25 @@ import com.swifty.bank.server.core.common.authentication.exception.StoredAuthVal
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.core.common.service.JwtService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.utils.HashUtil;
-import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
-
-import java.util.*;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
-    private final JwtUtil jwtUtil;
     private final AuthenticationService authenticationService;
     private final RedisUtil redisUtil;
+    private final JwtService jwtService;
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
@@ -56,69 +55,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
         if (mayBeCustomerByDeviceId.isPresent()) {
             Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
-            customerService.updateDeviceId(customerByDeviceId.getId(),null);
+            customerService.updateDeviceId(customerByDeviceId.getId(), null);
         }
 
         Customer customer = customerService.join(dto);
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
         redisUtil.deleteRedisStringValue(HashUtil.createStringHash(List.of("otp-", dto.getPhoneNumber())));
 
-        return this.storeRefreshToken(customer);
-    }
-
-    @Override
-    public ResponseResult<?> loginWithJwt(String body, String token) {
-        ObjectMapper mapper = new ObjectMapper();
-        String deviceId;
-        try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            deviceId = map.get("deviceId");
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        }
-
-        if (deviceId == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Device ID not exist",
-                    null
-            );
-        }
-
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
-
-        Optional<Customer> mayBeCustomerByDevice = customerService.findByDeviceId(deviceId);
-        if (mayBeCustomerByDevice.isEmpty()) return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] there is no device logged in with device " + deviceId,
-                null
-        );
-
-
-        Customer customer = mayBeCustomerByDevice.get();
-
-        if (uuid.toString().equals(customer.getId())
-                && customer.getDeviceId().equals(deviceId)) {
-            return storeRefreshToken(customer);
-        }
-
-        return new ResponseResult(Result.FAIL,
-                "[ERROR] Latest user of device is not match with token. It might be hijacked",
-                null
-        );
+        return new ResponseResult<>(Result.SUCCESS, "[INFO] 사용자가 성공적으로 등록되었습니다.", null);
     }
 
     @Transactional
@@ -136,11 +80,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         if (mayBeCustomerByDeviceId.isPresent()) {
             Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
-            customerService.updateDeviceId(customerByDeviceId.getId(),null);
-            customerService.updateDeviceId(customerByPhoneNumber.getId(),deviceId);
+
+            customerService.updateDeviceId(customerByDeviceId.getId(), null);
+            authenticationService.logout(customerByDeviceId.getId());
+            customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
         }
 
-        return storeRefreshToken(customerByPhoneNumber);
+        return storeAndGenerateRefreshToken(customerByPhoneNumber);
     }
 
     @Override
@@ -152,7 +98,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Map<String, String> map = mapper.readValue(body, Map.class);
             refreshToken = map.get("RefreshToken");
 
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", refreshToken).toString());
+            uuid = jwtService.getCustomerId();
         } catch (JsonProcessingException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -167,19 +113,19 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (isLoggedOut(uuid.toString())) {
+        // 로그아웃 된 유저가 아니어야 함
+        if (authenticationService.isLoggedOut(uuid)) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Logged out user tried reissue",
                     null
             );
         }
-        if (redisUtil.getRedisStringValue(refreshToken) != null) {
-            logout(refreshToken);
-
+        // 이전 DB에 저장된 Ref. 토큰과 같은 값인지 비교
+        if (!isValidatedRefreshToken(refreshToken)) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] Already used fresh token",
+                    "[ERROR] 현재 유효하지 않은 리프레시 토큰입니다.",
                     null
             );
         }
@@ -192,14 +138,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         );
 
         Customer customer = mayBeCustomer.get();
-        return this.storeRefreshToken(customer);
+        return this.storeAndGenerateRefreshToken(customer);
     }
 
     @Override
     public ResponseResult<?> logout(String token) {
         UUID uuid;
         try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
+            uuid =jwtService.getCustomerId();
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -208,32 +154,23 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (!isLoggedOut(uuid.toString())) {
-            String key = uuid.toString();
-            Auth prevAuth = redisUtil.getRedisAuthValue(key);
-            Auth newAuth = new Auth("", true);
-
-            redisUtil.setRedisStringValue(prevAuth.getRefreshToken(), key);
-            redisUtil.saveAuthRedis(key, newAuth);
-
+        try {
+            authenticationService.logout(uuid);
+            return new ResponseResult<>(Result.SUCCESS, "[INFO] user " + uuid.toString() + " logged out", null);
+        } catch (StoredAuthValueNotExistException e) {
             return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "[INFO] " + uuid.toString() + "logged out successfully",
+                    Result.FAIL,
+                    "[ERROR] user's logged in information not exist",
                     null
             );
         }
-        return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] " + uuid.toString() + "'s token information does not exist",
-                null
-        );
     }
 
     @Override
     public ResponseResult<?> signOut(String token) {
         UUID uuid;
         try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
+            uuid = jwtService.getCustomerId();
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -243,14 +180,15 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         try {
+            authenticationService.logout(uuid);
             customerService.withdrawCustomer(uuid);
-            logout(token);
+
             return new ResponseResult<>(
                     Result.SUCCESS,
                     "[INFO] " + uuid + " successfully withdraw",
                     null
             );
-        }catch (NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] there is no the customer containing that information",
@@ -259,11 +197,12 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
     }
 
-    private ResponseResult<?> storeRefreshToken(Customer customer) {
+    private ResponseResult<?> storeAndGenerateRefreshToken(Customer customer) {
         Map<String, Object> result = new HashMap<>();
 
         try {
             TokenDto tokens = authenticationService.generateTokenDtoWithCustomer(customer);
+            authenticationService.saveRefreshTokenInDataSources(tokens.getRefreshToken());
             result.put("token", tokens);
             return new ResponseResult<>(
                     Result.SUCCESS,
@@ -279,11 +218,21 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
     }
 
-    private boolean isLoggedOut(String key) {
-        Auth res = redisUtil.getRedisAuthValue(key);
-        if (res == null) {
-            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
+    private boolean isValidatedRefreshToken(String token) {
+        UUID uuid = jwtService.getCustomerId();
+
+        Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
+        if (previousAuth == null) {
+            previousAuth = authenticationService.findAuthByUuid(uuid)
+                    .orElse(null);
         }
-        return res.isLoggedOut();
+
+        if (previousAuth != null) {
+            // 마지막으로 저장된 ref. 토큰과 현재 토큰이 맞지 않다면 유효하지 않은 토큰임
+            if (!token.equals(previousAuth.getRefreshToken())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

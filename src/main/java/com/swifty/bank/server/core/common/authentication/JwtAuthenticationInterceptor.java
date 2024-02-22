@@ -3,19 +3,12 @@ package com.swifty.bank.server.core.common.authentication;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.core.common.authentication.annotation.PassAuth;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
-import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
-import com.swifty.bank.server.core.common.authentication.exception.TokenExpiredException;
-import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
 import com.swifty.bank.server.core.common.service.JwtService;
-import com.swifty.bank.server.utils.JwtUtil;
 import com.swifty.bank.server.utils.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -23,6 +16,8 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
+
+import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
@@ -89,6 +84,6 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
         if (ObjectUtils.isEmpty(res)) {
             throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
         }
-        return res.isLoggedOut();
+        return res.getRefreshToken().equals("LOGOUT");
     }
 }

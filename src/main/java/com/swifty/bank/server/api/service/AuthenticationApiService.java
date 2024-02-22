@@ -6,8 +6,6 @@ import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
 public interface AuthenticationApiService {
     ResponseResult<?> join(JoinRequest dto);
 
-    ResponseResult<?> loginWithJwt(String body, String token);
-
     ResponseResult<?> loginWithForm(String deviceId, String phoneNumber);
 
     ResponseResult<?> reissue(String body);
