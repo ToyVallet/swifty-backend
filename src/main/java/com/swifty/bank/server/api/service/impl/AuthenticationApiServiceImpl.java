@@ -5,17 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.controller.dto.TokenDto;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
 import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.constant.Result;
-import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.core.common.utils.JwtUtil;
+import com.swifty.bank.server.core.common.utils.RedisUtil;
+import com.swifty.bank.server.core.common.utils.StringUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.utils.HashUtil;
-import com.swifty.bank.server.utils.JwtUtil;
-import com.swifty.bank.server.utils.RedisUtil;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         String isVerified = redisUtil.getRedisStringValue(
-                HashUtil.createStringHash(List.of("otp-", dto.getPhoneNumber()))
+                StringUtil.joinString(List.of("otp-", dto.getPhoneNumber()))
         );
         if (isVerified == null || !isVerified.equals("true")) {
             // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
@@ -64,7 +64,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         Customer customer = customerService.join(dto);
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
-        redisUtil.deleteRedisStringValue(HashUtil.createStringHash(List.of("otp-", dto.getPhoneNumber())));
+        redisUtil.deleteRedisStringValue(StringUtil.joinString(List.of("otp-", dto.getPhoneNumber())));
 
         return new ResponseResult<>(Result.SUCCESS, "[INFO] 사용자가 성공적으로 등록되었습니다.", null);
     }

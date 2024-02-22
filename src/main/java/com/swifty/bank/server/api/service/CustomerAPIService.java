@@ -1,7 +1,7 @@
 package com.swifty.bank.server.api.service;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
-import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
 import java.util.UUID;
 
 public interface CustomerAPIService {

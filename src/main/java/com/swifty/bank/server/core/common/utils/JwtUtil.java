@@ -1,4 +1,4 @@
-package com.swifty.bank.server.utils;
+package com.swifty.bank.server.core.common.utils;
 
 import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenExpiredException;

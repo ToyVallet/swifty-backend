@@ -1,4 +1,4 @@
-package com.swifty.bank.server.utils;
+package com.swifty.bank.server.core.common.utils;
 
 import java.time.Instant;
 import java.time.LocalDate;

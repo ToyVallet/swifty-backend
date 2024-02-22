@@ -1,7 +1,7 @@
 package com.swifty.bank.server.core.config;
 
+import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
-import com.swifty.bank.server.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

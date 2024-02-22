@@ -5,17 +5,16 @@ import com.swifty.bank.server.core.common.authentication.exception.StoredAuthVal
 import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenExpiredException;
 import com.swifty.bank.server.core.common.authentication.exception.TokenFormatNotValidException;
-import com.swifty.bank.server.utils.JwtUtil;
-import com.swifty.bank.server.utils.RedisUtil;
+import com.swifty.bank.server.core.common.utils.JwtUtil;
+import com.swifty.bank.server.core.common.utils.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
-
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
