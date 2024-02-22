@@ -45,12 +45,11 @@ public class CustomerAPIServiceImpl implements CustomerAPIService {
     @Override
     public ResponseResult<?> customerInfoUpdate(UUID customerUuid, CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
         try {
-            Customer customer = customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
+            customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
 
             return ResponseResult.builder()
                     .result(Result.SUCCESS)
                     .message("성공적으로 회원정보를 수정하였습니다.")
-                    .data(customer)
                     .build();
 
         }catch (NoSuchElementException e) {
