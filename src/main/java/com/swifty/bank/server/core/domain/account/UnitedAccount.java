@@ -1,6 +1,7 @@
 package com.swifty.bank.server.core.domain.account;
 
 import com.swifty.bank.server.core.common.constant.Bank;
+import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,12 +33,15 @@ public class UnitedAccount {
 
     private String nickname;
 
+    private AccountStatus status;
+
     @Builder
-    public UnitedAccount(Customer customer, String accountNumber, Bank bank, String accountPassword, String nickname) {
+    public UnitedAccount(Customer customer, String accountNumber, Bank bank, String accountPassword) {
         this.customer = customer;
         this.accountNumber = accountNumber;
         this.bank = bank;
         this.accountPassword = accountPassword;
-        this.nickname = nickname;
+        this.nickname = null;
+        this.status = AccountStatus.ACTIVE;
     }
 }

@@ -5,6 +5,7 @@ import com.swifty.bank.server.core.domain.BaseEntity;
 import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,4 +31,12 @@ public class SubAccount extends BaseEntity {
     private double balance;
 
     private AccountStatus status;
+
+    @Builder
+    public SubAccount(UnitedAccount ua, Currency cur) {
+        this.unitedAccountUuid = ua;
+        this.currency = cur;
+        this.balance = 0;
+        this.status = AccountStatus.ACTIVE;
+    }
 }

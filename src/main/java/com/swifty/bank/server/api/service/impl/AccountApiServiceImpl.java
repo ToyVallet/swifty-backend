@@ -1,0 +1,72 @@
+package com.swifty.bank.server.api.service.impl;
+
+import com.swifty.bank.server.api.service.AccountApiService;
+import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
+import com.swifty.bank.server.core.common.constant.Result;
+import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.core.domain.account.dto.AccountRegisterRequest;
+import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
+import com.swifty.bank.server.core.domain.account.service.AccountService;
+import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.utils.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class AccountApiServiceImpl implements AccountApiService {
+    private final AccountService accountService;
+    private final CustomerService customerService;
+    private final JwtUtil jwtUtil;
+
+    @Override
+    public ResponseResult<?> registerUnitedAccount(String token, AccountRegisterRequest req) {
+        UUID uuid;
+
+        try {
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken(token, "id").toString());
+        } catch (AuthenticationException e) {
+            return new ResponseResult(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        Optional<Customer> customer = customerService.findByUuid(uuid);
+        if (customer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] 등록된 사용자가 없습니다. 오류가 발생한 UUID : ",
+                    uuid
+            );
+        }
+
+        AccountSaveDto dto = new AccountSaveDto(
+                req.getBank(),
+                req.getAccountPassword(),
+                req.getCurrencies(),
+                customer.get()
+        );
+
+        try {
+            accountService.saveMultipleCurrencyAccount(dto);
+        } catch (Exception e) { // 추후 구체적인 Customer Exception으로 교체 요망
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] 성공적으로 계좌를 등록했습니다",
+                null
+        );
+    }
+}
