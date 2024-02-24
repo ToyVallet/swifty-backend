@@ -13,6 +13,7 @@ import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.core.common.utils.StringUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.exception.AuthenticationException;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
@@ -61,7 +62,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             customerService.updateDeviceId(customer.getId(), null);
         }
 
-        Customer customer = customerService.join(dto);
+        Customer customer = customerService.join(JoinDto.createJoinDto(dto));
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
         redisUtil.deleteRedisStringValue(StringUtil.joinString(List.of("otp-", dto.getPhoneNumber())));
 

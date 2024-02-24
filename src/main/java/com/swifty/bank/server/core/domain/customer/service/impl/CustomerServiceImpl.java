@@ -1,10 +1,10 @@
 package com.swifty.bank.server.core.domain.customer.service.impl;
 
-import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
+import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import java.util.NoSuchElementException;
@@ -31,15 +31,15 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public Customer join(JoinRequest joinRequest) {
+    public Customer join(JoinDto joinDto) {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
-                .name(joinRequest.getName())
+                .name(joinDto.getName())
                 .customerStatus(CustomerStatus.ACTIVE)  // 일단 default
-                .nationality(joinRequest.getNationality())
-                .phoneNumber(joinRequest.getPhoneNumber())
-                .password(joinRequest.getPassword())
-                .deviceId(joinRequest.getDeviceId())
+                .nationality(joinDto.getNationality())
+                .phoneNumber(joinDto.getPhoneNumber())
+                .password(joinDto.getPassword())
+                .deviceId(joinDto.getDeviceId())
                 .build();
 
         customerRepository.save(customer);

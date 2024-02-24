@@ -1,14 +1,14 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
-import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface CustomerService {
-    Customer join(JoinRequest joinRequest);
+    Customer join(JoinDto joinDto);
 
     // 순수 UUID로의 조회를 1원칙으로 삼는다
     // Principle 1. Retrieve with User's own UUID (PK)
