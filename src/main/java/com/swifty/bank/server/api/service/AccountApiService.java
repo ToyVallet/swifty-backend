@@ -1,6 +1,6 @@
 package com.swifty.bank.server.api.service;
 
-import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.core.domain.account.dto.AccountRegisterRequest;
 import com.swifty.bank.server.core.domain.account.dto.ReviseAccountNicknameRequest;
 

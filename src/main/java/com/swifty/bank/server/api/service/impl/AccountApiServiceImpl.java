@@ -1,9 +1,9 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.service.AccountApiService;
-import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
-import com.swifty.bank.server.core.common.constant.Result;
-import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.service.dto.Result;
+import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountRegisterRequest;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
@@ -12,7 +12,7 @@ import com.swifty.bank.server.core.domain.account.exception.NoSuchUnitedAccountB
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.utils.JwtUtil;
+import com.swifty.bank.server.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +31,7 @@ public class AccountApiServiceImpl implements AccountApiService {
         UUID uuid;
 
         try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken(token, "id").toString());
+            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
         } catch (AuthenticationException e) {
             return new ResponseResult(
                     Result.FAIL,
@@ -77,7 +77,7 @@ public class AccountApiServiceImpl implements AccountApiService {
     public ResponseResult<?> reviseAccountNickname(String token, ReviseAccountNicknameRequest req) {
         UUID uuid;
         try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
+            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
         } catch (AuthenticationException e) {
             return new ResponseResult(
                     Result.FAIL,
