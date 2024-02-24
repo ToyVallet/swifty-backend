@@ -1,7 +1,7 @@
 package com.swifty.bank.server.core.common.authentication.service.impl;
 
-import com.swifty.bank.server.api.controller.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.Auth;
+import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.utils.DateUtil;
@@ -33,43 +33,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private int refreshTokenExpiration;
 
     @Override
-    public TokenDto generateTokenDtoWithCustomer(Customer customer) {
-        return new TokenDto(createAccessToken(customer), createRefreshToken(customer));
-    }
-
-    @Override
-    public void logout(UUID uuid) {
-        if (!isLoggedOut(uuid)) {
-            String key = uuid.toString();
-            Auth prevAuth = redisUtil.getRedisAuthValue(key);
-            if (prevAuth == null) {
-                prevAuth = authRepository.findAuthByUuid(uuid)
-                        .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
-            }
-
-            prevAuth.updateAuthContent("LOGOUT");
-            redisUtil.saveAuthRedis(key, prevAuth);
-        }
-        throw new NotLoggedInCustomerException("[ERROR] 로그인 되지 않은 유저가 로그 아웃을 시도했습니다.");
-    }
-
-    @Override
-    public boolean isLoggedOut(UUID uuid) {
-        Auth res = redisUtil.getRedisAuthValue(uuid.toString());
-        if (res == null) {
-            res = findAuthByUuid(uuid)
-                    .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
-            redisUtil.saveAuthRedis(uuid.toString(), res);
-        }
-        return res.getRefreshToken().equals("LOGOUT");
-    }
-
-    @Override
-    public Optional<Auth> findAuthByUuid(UUID uuid) {
-        return authRepository.findAuthByUuid(uuid);
-    }
-
-    @Override
     public String createAccessToken(Customer customer) {
         Claims claims = Jwts.claims();
         Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + accessTokenExpiration * 1000L);
@@ -89,29 +52,62 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return JwtUtil.generateToken(claims, expiration);
     }
 
-    public UUID extractCustomerId(String jwt) {
-        return UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
+    @Override
+    public TokenDto generateTokenDto(Customer customer) {
+        return new TokenDto(createAccessToken(customer), createRefreshToken(customer));
+    }
+
+    @Override
+    public void logout(UUID customerId) {
+        if (!isLoggedOut(customerId)) {
+            String key = customerId.toString();
+            Auth prevAuth = redisUtil.getRedisAuthValue(key);
+            if (prevAuth == null) {
+                prevAuth = authRepository.findAuthByUuid(customerId)
+                        .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
+            }
+
+            prevAuth.updateAuthContent("LOGOUT");
+            redisUtil.saveAuthRedis(key, prevAuth);
+        }
+        throw new NotLoggedInCustomerException("[ERROR] 로그인 되지 않은 유저가 로그 아웃을 시도했습니다.");
+    }
+
+    @Override
+    public boolean isLoggedOut(UUID customerId) {
+        Auth res = redisUtil.getRedisAuthValue(customerId.toString());
+        if (res == null) {
+            res = findAuthByCustomerId(customerId)
+                    .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
+            redisUtil.saveAuthRedis(customerId.toString(), res);
+        }
+        return res.getRefreshToken().equals("LOGOUT");
+    }
+
+    @Override
+    public Optional<Auth> findAuthByCustomerId(UUID customerId) {
+        return authRepository.findAuthByUuid(customerId);
     }
 
     @Override
     @Transactional
-    public void saveRefreshTokenInDataSources(String token) {
-        UUID uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
+    public void saveRefreshTokenInDataSources(String jwt) {
+        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
+        Auth previousAuth = redisUtil.getRedisAuthValue(customerId.toString());
         if (previousAuth == null) {
-            previousAuth = findAuthByUuid(uuid)
+            previousAuth = findAuthByCustomerId(customerId)
                     .orElse(null);
         }
         Auth newAuth;
 
         if (previousAuth != null) {
-            previousAuth.updateAuthContent(token);
+            previousAuth.updateAuthContent(jwt);
             newAuth = previousAuth;
         } else {
-            newAuth = new Auth(uuid, token);
+            newAuth = new Auth(customerId, jwt);
             authRepository.save(newAuth);
         }
-        redisUtil.saveAuthRedis(uuid.toString(), newAuth);
+        redisUtil.saveAuthRedis(customerId.toString(), newAuth);
     }
 }
