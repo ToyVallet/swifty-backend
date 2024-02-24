@@ -68,4 +68,16 @@ public class VerifyServiceImpl implements VerifyService {
                 List.of("otp-", str)
         );
     }
+
+    @Override
+    public boolean isVerified(String phoneNumber) {
+        String isVerified = redisUtil.getRedisStringValue(
+                createRedisKeyForOtp(phoneNumber)
+        );
+        if (isVerified == null || !isVerified.equals("true")) {
+            // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
+            return false;
+        }
+        return true;
+    }
 }
