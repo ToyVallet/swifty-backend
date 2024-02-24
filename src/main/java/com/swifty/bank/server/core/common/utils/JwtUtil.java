@@ -34,8 +34,13 @@ public class JwtUtil {
 
     public static String extractJwtFromCurrentRequestHeader() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-
-        return request.getHeader("Authorization").split("Bearer ")[1];
+        try {
+            String token = request.getHeader("Authorization").split("Bearer ")[1];
+            validateToken(token);
+            return token;
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("올바른 jwt가 존재하지 않습니다.");
+        }
     }
 
     public static Object getClaimByKey(String token, String key) {
@@ -74,15 +79,14 @@ public class JwtUtil {
      * 2. JWS signature was discovered
      * 3. expired token
      */
-    public static boolean validateToken(String token) {
+    public static void validateToken(String token) {
         JwtParser jwtParser = Jwts.parserBuilder()
                 .setSigningKey(getSecretKey())
                 .build();
         try {
             jwtParser.parse(token);
-            return true;
         } catch (Exception e) {
-            return false;
+            throw new IllegalArgumentException("올바른 jwt가 아닙니다.");
         }
     }
 

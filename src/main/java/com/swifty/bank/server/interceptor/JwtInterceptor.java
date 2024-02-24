@@ -32,20 +32,11 @@ public class JwtInterceptor implements HandlerInterceptor {
                 return true;
             }
 
-            String accessToken = req.getHeader("Authorization").split("Bearer ")[1];
-
-            if (JwtUtil.isExpiredToken(accessToken)) {
-                throw new IllegalArgumentException("만료된 JWT 토큰입니다.");
-            }
-
-            if (!JwtUtil.validateToken(accessToken)) {
-                throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
-            }
-
+            String accessToken = JwtUtil.extractJwtFromCurrentRequestHeader();
+            JwtUtil.validateToken(accessToken);
             if (isLoggedOut(JwtUtil.getClaimByKey(accessToken, "customerId").toString())) {
                 throw new IllegalArgumentException("로그아웃 상태의 토큰입니다.");
             }
-
             return true;
         } catch (Exception e) {
             ObjectMapper mapper = new ObjectMapper();
