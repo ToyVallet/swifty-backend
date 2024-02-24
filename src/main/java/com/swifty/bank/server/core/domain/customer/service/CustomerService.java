@@ -1,8 +1,8 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
-import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
+import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,22 +15,22 @@ public interface CustomerService {
     // Something to exchange with Frontend as user identification
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
-    Optional<Customer> findByUuid(UUID uuid);
+    Optional<Customer> findByUuid(UUID customerId);
 
     Optional<Customer> findByPhoneNumber(String phoneNumber);
 
     Optional<Customer> findByDeviceId(String deviceId);
 
-    Customer updatePhoneNumber(UUID uuid, String newPhoneNumber);
+    Customer updatePhoneNumber(UUID customerId, String newPhoneNumber);
 
-    Customer updateDeviceId(UUID uuid, String newDeviceId);
+    Customer updateDeviceId(UUID customerId, String newDeviceId);
 
-    Customer updateCustomerInfo(UUID customerUuid,
+    Customer updateCustomerInfo(UUID customerId,
                                 CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
 
-    Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID uuid);
+    Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID customerId);
 
-    void updatePassword(UUID uuid, String newPassword);
+    void updatePassword(UUID customerId, String newPassword);
 
-    void withdrawCustomer(UUID uuid);
+    void withdrawCustomer(UUID customerId);
 }

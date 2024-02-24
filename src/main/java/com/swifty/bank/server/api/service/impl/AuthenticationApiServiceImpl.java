@@ -57,8 +57,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
         if (mayBeCustomerByDeviceId.isPresent()) {
-            Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
-            customerService.updateDeviceId(customerByDeviceId.getId(), null);
+            Customer customer = mayBeCustomerByDeviceId.get();
+            customerService.updateDeviceId(customer.getId(), null);
         }
 
         Customer customer = customerService.join(dto);
@@ -97,13 +97,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     @Override
     public ResponseResult<?> reissue(String body) {
         ObjectMapper mapper = new ObjectMapper();
-        UUID uuid;
+        UUID customerId;
         String refreshToken;
         try {
             Map<String, String> map = mapper.readValue(body, Map.class);
             refreshToken = map.get("RefreshToken");
 
-            uuid = UUID.fromString(JwtUtil.getClaimByKey(refreshToken, "customerId").toString());
+            customerId = UUID.fromString(JwtUtil.getClaimByKey(refreshToken, "customerId").toString());
         } catch (JsonProcessingException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -119,7 +119,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         // 로그아웃 된 유저가 아니어야 함
-        if (authenticationService.isLoggedOut(uuid)) {
+        if (authenticationService.isLoggedOut(customerId)) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Logged out user tried reissue",
@@ -135,7 +135,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        Optional<Customer> mayBeCustomer = customerService.findByUuid(uuid);
+        Optional<Customer> mayBeCustomer = customerService.findByUuid(customerId);
         if (mayBeCustomer.isEmpty()) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -150,9 +150,9 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> logout(String token) {
-        UUID uuid;
+        UUID customerId;
         try {
-            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
+            customerId = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -162,8 +162,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         try {
-            authenticationService.logout(uuid);
-            return new ResponseResult<>(Result.SUCCESS, "[INFO] user " + uuid + " logged out", null);
+            authenticationService.logout(customerId);
+            return new ResponseResult<>(Result.SUCCESS, "[INFO] user " + customerId + " logged out", null);
         } catch (StoredAuthValueNotExistException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -230,7 +230,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
         if (previousAuth == null) {
-            previousAuth = authenticationService.findAuthByUuid(uuid)
+            previousAuth = authenticationService.findAuthByCustomerId(uuid)
                     .orElse(null);
         }
 

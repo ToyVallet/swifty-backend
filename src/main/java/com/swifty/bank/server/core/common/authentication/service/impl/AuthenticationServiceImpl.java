@@ -58,12 +58,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(UUID uuid) {
-        if (!isLoggedOut(uuid)) {
-            String key = uuid.toString();
+    public void logout(UUID customerId) {
+        if (!isLoggedOut(customerId)) {
+            String key = customerId.toString();
             Auth prevAuth = redisUtil.getRedisAuthValue(key);
             if (prevAuth == null) {
-                prevAuth = authRepository.findAuthByUuid(uuid)
+                prevAuth = authRepository.findAuthByUuid(customerId)
                         .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
             }
 
@@ -74,29 +74,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public boolean isLoggedOut(UUID uuid) {
-        Auth res = redisUtil.getRedisAuthValue(uuid.toString());
+    public boolean isLoggedOut(UUID customerId) {
+        Auth res = redisUtil.getRedisAuthValue(customerId.toString());
         if (res == null) {
-            res = findAuthByUuid(uuid)
+            res = findAuthByCustomerId(customerId)
                     .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
-            redisUtil.saveAuthRedis(uuid.toString(), res);
+            redisUtil.saveAuthRedis(customerId.toString(), res);
         }
         return res.getRefreshToken().equals("LOGOUT");
     }
 
     @Override
-    public Optional<Auth> findAuthByUuid(UUID uuid) {
-        return authRepository.findAuthByUuid(uuid);
+    public Optional<Auth> findAuthByCustomerId(UUID customerId) {
+        return authRepository.findAuthByUuid(customerId);
     }
-    
+
     @Override
     @Transactional
     public void saveRefreshTokenInDataSources(String jwt) {
-        UUID uuid = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
+        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
+        Auth previousAuth = redisUtil.getRedisAuthValue(customerId.toString());
         if (previousAuth == null) {
-            previousAuth = findAuthByUuid(uuid)
+            previousAuth = findAuthByCustomerId(customerId)
                     .orElse(null);
         }
         Auth newAuth;
@@ -105,9 +105,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             previousAuth.updateAuthContent(jwt);
             newAuth = previousAuth;
         } else {
-            newAuth = new Auth(uuid, jwt);
+            newAuth = new Auth(customerId, jwt);
             authRepository.save(newAuth);
         }
-        redisUtil.saveAuthRedis(uuid.toString(), newAuth);
+        redisUtil.saveAuthRedis(customerId.toString(), newAuth);
     }
 }

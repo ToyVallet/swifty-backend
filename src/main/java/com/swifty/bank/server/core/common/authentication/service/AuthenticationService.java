@@ -13,7 +13,7 @@ public interface AuthenticationService {
 
     boolean isLoggedOut(UUID uuid);
 
-    Optional<Auth> findAuthByUuid(UUID uuid);
+    Optional<Auth> findAuthByCustomerId(UUID uuid);
 
     void saveRefreshTokenInDataSources(String token);
 
