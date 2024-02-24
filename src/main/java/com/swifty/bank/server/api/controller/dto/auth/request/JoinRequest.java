@@ -1,5 +1,6 @@
 package com.swifty.bank.server.api.controller.dto.auth.request;
 
+import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -58,5 +59,10 @@ public class JoinRequest {
     @Size(max = 8, min = 8)
     @Schema(description = "8 size digits", example = "20000101", required = true)
     private String birthDate;
-    private GrantedAuthority roles;
+
+    @NotNull
+    @Pattern(regexp = "CUSTOMER|ADMIN", message = "[ERROR] 선택 가능한 유저 타입이 아닙니다")
+    @Schema(description = "Customer or Admin만 선택할 수 있습니다.", implementation = UserRole.class,
+            example = "CUSTOMER", required = true)
+    private UserRole roles;
 }

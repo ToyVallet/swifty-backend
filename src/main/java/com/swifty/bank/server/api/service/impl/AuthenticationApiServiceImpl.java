@@ -16,6 +16,7 @@ import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.exception.AuthenticationException;
+import com.swifty.bank.server.exception.NoSuchAuthByUuidException;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import java.util.HashMap;
 import java.util.List;
@@ -88,7 +89,12 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
 
             customerService.updateDeviceId(customerByDeviceId.getId(), null);
-            authenticationService.logout(customerByDeviceId.getId());
+            try {
+                if (!authenticationService.isLoggedOut(customerByDeviceId.getId( )))
+                    authenticationService.logout(customerByDeviceId.getId());
+            } catch (NoSuchAuthByUuidException e) {
+                // 로그인 안 됐을때는 패스
+            }
             customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
         }
 
@@ -99,18 +105,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> reissue(String body) {
         ObjectMapper mapper = new ObjectMapper();
         UUID customerId;
-        String refreshToken;
         try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            refreshToken = map.get("RefreshToken");
-
-            customerId = UUID.fromString(JwtUtil.getClaimByKey(refreshToken, "customerId").toString());
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
+            customerId = UUID.fromString(JwtUtil.getClaimByKey(body, "customerId").toString());
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -128,7 +124,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
         // 이전 DB에 저장된 Ref. 토큰과 같은 값인지 비교
-        if (!isValidatedRefreshToken(refreshToken)) {
+        if (!isValidatedRefreshToken(body)) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] 현재 유효하지 않은 리프레시 토큰입니다.",

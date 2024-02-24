@@ -41,6 +41,6 @@ public class RedisUtil {
     }
 
     public void deleteRedisStringValue(String key) {
-        redisStringTemplate.opsForHash().delete(key);
+        redisStringTemplate.delete(key);
     }
 }

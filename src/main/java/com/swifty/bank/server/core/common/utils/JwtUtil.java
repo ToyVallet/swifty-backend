@@ -19,7 +19,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Service
 @Slf4j
 public class JwtUtil {
-    @Value("${jwt.secret}")
     private static String secretKey;
 
     public static String generateToken(Claims claims, Date expiration) {
@@ -105,5 +104,10 @@ public class JwtUtil {
 
     private static Key getSecretKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
+
+    @Value("${jwt.secret}")
+    public void setSecretKey(String secret) {
+        JwtUtil.secretKey = secret;
     }
 }

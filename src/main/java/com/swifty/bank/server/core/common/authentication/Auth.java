@@ -25,6 +25,8 @@ public class Auth extends BaseEntity {
     @Id
     @Column(columnDefinition = "BINARY(16)")
     private UUID uuid;
+
+    @Column(length = 1024)
     private String refreshToken;
 
     public void updateAuthContent(String refreshToken) {

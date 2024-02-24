@@ -1,6 +1,7 @@
 package com.swifty.bank.server.core.domain.customer.dto;
 
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
+import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class JoinDto {
     private String deviceId;
     private Gender gender;
     private String birthDate;
-    private GrantedAuthority roles;
+    private UserRole roles;
 
     public static JoinDto createJoinDto(JoinRequest joinRequest) {
         return new JoinDto(

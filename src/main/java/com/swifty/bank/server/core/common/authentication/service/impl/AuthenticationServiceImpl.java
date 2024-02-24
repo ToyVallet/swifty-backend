@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final RedisUtil redisUtil;
     private final AuthRepository authRepository;
@@ -90,7 +89,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public void saveRefreshTokenInDataSources(String jwt) {
         UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
