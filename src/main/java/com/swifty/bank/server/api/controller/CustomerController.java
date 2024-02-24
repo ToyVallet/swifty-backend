@@ -2,8 +2,9 @@ package com.swifty.bank.server.api.controller;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
-import com.swifty.bank.server.api.service.CustomerAPIService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.service.impl.CustomerApiServiceImpl;
+import com.swifty.bank.server.core.common.authentication.service.impl.AuthenticationServiceImpl;
 import com.swifty.bank.server.core.common.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,15 +25,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Tag(name = "Customer Information API")
 @Slf4j
 public class CustomerController {
-    private final CustomerAPIService customerAPIService;
-    private final JwtUtil jwtUtil;
+    private final CustomerApiServiceImpl customerApiService;
+    private final AuthenticationServiceImpl authenticationService;
 
     @GetMapping("")
     @Operation(summary = "get customer's whole information in database", description = "no request body needed")
     public ResponseEntity<?> customerInfo() {
-        UUID customerId = jwtUtil.getCustomerId();
+        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        ResponseResult<?> customerInfo = customerAPIService.getCustomerInfo(customerId);
+        ResponseResult<?> customerInfo = customerApiService.getCustomerInfo(customerId);
 
         return ResponseEntity
                 .ok()
@@ -43,9 +45,10 @@ public class CustomerController {
     @Operation(summary = "change customer's whole information in database", description = "specific DTO required")
     public ResponseEntity<?> customerInfoUpdate(
             @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        UUID customerId = jwtUtil.getCustomerId();
+        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        ResponseResult<?> responseResult = customerAPIService.customerInfoUpdate(customerId,
+        ResponseResult<?> responseResult = customerApiService.customerInfoUpdate(customerId,
                 customerInfoUpdateCondition);
 
         return ResponseEntity
@@ -56,9 +59,10 @@ public class CustomerController {
     @PostMapping("/password")
     @Operation(summary = "confirm whether input and original password matches", description = "password string needed")
     public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
-        UUID customerId = jwtUtil.getCustomerId();
+        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        ResponseResult responseResult = customerAPIService.confirmPassword(customerId, password.getPasswd());
+        ResponseResult responseResult = customerApiService.confirmPassword(customerId, password.getPasswd());
 
         return ResponseEntity
                 .ok()
@@ -68,9 +72,10 @@ public class CustomerController {
     @PatchMapping("/password")
     @Operation(summary = "reset password with input", description = "password string needed in body")
     public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
-        UUID customerId = jwtUtil.getCustomerId();
+        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        ResponseResult responseResult = customerAPIService.resetPassword(customerId, newPassword.getPasswd());
+        ResponseResult responseResult = customerApiService.resetPassword(customerId, newPassword.getPasswd());
 
         return ResponseEntity
                 .ok()

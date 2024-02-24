@@ -23,7 +23,6 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
 
     @Override
@@ -33,17 +32,17 @@ public class JwtInterceptor implements HandlerInterceptor {
                 return true;
             }
 
-            String jwtAccessToken = jwtUtil.getAccessToken();
+            String accessToken = req.getHeader("Authorization").split("Bearer ")[1];
 
-            if (!jwtUtil.isValidateToken(jwtAccessToken)) {
-                throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
-            }
-
-            if (jwtUtil.isExpiredToken(jwtAccessToken)) {
+            if (JwtUtil.isExpiredToken(accessToken)) {
                 throw new IllegalArgumentException("만료된 JWT 토큰입니다.");
             }
 
-            if (isLoggedOut(jwtUtil.getCustomerId().toString())) {
+            if (!JwtUtil.validateToken(accessToken)) {
+                throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
+            }
+
+            if (isLoggedOut(JwtUtil.getClaimByKey(accessToken, "customerId").toString())) {
                 throw new IllegalArgumentException("로그아웃 상태의 토큰입니다.");
             }
 

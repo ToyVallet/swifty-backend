@@ -2,7 +2,7 @@ package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
-import com.swifty.bank.server.api.service.CustomerAPIService;
+import com.swifty.bank.server.api.service.CustomerApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.domain.customer.Customer;
@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class CustomerApiServiceImpl implements CustomerAPIService {
+public class CustomerApiServiceImpl implements CustomerApiService {
     private final CustomerService customerService;
     private final BCryptPasswordEncoder encoder;
 

@@ -16,4 +16,8 @@ public interface AuthenticationService {
     Optional<Auth> findAuthByUuid(UUID uuid);
 
     void saveRefreshTokenInDataSources(String token);
+
+    String createAccessToken(Customer customer);
+
+    String createRefreshToken(Customer customer);
 }
