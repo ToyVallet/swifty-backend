@@ -5,7 +5,7 @@ import com.swifty.bank.server.api.controller.dto.customer.request.PasswordReques
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.impl.CustomerApiServiceImpl;
 import com.swifty.bank.server.core.common.authentication.service.impl.AuthenticationServiceImpl;
-import com.swifty.bank.server.core.common.utils.JwtUtil;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;

@@ -1,11 +1,9 @@
 package com.swifty.bank.server.core.domain.sms.service.impl;
 
-import com.swifty.bank.server.core.common.utils.RandomUtil;
-import com.swifty.bank.server.core.common.utils.RedisUtil;
-import com.swifty.bank.server.core.common.utils.StringUtil;
+import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
 import com.swifty.bank.server.core.domain.sms.constant.MessageStatus;
 import com.swifty.bank.server.core.domain.sms.service.VerifyService;
-import java.util.List;
+import com.swifty.bank.server.core.utils.RandomUtil;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class VerifyServiceImpl implements VerifyService {
     private final TwilioMessageService messageService;
-    private final RedisUtil redisUtil;
+    private final OtpRedisServiceImpl redisService;
 
     @Override
     public Boolean sendVerificationCode(String phoneNumber) {
@@ -29,20 +27,18 @@ public class VerifyServiceImpl implements VerifyService {
             return false;
         }
 
-        String redisKey = createRedisKeyForOtp(phoneNumber);
-        redisUtil.setRedisStringValue(
-                redisKey,
-                otp
+        redisService.setData(
+                phoneNumber,
+                otp,
+                5L,
+                TimeUnit.MINUTES
         );
-        redisUtil.setRedisStringExpiration(redisKey, 5, TimeUnit.MINUTES);
-
         return true;
     }
 
     @Override
     public Boolean checkVerificationCode(String phoneNumber, String expectedOtp) {
-        String redisKey = createRedisKeyForOtp(phoneNumber);
-        String actualOtp = redisUtil.getRedisStringValue(redisKey);
+        String actualOtp = redisService.getData(phoneNumber);
 
         // 기간이 만료되었거나 인증번호를 발송한 적이 없는 경우
         if (actualOtp == null || actualOtp.isEmpty()) {
@@ -54,30 +50,21 @@ public class VerifyServiceImpl implements VerifyService {
             return false;
         }
 
-        redisUtil.setRedisStringValue(
-                redisKey,
-                "true"
-        );
         // 인증 성공한 시기로부터 10분간만 인증 유효하도록 함
-        redisUtil.setRedisStringExpiration(redisKey, 10, TimeUnit.MINUTES);
+        redisService.setData(
+                phoneNumber,
+                "true",
+                10L,
+                TimeUnit.MINUTES
+        );
         return true;
     }
 
-    public String createRedisKeyForOtp(String str) {
-        return StringUtil.joinString(
-                List.of("otp-", str)
-        );
-    }
 
     @Override
     public boolean isVerified(String phoneNumber) {
-        String isVerified = redisUtil.getRedisStringValue(
-                createRedisKeyForOtp(phoneNumber)
-        );
-        if (isVerified == null || !isVerified.equals("true")) {
-            // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
-            return false;
-        }
-        return true;
+        String isVerified = redisService.getData(phoneNumber);
+        // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
+        return isVerified != null && isVerified.equals("true");
     }
 }

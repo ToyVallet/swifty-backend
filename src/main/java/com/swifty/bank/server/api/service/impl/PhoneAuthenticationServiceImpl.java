@@ -6,9 +6,9 @@ import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCod
 import com.swifty.bank.server.api.service.PhoneAuthenticationService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.common.utils.RandomUtil;
-import com.swifty.bank.server.core.common.utils.RedisUtil;
+import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
 import com.swifty.bank.server.core.domain.sms.service.impl.VerifyServiceImpl;
+import com.swifty.bank.server.core.utils.RandomUtil;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,18 +19,18 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationService {
     private final VerifyServiceImpl verifyService;
-    private final RedisUtil redisUtil;
+    private final OtpRedisServiceImpl otpRedisService;
 
     @Override
     public ResponseResult<?> stealVerificationCode(GetVerificationCodeRequest getVerificationCodeRequest) {
         String otp = RandomUtil.generateOtp(6);
 
-        String redisKey = verifyService.createRedisKeyForOtp(getVerificationCodeRequest.getPhoneNumber());
-        redisUtil.setRedisStringValue(
-                redisKey,
-                otp
+        otpRedisService.setData(
+                getVerificationCodeRequest.getPhoneNumber(),
+                otp,
+                5L,
+                TimeUnit.MINUTES
         );
-        redisUtil.setRedisStringExpiration(redisKey, 5, TimeUnit.MINUTES);
 
         return new ResponseResult<>(
                 Result.SUCCESS,
