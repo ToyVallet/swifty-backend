@@ -23,7 +23,6 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
 
     @Override
@@ -33,20 +32,11 @@ public class JwtInterceptor implements HandlerInterceptor {
                 return true;
             }
 
-            String jwtAccessToken = jwtUtil.getAccessToken();
-
-            if (!jwtUtil.isValidateToken(jwtAccessToken)) {
-                throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
-            }
-
-            if (jwtUtil.isExpiredToken(jwtAccessToken)) {
-                throw new IllegalArgumentException("만료된 JWT 토큰입니다.");
-            }
-
-            if (isLoggedOut(jwtUtil.getCustomerId().toString())) {
+            String accessToken = JwtUtil.extractJwtFromCurrentRequestHeader();
+            JwtUtil.validateToken(accessToken);
+            if (isLoggedOut(JwtUtil.getClaimByKey(accessToken, "customerId").toString())) {
                 throw new IllegalArgumentException("로그아웃 상태의 토큰입니다.");
             }
-
             return true;
         } catch (Exception e) {
             ObjectMapper mapper = new ObjectMapper();

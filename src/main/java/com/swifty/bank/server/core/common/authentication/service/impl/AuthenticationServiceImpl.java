@@ -4,14 +4,19 @@ import com.swifty.bank.server.api.controller.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.utils.DateUtil;
 import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.exception.NoSuchAuthByUuidException;
 import com.swifty.bank.server.exception.NotLoggedInCustomerException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,14 +25,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final RedisUtil redisUtil;
-    private final JwtUtil jwtUtil;
     private final AuthRepository authRepository;
 
+    @Value("${jwt.access-token-expiration-millis}")
+    private int accessTokenExpiration;
+    @Value("${jwt.refresh-token-expiration-millis}")
+    private int refreshTokenExpiration;
 
     @Override
     public TokenDto generateTokenDtoWithCustomer(Customer customer) {
-        TokenDto tokens = new TokenDto(createAccessToken(customer), createRefreshToken(customer));
-        return tokens;
+        return new TokenDto(createAccessToken(customer), createRefreshToken(customer));
     }
 
     @Override
@@ -62,18 +69,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return authRepository.findAuthByUuid(uuid);
     }
 
-    private String createAccessToken(Customer customer) {
-        return jwtUtil.createJwtAccessToken(customer.getId());
+    @Override
+    public String createAccessToken(Customer customer) {
+        Claims claims = Jwts.claims();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + accessTokenExpiration * 1000L);
+
+        claims.setSubject("AccessToken");
+        claims.put("customerId", customer.getId());
+        return JwtUtil.generateToken(claims, expiration);
     }
 
-    private String createRefreshToken(Customer customer) {
-        return jwtUtil.createJwtRefreshToken(customer.getId());
+    @Override
+    public String createRefreshToken(Customer customer) {
+        Claims claims = Jwts.claims();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + refreshTokenExpiration * 1000L);
+
+        claims.setSubject("RefreshToken");
+        claims.put("customerId", customer.getId());
+        return JwtUtil.generateToken(claims, expiration);
+    }
+
+    public UUID extractCustomerId(String jwt) {
+        return UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
     }
 
     @Override
     @Transactional
     public void saveRefreshTokenInDataSources(String token) {
-        UUID uuid = jwtUtil.getCustomerId();
+        UUID uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
 
         Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
         if (previousAuth == null) {

@@ -4,7 +4,7 @@ import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUp
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import java.util.UUID;
 
-public interface CustomerAPIService {
+public interface CustomerApiService {
     ResponseResult<?> getCustomerInfo(UUID customerUuid);
 
     ResponseResult<?> customerInfoUpdate(UUID customerUuid,

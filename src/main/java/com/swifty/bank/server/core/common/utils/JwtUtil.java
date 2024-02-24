@@ -1,17 +1,15 @@
 package com.swifty.bank.server.core.common.utils;
 
+import com.swifty.bank.server.exception.TokenContentNotValidException;
+import com.swifty.bank.server.exception.TokenExpiredException;
+import com.swifty.bank.server.exception.TokenNotExistException;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
-import java.time.Duration;
 import java.util.Date;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,83 +20,78 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Slf4j
 public class JwtUtil {
     @Value("${jwt.secret}")
-    private String secretKey;
-    private final long accessTokenValidTime = Duration.ofMinutes(30).toMillis(); // 만료시간 30분
-    private final long refreshTokenValidTime = Duration.ofDays(14).toMillis(); // 만료시간 2주
+    private static String secretKey;
 
-    public String createJwtAccessToken(UUID customerUUID) {
-        Key secretKey = getSecretKey();
-
+    public static String generateToken(Claims claims, Date expiration) {
         return Jwts.builder()
                 .setHeaderParam("type", "jwt")
-                .setSubject("AccessToken")
-                .claim("customerId", customerUUID)
+                .setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenValidTime))
-                .signWith(secretKey)
+                .setExpiration(expiration)
+                .signWith(getSecretKey())
                 .compact();
     }
 
-    public String createJwtRefreshToken(UUID customerUUID) {
-        Key secretKey = getSecretKey();
-
-        return Jwts.builder()
-                .setHeaderParam("type", "jwt")
-                .setSubject("RefreshToken")
-                .claim("customerId", customerUUID)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenValidTime))
-                .signWith(secretKey)
-                .compact();
-    }
-
-    public String getAccessToken() {
+    public static String extractJwtFromCurrentRequestHeader() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-
-        return request.getHeader("Authorization").split("Bearer ")[1];
-    }
-
-    public UUID getCustomerId() {
-        Key secretKey = getSecretKey();
-        String accessToken = getAccessToken();
-
-        if (!isValidateToken(accessToken)) {
-            throw new IllegalArgumentException("JWT 토큰이 잘못되었습니다.");
-        }
-
-        Jws<Claims> claimsJws = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(accessToken);
-
-        return UUID.fromString(claimsJws.getBody().get("customerId", String.class));
-    }
-
-
-    public boolean isValidateToken(String token) {
         try {
-            Key secretKey = getSecretKey();
-            Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
-            String customerId = claimsJws.getBody().get("customerId", String.class);
-
-            if (customerId.isEmpty()) {
-                throw new IllegalArgumentException();
-            }
-
-            return true;
-        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            log.info("잘못된 JWT 서명입니다.");
-        } catch (ExpiredJwtException e) {
-            log.info("만료된 JWT 토큰입니다.");
-        } catch (UnsupportedJwtException e) {
-            log.info("지원되지 않는 JWT 토큰입니다.");
+            String token = request.getHeader("Authorization").split("Bearer ")[1];
+            validateToken(token);
+            return token;
         } catch (IllegalArgumentException e) {
-            log.info("JWT 토큰이 잘못되었습니다.");
+            throw new IllegalArgumentException("올바른 jwt가 존재하지 않습니다.");
         }
-        return false;
     }
 
-    public boolean isExpiredToken(String accessToken) {
+    public static Object getClaimByKey(String token, String key) {
+        if (token == null || token.isEmpty()) {
+            throw new TokenNotExistException("[ERROR] there is no token");
+        }
+        // parsing
+        if (token.startsWith("Bearer ")) {
+            // IndexOutOfBound error expected
+            token = token.split(" ")[1].trim();
+        }
+        // check if expired
+        if (isExpiredToken(token)) {
+            throw new TokenExpiredException("[ERROR] Token is expired, reissue it");
+        }
+
+        Claims claims = getAllClaims(token);
+        // validate key
+        if (!claims.containsKey(key)) {
+            throw new TokenContentNotValidException("[ERROR] There is no '" + key + "' in token");
+        }
+        return claims.get(key);
+    }
+
+    private static Claims getAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey.getBytes())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    /*
+     * validate
+     * 1. JWT was incorrectly constructed
+     * 2. JWS signature was discovered
+     * 3. expired token
+     */
+    public static void validateToken(String token) {
+        JwtParser jwtParser = Jwts.parserBuilder()
+                .setSigningKey(getSecretKey())
+                .build();
+        try {
+            jwtParser.parse(token);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("올바른 jwt가 아닙니다.");
+        }
+    }
+
+
+    public static boolean isExpiredToken(String accessToken) {
         Key secretKey = getSecretKey();
 
         return Jwts.parserBuilder()
@@ -110,7 +103,7 @@ public class JwtUtil {
                 .before(new Date());
     }
 
-    private Key getSecretKey() {
+    private static Key getSecretKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 }

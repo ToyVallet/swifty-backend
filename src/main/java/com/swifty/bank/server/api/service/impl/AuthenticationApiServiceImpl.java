@@ -8,12 +8,11 @@ import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.utils.JwtUtil;
+import com.swifty.bank.server.core.common.authentication.service.impl.AuthenticationServiceImpl;
 import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.core.common.utils.StringUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.core.domain.customer.service.impl.CustomerServiceImpl;
 import com.swifty.bank.server.exception.AuthenticationException;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import java.util.HashMap;
@@ -29,14 +28,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
-    private final CustomerService customerService;
-    private final AuthenticationService authenticationService;
+    private final CustomerServiceImpl customerService;
+    private final AuthenticationServiceImpl authenticationService;
     private final RedisUtil redisUtil;
-    private final JwtUtil jwtUtil;
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
-        if (customerService.findByPhoneNumber(dto.getPhoneNumber()) != null) {
+        if (customerService.findByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] Customer retrieval is not valid",
@@ -104,7 +102,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Map<String, String> map = mapper.readValue(body, Map.class);
             refreshToken = map.get("RefreshToken");
 
-            uuid = jwtUtil.getCustomerId();
+            uuid = authenticationService.extractCustomerId(refreshToken);
         } catch (JsonProcessingException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -153,7 +151,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> logout(String token) {
         UUID uuid;
         try {
-            uuid = jwtUtil.getCustomerId();
+            uuid = authenticationService.extractCustomerId(token);
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -178,7 +176,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     public ResponseResult<?> signOut(String token) {
         UUID uuid;
         try {
-            uuid = jwtUtil.getCustomerId();
+            uuid = authenticationService.extractCustomerId(token);
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -227,7 +225,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     private boolean isValidatedRefreshToken(String token) {
-        UUID uuid = jwtUtil.getCustomerId();
+        UUID uuid = authenticationService.extractCustomerId(token);
 
         Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
         if (previousAuth == null) {
