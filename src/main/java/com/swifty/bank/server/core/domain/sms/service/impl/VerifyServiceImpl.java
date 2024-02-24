@@ -1,9 +1,9 @@
 package com.swifty.bank.server.core.domain.sms.service.impl;
 
 import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
-import com.swifty.bank.server.core.common.utils.RandomUtil;
 import com.swifty.bank.server.core.domain.sms.constant.MessageStatus;
 import com.swifty.bank.server.core.domain.sms.service.VerifyService;
+import com.swifty.bank.server.core.utils.RandomUtil;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

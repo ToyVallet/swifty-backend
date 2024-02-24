@@ -11,11 +11,11 @@ import com.swifty.bank.server.core.common.authentication.service.AuthenticationS
 import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
 import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
-import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.domain.sms.service.VerifyService;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.exception.AuthenticationException;
 import com.swifty.bank.server.exception.NoSuchAuthByUuidException;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;

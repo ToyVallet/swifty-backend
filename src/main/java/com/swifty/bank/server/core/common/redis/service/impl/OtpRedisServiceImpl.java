@@ -1,13 +1,14 @@
 package com.swifty.bank.server.core.common.redis.service.impl;
 
 import com.swifty.bank.server.core.common.redis.repository.OtpRedisRepository;
+import com.swifty.bank.server.core.common.redis.service.RedisService;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OtpRedisServiceImpl {
+public class OtpRedisServiceImpl implements RedisService {
     private final OtpRedisRepository otpRedisRepository;
 
     public String getData(String key) {

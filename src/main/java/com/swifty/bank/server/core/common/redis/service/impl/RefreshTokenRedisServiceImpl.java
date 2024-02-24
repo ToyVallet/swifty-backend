@@ -2,6 +2,7 @@ package com.swifty.bank.server.core.common.redis.service.impl;
 
 import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 import com.swifty.bank.server.core.common.redis.repository.RefreshTokenRedisRepository;
+import com.swifty.bank.server.core.common.redis.service.RedisService;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class RefreshTokenRedisServiceImpl {
+public class RefreshTokenRedisServiceImpl implements RedisService {
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     @Value("${jwt.redis.timeout}")

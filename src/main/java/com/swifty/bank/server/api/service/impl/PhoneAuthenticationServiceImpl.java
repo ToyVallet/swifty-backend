@@ -7,8 +7,8 @@ import com.swifty.bank.server.api.service.PhoneAuthenticationService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
-import com.swifty.bank.server.core.common.utils.RandomUtil;
 import com.swifty.bank.server.core.domain.sms.service.impl.VerifyServiceImpl;
+import com.swifty.bank.server.core.utils.RandomUtil;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationServic
     @Override
     public ResponseResult<?> stealVerificationCode(GetVerificationCodeRequest getVerificationCodeRequest) {
         String otp = RandomUtil.generateOtp(6);
-        
+
         otpRedisService.setData(
                 getVerificationCodeRequest.getPhoneNumber(),
                 otp,

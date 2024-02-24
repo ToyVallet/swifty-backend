@@ -6,7 +6,7 @@ import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
-import com.swifty.bank.server.core.common.utils.JwtUtil;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
