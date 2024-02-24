@@ -64,16 +64,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void logout(UUID customerId) {
         if (!isLoggedOut(customerId)) {
             String key = customerId.toString();
-            RefreshTokenCache refreshTokenCache = refreshTokenRedisService.getData(key);
+            Auth prevAuth = authRepository.findAuthByUuid(customerId)
+                    .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
 
-            if (refreshTokenCache == null) {
-                Auth prevAuth = authRepository.findAuthByUuid(customerId)
-                        .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
+            prevAuth.updateAuthContent("LOGOUT");
 
-                prevAuth.updateAuthContent("LOGOUT");
-
-                refreshTokenRedisService.setData(key, new RefreshTokenCache(customerId, "LOGOUT"));
-            }
+            refreshTokenRedisService.setData(key, new RefreshTokenCache(customerId, "LOGOUT"));
+            return;
         }
         throw new NotLoggedInCustomerException("[ERROR] 로그인 되지 않은 유저가 로그 아웃을 시도했습니다.");
     }
