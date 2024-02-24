@@ -2,27 +2,30 @@ package com.swifty.bank.server.core.common.authentication.service.impl;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
-import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
+import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.utils.DateUtil;
+import com.swifty.bank.server.core.common.utils.JwtUtil;
+import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.utils.DateUtil;
-import com.swifty.bank.server.utils.JwtUtil;
-import com.swifty.bank.server.utils.RedisUtil;
+import com.swifty.bank.server.exception.NoSuchAuthByUuidException;
+import com.swifty.bank.server.exception.NotLoggedInCustomerException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.util.Date;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final RedisUtil redisUtil;
-    private final JwtUtil jwtUtil;
+    private final AuthRepository authRepository;
 
     @Value("${jwt.access-token-expiration-millis}")
     private int accessTokenExpiration;
@@ -30,50 +33,81 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private int refreshTokenExpiration;
 
     @Override
-    public TokenDto generateTokenDtoWithCustomer(Customer customer) {
-        TokenDto tokens = new TokenDto(createAccessToken(customer), createRefreshToken(customer));
-        saveRefreshTokenInRedis(tokens.getRefreshToken());
-        return tokens;
-    }
-
-    private String createAccessToken(Customer customer) {
+    public String createAccessToken(Customer customer) {
         Claims claims = Jwts.claims();
-        Date now = DateUtil.now();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + accessTokenExpiration * 1000L);
 
-        claims.put("id", customer.getId());
-        claims.put("scopes", List.of(new SimpleGrantedAuthority("CUSTOMER")));
-        claims.setSubject("ACCESS");
-        claims.setExpiration(DateUtil.millisToDate(now.getTime() + accessTokenExpiration * 1000L));
-        return jwtUtil.generateToken(claims);
+        claims.setSubject("AccessToken");
+        claims.put("customerId", customer.getId());
+        return JwtUtil.generateToken(claims, expiration);
     }
 
-    private String createRefreshToken(Customer customer) {
+    @Override
+    public String createRefreshToken(Customer customer) {
         Claims claims = Jwts.claims();
-        Date now = DateUtil.now();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + refreshTokenExpiration * 1000L);
 
-        claims.put("id", customer.getId());
-        claims.put("scopes", List.of(new SimpleGrantedAuthority("CUSTOMER")));
-        claims.setSubject("REFRESH");
-        claims.setExpiration(DateUtil.millisToDate(now.getTime() + refreshTokenExpiration * 1000L));
-        return jwtUtil.generateToken(claims);
+        claims.setSubject("RefreshToken");
+        claims.put("customerId", customer.getId());
+        return JwtUtil.generateToken(claims, expiration);
     }
 
-    private void saveRefreshTokenInRedis(String token) {
-        UUID uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
-        Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
+    @Override
+    public TokenDto generateTokenDto(Customer customer) {
+        return new TokenDto(createAccessToken(customer), createRefreshToken(customer));
+    }
+
+    @Override
+    public void logout(UUID customerId) {
+        if (!isLoggedOut(customerId)) {
+            String key = customerId.toString();
+            Auth prevAuth = redisUtil.getRedisAuthValue(key);
+            if (prevAuth == null) {
+                prevAuth = authRepository.findAuthByUuid(customerId)
+                        .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
+            }
+
+            prevAuth.updateAuthContent("LOGOUT");
+            redisUtil.saveAuthRedis(key, prevAuth);
+        }
+        throw new NotLoggedInCustomerException("[ERROR] 로그인 되지 않은 유저가 로그 아웃을 시도했습니다.");
+    }
+
+    @Override
+    public boolean isLoggedOut(UUID customerId) {
+        Auth res = redisUtil.getRedisAuthValue(customerId.toString());
+        if (res == null) {
+            res = findAuthByCustomerId(customerId)
+                    .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
+            redisUtil.saveAuthRedis(customerId.toString(), res);
+        }
+        return res.getRefreshToken().equals("LOGOUT");
+    }
+
+    @Override
+    public Optional<Auth> findAuthByCustomerId(UUID customerId) {
+        return authRepository.findAuthByUuid(customerId);
+    }
+
+    @Override
+    @Transactional
+    public void saveRefreshTokenInDataSources(String jwt) {
+        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
+
+        Auth previousAuth = redisUtil.getRedisAuthValue(customerId.toString());
+        if (previousAuth == null) {
+            previousAuth = findAuthByCustomerId(customerId)
+                    .orElse(null);
+        }
         Auth newAuth;
 
         if (previousAuth != null) {
-            newAuth = new Auth(token, previousAuth.isLoggedOut());
-            UUID prevUuid = UUID.fromString(
-                    jwtUtil.getClaimByKeyFromToken("id", previousAuth.getRefreshToken()).toString());
-
-            if (!uuid.toString().equals(prevUuid.toString())) {
-                throw new TokenContentNotValidException("[ERROR] Two token's owner is different");
-            }
+            previousAuth.updateAuthContent(jwt);
+            newAuth = previousAuth;
         } else {
-            newAuth = new Auth(token, false);
+            newAuth = new Auth(customerId, jwt);
+            authRepository.save(newAuth);
         }
-        redisUtil.saveAuthRedis(uuid.toString(), newAuth);
+        redisUtil.saveAuthRedis(customerId.toString(), newAuth);
     }
 }

@@ -1,21 +1,20 @@
 package com.swifty.bank.server.core.domain.customer.service.impl;
 
+import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
+import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
+import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
 @Service
@@ -32,15 +31,15 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public Customer join(JoinRequest joinRequest) {
+    public Customer join(JoinDto joinDto) {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
-                .name(joinRequest.getName())
+                .name(joinDto.getName())
                 .customerStatus(CustomerStatus.ACTIVE)  // 일단 default
-                .nationality(joinRequest.getNationality())
-                .phoneNumber(joinRequest.getPhoneNumber())
-                .password(joinRequest.getPassword())
-                .deviceId(joinRequest.getDeviceId())
+                .nationality(joinDto.getNationality())
+                .phoneNumber(joinDto.getPhoneNumber())
+                .password(joinDto.getPassword())
+                .deviceId(joinDto.getDeviceId())
                 .build();
 
         customerRepository.save(customer);
@@ -48,9 +47,9 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Optional<Customer> findByUuid(UUID uuid) {
+    public Optional<Customer> findByUuid(UUID customerId) {
 
-        return customerRepository.findOneByUUID(uuid);
+        return customerRepository.findOneByUUID(customerId);
     }
 
     @Override
@@ -68,26 +67,35 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public Customer updateCustomerInfo(UUID customerUuid, CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest) {
+    public Customer updateCustomerInfo(UUID customerId,
+                                       CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest) {
 
-        Customer customer = customerRepository.findOneByUUID(customerUuid)
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다"));
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getName())) customer.updateName(customerInfoUpdateConditionRequest.getName());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getName())) {
+            customer.updateName(customerInfoUpdateConditionRequest.getName());
+        }
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getPhoneNumber())) customer.updatePhoneNumber(customerInfoUpdateConditionRequest.getPhoneNumber());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getPhoneNumber())) {
+            customer.updatePhoneNumber(customerInfoUpdateConditionRequest.getPhoneNumber());
+        }
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getBirthDate())) customer.updateBirthDate(customerInfoUpdateConditionRequest.getBirthDate());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getBirthDate())) {
+            customer.updateBirthDate(customerInfoUpdateConditionRequest.getBirthDate());
+        }
 
-        if(Objects.nonNull(customerInfoUpdateConditionRequest.getNationality())) customer.updateNationality(customerInfoUpdateConditionRequest.getNationality());
+        if (Objects.nonNull(customerInfoUpdateConditionRequest.getNationality())) {
+            customer.updateNationality(customerInfoUpdateConditionRequest.getNationality());
+        }
 
         return customer;
     }
 
     @Transactional
     @Override
-    public Customer updatePhoneNumber(UUID uuid, String phoneNumber) {
-        Customer customer = customerRepository.findOneByUUID(uuid)
+    public Customer updatePhoneNumber(UUID customerId, String phoneNumber) {
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("[ERROR] No customer " +
                         "found by the phone" +
                         " number and nationality"));
@@ -98,8 +106,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public Customer updateDeviceId(UUID uuid, String deviceId) {
-        Customer customer = customerRepository.findOneByUUID(uuid)
+    public Customer updateDeviceId(UUID customerId, String deviceId) {
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("[ERROR] : No customer found by the device id"));
 
         customer.updateDeviceId(deviceId);
@@ -108,22 +116,22 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public void withdrawCustomer(UUID uuid) {
-        Customer customer = customerRepository.findOneByUUID(uuid)
+    public void withdrawCustomer(UUID customerId) {
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
 
         customer.delete();
     }
 
     @Override
-    public Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID uuid) {
-        return customerRepository.findCustomerInfoResponseByUUID(uuid);
+    public Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID customerId) {
+        return customerRepository.findCustomerInfoResponseByUUID(customerId);
     }
 
     @Override
-    public void updatePassword(UUID uuid, String newPassword) {
+    public void updatePassword(UUID customerId, String newPassword) {
         String encodePassword = encoder.encode(newPassword);
-        Customer customer = customerRepository.findOneByUUID(uuid)
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
 
         customer.resetPassword(encodePassword);

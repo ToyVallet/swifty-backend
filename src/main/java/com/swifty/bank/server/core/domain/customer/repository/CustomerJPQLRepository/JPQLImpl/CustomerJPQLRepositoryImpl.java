@@ -1,14 +1,13 @@
 package com.swifty.bank.server.core.domain.customer.repository.CustomerJPQLRepository.JPQLImpl;
 
+import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerJPQLRepository.CustomerJPQLRepository;
 import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
 @Repository
@@ -59,22 +58,23 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     public Optional<CustomerInfoResponse> findCustomerInfoResponseByUUID(UUID uuid) {
         return em.createQuery(
                         "SELECT new com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse(" +
-                                "c.name" +
-                                ",c.phoneNumber" +
-                                ",c.birthDate" +
-                                ",c.nationality" +
-                                ",c.customerStatus" +
+                                "C.name" +
+                                ",C.phoneNumber" +
+                                ",C.gender" +
+                                ",C.birthDate" +
+                                ",C.nationality" +
+                                ",C.customerStatus" +
                                 ") " +
                                 "FROM Customer C " +
-                                "WHERE  C.uuid = :uuid " +
+                                "WHERE  C.id = :uuid " +
                                 "AND C.isDeleted = :isDeleted",
                         CustomerInfoResponse.class
                 )
                 .setParameter("uuid", uuid)
                 .setParameter("isDeleted", isDeleted)
-                .getResultList( )
-                .stream( )
-                .findAny( );
+                .getResultList()
+                .stream()
+                .findAny();
     }
 
     @Override

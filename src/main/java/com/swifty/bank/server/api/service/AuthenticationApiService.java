@@ -1,12 +1,10 @@
 package com.swifty.bank.server.api.service;
 
-import com.swifty.bank.server.core.common.response.ResponseResult;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
 
 public interface AuthenticationApiService {
     ResponseResult<?> join(JoinRequest dto);
-
-    ResponseResult<?> loginWithJwt(String body, String token);
 
     ResponseResult<?> loginWithForm(String deviceId, String phoneNumber);
 
