@@ -1,6 +1,5 @@
 package com.swifty.bank.server.api.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.VerifyCustomerExistenceRequest;
@@ -8,11 +7,11 @@ import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
+import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.common.utils.JwtUtil;
-import com.swifty.bank.server.core.common.utils.RedisUtil;
-import com.swifty.bank.server.core.common.utils.StringUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
@@ -20,8 +19,6 @@ import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.exception.AuthenticationException;
 import com.swifty.bank.server.exception.NoSuchAuthByUuidException;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -36,7 +33,9 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final AuthenticationService authenticationService;
     private final VerifyService verifyService;
-    private final RedisUtil redisUtil;
+
+    private final OtpRedisServiceImpl otpRedisService;
+    private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
 
     @Override
     public ResponseResult<?> verifyCustomerExistence(VerifyCustomerExistenceRequest verifyCustomerExistenceRequest) {
@@ -74,7 +73,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        if (verifyService.isVerified(dto.getPhoneNumber())) {
+        if (!verifyService.isVerified(dto.getPhoneNumber())) {
             // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
             return new ResponseResult<>(
                     Result.FAIL,
@@ -91,7 +90,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         Customer customer = customerService.join(JoinDto.createJoinDto(dto));
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
-        redisUtil.deleteRedisStringValue(createRedisKeyForOtp(dto.getPhoneNumber()));
+        otpRedisService.deleteData(dto.getPhoneNumber());
 
         return new ResponseResult<>(Result.SUCCESS, "[INFO] 사용자가 성공적으로 등록되었습니다.", null);
     }
@@ -116,15 +115,29 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
             customerService.updateDeviceId(customerByDeviceId.getId(), null);
             try {
-                if (!authenticationService.isLoggedOut(customerByDeviceId.getId( )))
+                if (!authenticationService.isLoggedOut(customerByDeviceId.getId())) {
                     authenticationService.logout(customerByDeviceId.getId());
+                }
             } catch (NoSuchAuthByUuidException e) {
                 // 로그인 안 됐을때는 패스
             }
             customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
         }
 
-        return storeAndGenerateRefreshToken(customerByPhoneNumber);
+        Map<String, Object> result = authenticationService.generateAndStoreRefreshToken(customerByPhoneNumber);
+        if (result == null) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "refresh token 생성 및 저장에 실패했습니다.",
+                    null
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] Authentication succeed with user id: " + customerByPhoneNumber.getId(),
+                result
+        );
     }
 
     @Override
@@ -168,7 +181,20 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         Customer customer = mayBeCustomer.get();
-        return this.storeAndGenerateRefreshToken(customer);
+        Map<String, Object> result = authenticationService.generateAndStoreRefreshToken(customer);
+        if (result == null) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "refresh token 생성 및 저장에 실패했습니다.",
+                    null
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] Authentication succeed with user id: " + customer.getId(),
+                result
+        );
     }
 
     @Override
@@ -227,48 +253,20 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
     }
 
-    private ResponseResult<?> storeAndGenerateRefreshToken(Customer customer) {
-        Map<String, Object> result = new HashMap<>();
-
-        try {
-            TokenDto tokens = authenticationService.generateTokenDto(customer);
-            authenticationService.saveRefreshTokenInDataSources(tokens.getRefreshToken());
-            result.put("token", tokens);
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "[INFO] Authentication succeed with user id: " + customer.getId(),
-                    result
-            );
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
-    }
-
     private boolean isValidatedRefreshToken(String token) {
         UUID uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
 
-        Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
-        if (previousAuth == null) {
-            previousAuth = authenticationService.findAuthByCustomerId(uuid)
-                    .orElse(null);
-        }
+        // get refresh token from redis
+        RefreshTokenCache previousCache = refreshTokenRedisService.getData(uuid.toString());
 
-        if (previousAuth != null) {
+        if (previousCache == null) {
+            // get refresh token from mysql
+            Auth previousAuth = authenticationService.findAuthByCustomerId(uuid)
+                    .orElse(null);
+
             // 마지막으로 저장된 ref. 토큰과 현재 토큰이 맞지 않다면 유효하지 않은 토큰임
-            if (!token.equals(previousAuth.getRefreshToken())) {
-                return false;
-            }
+            return previousAuth == null || token.equals(previousAuth.getRefreshToken());
         }
         return true;
-    }
-
-    public String createRedisKeyForOtp(String str) {
-        return StringUtil.joinString(
-                List.of("otp-", str)
-        );
     }
 }

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.common.authentication.Auth;
+import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
+import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.common.utils.JwtUtil;
-import com.swifty.bank.server.core.common.utils.RedisUtil;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +23,7 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final RedisUtil redisUtil;
+    private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws IOException {
@@ -70,7 +70,8 @@ public class JwtInterceptor implements HandlerInterceptor {
     }
 
     private boolean isLoggedOut(String key) {
-        Auth res = redisUtil.getRedisAuthValue(key);
+        // Warning: redis에서만 검증하고 있습니다.
+        RefreshTokenCache res = refreshTokenRedisService.getData(key);
         if (ObjectUtils.isEmpty(res)) {
             throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
         }
