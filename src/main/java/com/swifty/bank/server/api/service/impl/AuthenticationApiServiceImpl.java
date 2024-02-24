@@ -3,6 +3,7 @@ package com.swifty.bank.server.api.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.VerifyCustomerExistenceRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
@@ -15,6 +16,7 @@ import com.swifty.bank.server.core.common.utils.StringUtil;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.exception.AuthenticationException;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import java.util.HashMap;
@@ -32,7 +34,34 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final AuthenticationService authenticationService;
+    private final VerifyService verifyService;
     private final RedisUtil redisUtil;
+
+    @Override
+    public ResponseResult<?> verifyCustomerExistence(VerifyCustomerExistenceRequest verifyCustomerExistenceRequest) {
+        String phoneNumber = verifyCustomerExistenceRequest.getPhoneNumber();
+        if (!verifyService.isVerified(phoneNumber)) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "먼저 휴대폰 인증이 필요합니다.",
+                    false
+            );
+        }
+
+        if (customerService.findByPhoneNumber(phoneNumber).isPresent()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "이미 가입된 회원입니다.",
+                    false
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "회원가입이 가능합니다.",
+                true
+        );
+    }
 
     @Override
     public ResponseResult<?> join(JoinRequest dto) {
@@ -44,10 +73,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             );
         }
 
-        String isVerified = redisUtil.getRedisStringValue(
-                createRedisKeyForOtp(dto.getPhoneNumber())
-        );
-        if (isVerified == null || !isVerified.equals("true")) {
+        if (verifyService.isVerified(dto.getPhoneNumber())) {
             // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
             return new ResponseResult<>(
                     Result.FAIL,

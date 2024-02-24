@@ -4,6 +4,7 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.LoginWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.VerifyCustomerExistenceRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,6 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Authentication API")
 public class AuthenticationController {
     private final AuthenticationApiService authenticationApiService;
+
+    @PassAuth
+    @PostMapping("/verify-customer-existence")
+    public ResponseEntity<?> VerifyCustomerExistence(
+            @RequestBody VerifyCustomerExistenceRequest body
+    ) {
+        return ResponseEntity
+                .ok()
+                .body(authenticationApiService.verifyCustomerExistence(body));
+    }
 
     @PassAuth
     @PostMapping("/sign-in-with-form")
