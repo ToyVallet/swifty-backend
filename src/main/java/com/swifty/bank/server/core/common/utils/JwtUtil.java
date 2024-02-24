@@ -76,7 +76,7 @@ public class JwtUtil {
     /*
      * validate
      * 1. JWT was incorrectly constructed
-     * 2. JWS signature was discovered
+     * 2. JWS signature was discovered, but could not be verified
      * 3. expired token
      */
     public static void validateToken(String token) {
