@@ -45,7 +45,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         String isVerified = redisUtil.getRedisStringValue(
-                StringUtil.joinString(List.of("otp-", dto.getPhoneNumber()))
+                createRedisKeyForOtp(dto.getPhoneNumber())
         );
         if (isVerified == null || !isVerified.equals("true")) {
             // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
@@ -64,7 +64,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         Customer customer = customerService.join(JoinDto.createJoinDto(dto));
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
-        redisUtil.deleteRedisStringValue(StringUtil.joinString(List.of("otp-", dto.getPhoneNumber())));
+        redisUtil.deleteRedisStringValue(createRedisKeyForOtp(dto.getPhoneNumber()));
 
         return new ResponseResult<>(Result.SUCCESS, "[INFO] 사용자가 성공적으로 등록되었습니다.", null);
     }
@@ -242,5 +242,11 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             }
         }
         return true;
+    }
+
+    public String createRedisKeyForOtp(String str) {
+        return StringUtil.joinString(
+                List.of("otp-", str)
+        );
     }
 }
