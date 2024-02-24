@@ -68,7 +68,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         if (customerService.findByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] Customer retrieval is not valid",
+                    "이미 가입된 번호입니다.",
                     null
             );
         }
@@ -77,7 +77,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] not verified phone number",
+                    "인증이 완료되지 않은 번호입니다.",
                     null
             );
         }
@@ -92,7 +92,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
         otpRedisService.deleteData(dto.getPhoneNumber());
 
-        return new ResponseResult<>(Result.SUCCESS, "[INFO] 사용자가 성공적으로 등록되었습니다.", null);
+        return new ResponseResult<>(Result.SUCCESS, "사용자가 성공적으로 등록되었습니다.", null);
     }
 
     @Transactional
@@ -102,7 +102,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         if (mayBeCustomerByPhoneNumber.isEmpty()) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] No registered user with phone number, cannot login",
+                    "해당 번호로 가입된 사용자가 존재하지 않습니다.",
                     null
             );
         }
@@ -135,7 +135,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         return new ResponseResult<>(
                 Result.SUCCESS,
-                "[INFO] Authentication succeed with user id: " + customerByPhoneNumber.getId(),
+                "로그인 인증에 성공하였습니다.",
                 result
         );
     }
@@ -158,7 +158,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         if (authenticationService.isLoggedOut(customerId)) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] Logged out user tried reissue",
+                    "로그아웃된 유저입니다.",
                     null
             );
         }
@@ -166,7 +166,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         if (!isValidatedRefreshToken(body)) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] 현재 유효하지 않은 리프레시 토큰입니다.",
+                    "현재 유효하지 않은 refresh token입니다.",
                     null
             );
         }
@@ -175,7 +175,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         if (mayBeCustomer.isEmpty()) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "[ERROR] No Such Customer with the uuid",
+                    "유효하지 않은 uuid입니다.",
                     null
             );
         }
@@ -192,7 +192,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         return new ResponseResult<>(
                 Result.SUCCESS,
-                "[INFO] Authentication succeed with user id: " + customer.getId(),
+                "refresh token 재발급이 성공하였습니다.",
                 result
         );
     }
