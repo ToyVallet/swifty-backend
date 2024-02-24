@@ -3,14 +3,19 @@ package com.swifty.bank.server.core.domain.account.service.impl;
 import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.account.SubAccount;
 import com.swifty.bank.server.core.domain.account.UnitedAccount;
+import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
+import com.swifty.bank.server.core.domain.account.exception.NoSuchUnitedAccountByUuidException;
+import com.swifty.bank.server.core.domain.account.exception.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import com.swifty.bank.server.core.domain.account.repository.SubAccountRepository;
 import com.swifty.bank.server.core.domain.account.repository.UnitedAccountRepository;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +44,23 @@ public class AccountServiceImpl implements AccountService {
         }
 
         return createdAccount;
+    }
+
+    @Override
+    public void updateUaNickname(AccountNicknameUpdateDto dto) {
+        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(dto.getUaUuid());
+
+        if (ua.isEmpty()) {
+            throw new NoSuchUnitedAccountByUuidException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
+        }
+
+        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+
+        if (accountOwnerUuid.compareTo(dto.getCustomerUuid()) != 0) {
+            throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 수정 요청자와 소유자가 다릅니다.");
+        }
+
+        ua.get().updateNickname(dto.getNickname());
     }
 
     // 모듈러스 10 알고리즘 참고

@@ -4,8 +4,11 @@ import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
 import com.swifty.bank.server.core.common.constant.Result;
 import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountRegisterRequest;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
+import com.swifty.bank.server.core.domain.account.dto.ReviseAccountNicknameRequest;
+import com.swifty.bank.server.core.domain.account.exception.NoSuchUnitedAccountByUuidException;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
@@ -66,6 +69,42 @@ public class AccountApiServiceImpl implements AccountApiService {
         return new ResponseResult<>(
                 Result.SUCCESS,
                 "[INFO] 성공적으로 계좌를 등록했습니다",
+                null
+        );
+    }
+
+    @Override
+    public ResponseResult<?> reviseAccountNickname(String token, ReviseAccountNicknameRequest req) {
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
+        } catch (AuthenticationException e) {
+            return new ResponseResult(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        AccountNicknameUpdateDto dto = new AccountNicknameUpdateDto(
+                uuid,
+                req.getUnitedAccountUuid(),
+                req.getNickname()
+        );
+
+        try {
+            accountService.updateUaNickname(dto);
+        } catch (NoSuchUnitedAccountByUuidException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] " + uuid.toString() + "의 계좌 닉네임 변경이 완료 되었습니다",
                 null
         );
     }
