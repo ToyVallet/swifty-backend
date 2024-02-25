@@ -17,7 +17,7 @@ public class AuthJpqlRepositoryImpl implements AuthJpqlRepository {
     @Override
     public Optional<RefreshTokenCache> findAuthByUuid(UUID uuid) {
         return em.createQuery(
-                        "SELECT A FROM Auth A WHERE A.isDeleted = :isDeleted AND A.uuid = :uuid", RefreshTokenCache.class
+                        "SELECT A FROM RefreshTokenCache A WHERE A.isDeleted = :isDeleted AND A.id = :uuid", RefreshTokenCache.class
                 )
                 .setParameter("isDeleted", false)
                 .setParameter("uuid", uuid)
