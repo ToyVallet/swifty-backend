@@ -18,7 +18,7 @@ public class NoSuchElementExceptionHandler {
                 null);
 
         return ResponseEntity
-                .accepted()
+                .badRequest()
                 .body(res);
     }
 }

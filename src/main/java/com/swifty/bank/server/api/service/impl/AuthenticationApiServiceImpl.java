@@ -50,7 +50,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         if (customerService.findByPhoneNumber(phoneNumber).isPresent()) {
             return new ResponseResult<>(
-                    Result.FAIL,
+                    Result.SUCCESS,
                     "이미 가입된 회원입니다.",
                     false
             );

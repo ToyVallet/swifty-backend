@@ -4,20 +4,18 @@ import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
-public class IllegalArgumentExceptionHandler {
-
-    @ExceptionHandler
-    public ResponseEntity<?> handlerIllegalArgumentException(IllegalArgumentException e) {
+public class ExceptionHandler {
+    @org.springframework.web.bind.annotation.ExceptionHandler
+    public ResponseEntity<?> handleException(Exception e) {
         ResponseResult res = new ResponseResult(
                 Result.FAIL,
-                "[ERROR] 유효하지 않은 입력입니다. 입력을 검토하거나 백엔드 팀에 문의하세요",
+                "[ERROR] 알 수 없는 예외가 발생했습니다. 백엔드 단에 문의해 주세요",
                 null
         );
         return ResponseEntity
-                .badRequest()
+                .internalServerError()
                 .body(res);
     }
 }

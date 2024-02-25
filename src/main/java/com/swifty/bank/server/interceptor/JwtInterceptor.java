@@ -8,6 +8,7 @@ import com.swifty.bank.server.core.common.authentication.service.AuthenticationS
 import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.utils.JwtUtil;
+import com.swifty.bank.server.exception.NotLoggedInCustomerException;
 import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,7 +42,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             if (authenticationService.isLoggedOut(
                     UUID.fromString(JwtUtil.getClaimByKey(accessToken, "customerId").toString())
                     )) {
-                throw new IllegalArgumentException("로그아웃 상태의 토큰입니다.");
+                throw new NotLoggedInCustomerException("로그아웃 상태의 토큰입니다.");
             }
             return true;
         } catch (Exception e) {
