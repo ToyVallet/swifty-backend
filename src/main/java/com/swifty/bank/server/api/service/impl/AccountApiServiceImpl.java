@@ -1,5 +1,6 @@
 package com.swifty.bank.server.api.service.impl;
 
+import com.swifty.bank.server.api.controller.dto.account.request.RetrieveBalanceWithCurrencyRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountPasswordRequest;
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
@@ -10,6 +11,7 @@ import com.swifty.bank.server.api.controller.dto.account.request.AccountRegister
 import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
 import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountNicknameRequest;
+import com.swifty.bank.server.core.domain.account.dto.RetrieveBalanceOfUnitedAccountByCurrencyDto;
 import com.swifty.bank.server.core.domain.account.exception.NoSuchUnitedAccountByUuidException;
 import com.swifty.bank.server.core.domain.account.exception.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
@@ -19,8 +21,7 @@ import com.swifty.bank.server.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -122,11 +123,11 @@ public class AccountApiServiceImpl implements AccountApiService {
     public ResponseResult<?> resetAccountPassword(String token, ReviseAccountPasswordRequest req) {
         UUID uuid;
         try {
-           uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
+            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
         } catch (AuthenticationException e) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    e.getMessage( ),
+                    e.getMessage(),
                     null
             );
         }
@@ -155,5 +156,45 @@ public class AccountApiServiceImpl implements AccountApiService {
                 "[INFO] 성공적으로 계좌 비밀번호 변경을 마쳤습니다.",
                 null
         );
+    }
+
+    @Override
+    public ResponseResult<?> retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
+        } catch (AuthenticationException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        Map<String, Object> res = new HashMap<>();
+        try {
+            RetrieveBalanceOfUnitedAccountByCurrencyDto dto = new RetrieveBalanceOfUnitedAccountByCurrencyDto(
+                    uuid, req.getUnitedAccountUuid(), req.getCurrency()
+            );
+            res.put("balance", accountService.retrieveBalanceByCurrency(dto));
+        } catch (NoSuchUnitedAccountByUuidException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] 계좌 조회가 성공적으로 완료되었습니다.",
+                    res
+                );
     }
 }

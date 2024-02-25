@@ -24,7 +24,7 @@ public class SubAccount extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unitedAccountUuid", foreignKey = @ForeignKey(name = "FK_united_account"))
-    private UnitedAccount unitedAccountUuid;
+    private UnitedAccount unitedAccount;
 
     private Currency currency;
 
@@ -34,7 +34,7 @@ public class SubAccount extends BaseEntity {
 
     @Builder
     public SubAccount(UnitedAccount ua, Currency cur) {
-        this.unitedAccountUuid = ua;
+        this.unitedAccount = ua;
         this.currency = cur;
         this.balance = 0;
         this.status = AccountStatus.ACTIVE;
