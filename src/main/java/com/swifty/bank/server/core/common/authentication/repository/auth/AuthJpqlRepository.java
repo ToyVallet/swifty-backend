@@ -1,6 +1,5 @@
 package com.swifty.bank.server.core.common.authentication.repository.auth;
 
-import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 
 import java.util.Optional;

@@ -5,6 +5,7 @@ import com.swifty.bank.server.api.controller.dto.sms.request.CheckVerificationCo
 import com.swifty.bank.server.api.controller.dto.sms.request.GetVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCodeRequest;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.api.service.impl.PhoneAuthenticationServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,12 +32,17 @@ public class PhoneAuthenticationController {
     @PostMapping(value = "/steal-verification-code")
     public ResponseEntity<?> stealVerificationCode(
             @RequestBody @Valid GetVerificationCodeRequest getVerificationCodeRequest) {
-        ResponseResult<?> responseResult = phoneAuthenticationService.stealVerificationCode(
+        ResponseResult<?> res = phoneAuthenticationService.stealVerificationCode(
                 getVerificationCodeRequest);
 
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(responseResult);
+                .body(res);
     }
 
     @PassAuth
@@ -44,12 +50,17 @@ public class PhoneAuthenticationController {
     @PostMapping(value = "/send-verification-code")
     public ResponseEntity<?> sendVerificationCode(
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
-        ResponseResult<?> responseResult = phoneAuthenticationService.sendVerificationCode(
+        ResponseResult<?> res = phoneAuthenticationService.sendVerificationCode(
                 sendVerificationCodeRequest);
 
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(responseResult);
+                .body(res);
     }
 
     @PassAuth
@@ -57,11 +68,16 @@ public class PhoneAuthenticationController {
     @PostMapping(value = "/check-verification-code")
     public ResponseEntity<?> checkVerificationCode(
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
-        ResponseResult<?> responseResult = phoneAuthenticationService.checkVerificationCode(
+        ResponseResult<?> res = phoneAuthenticationService.checkVerificationCode(
                 checkVerificationCodeRequest);
 
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(responseResult);
+                .body(res);
     }
 }

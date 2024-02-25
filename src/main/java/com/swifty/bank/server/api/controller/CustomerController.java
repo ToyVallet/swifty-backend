@@ -4,13 +4,16 @@ import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUp
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.service.CustomerApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.api.service.impl.CustomerApiServiceImpl;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.authentication.service.impl.AuthenticationServiceImpl;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -34,13 +37,17 @@ public class CustomerController {
     @Operation(summary = "get customer's whole information in database", description = "no request body needed")
     public ResponseEntity<?> customerInfo() {
         String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
-        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
-        ResponseResult<?> customerInfo = customerApiService.getCustomerInfo(customerId);
+        ResponseResult<?> res = customerApiService.getCustomerInfo(jwt);
 
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(customerInfo);
+                .body(res);
     }
 
     @PatchMapping("")
@@ -48,39 +55,51 @@ public class CustomerController {
     public ResponseEntity<?> customerInfoUpdate(
             @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
         String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
-        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
-        ResponseResult<?> responseResult = customerApiService.customerInfoUpdate(customerId,
+        ResponseResult<?> res = customerApiService.customerInfoUpdate(jwt,
                 customerInfoUpdateCondition);
 
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(responseResult);
+                .body(res);
     }
 
     @PostMapping("/password")
     @Operation(summary = "confirm whether input and original password matches", description = "password string needed")
     public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
         String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
-        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
-        ResponseResult responseResult = customerApiService.confirmPassword(customerId, password.getPasswd());
+        ResponseResult res = customerApiService.confirmPassword(jwt, password.getPasswd());
 
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(responseResult);
+                .body(res);
     }
 
     @PatchMapping("/password")
     @Operation(summary = "reset password with input", description = "password string needed in body")
     public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
         String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
-        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
-        ResponseResult responseResult = customerApiService.resetPassword(customerId, newPassword.getPasswd());
+        ResponseResult res = customerApiService.resetPassword(jwt, newPassword.getPasswd());
 
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(responseResult);
+                .body(res);
     }
 }

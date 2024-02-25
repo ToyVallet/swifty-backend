@@ -1,6 +1,5 @@
 package com.swifty.bank.server.core.common.authentication.repository.auth.impl;
 
-import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.repository.auth.AuthJpqlRepository;
 import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 import jakarta.persistence.EntityManager;

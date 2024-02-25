@@ -1,5 +1,8 @@
 package com.swifty.bank.server.api.service.dto;
 
+import lombok.Getter;
+
+@Getter
 public enum Result {
 
     SUCCESS(200),
@@ -9,5 +12,8 @@ public enum Result {
 
     Result(int code) {
         this.code = code;
+    }
+    public boolean equals(Result result) {
+        return result.getCode() == this.code;
     }
 }

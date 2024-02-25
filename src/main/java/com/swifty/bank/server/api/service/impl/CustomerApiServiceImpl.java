@@ -10,6 +10,8 @@ import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.swifty.bank.server.core.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,8 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     private final BCryptPasswordEncoder encoder;
 
     @Override
-    public ResponseResult<?> getCustomerInfo(UUID customerUuid) {
+    public ResponseResult<?> getCustomerInfo(String jwt) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
         Optional<CustomerInfoResponse> mayBeCustomerInfo = customerService.findCustomerInfoDtoByUuid(customerUuid);
         if (mayBeCustomerInfo.isEmpty()) {
@@ -44,8 +47,9 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
 
     @Override
-    public ResponseResult<?> customerInfoUpdate(UUID customerUuid,
+    public ResponseResult<?> customerInfoUpdate(String jwt,
                                                 CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
         customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
 
         return ResponseResult.builder()
@@ -55,7 +59,8 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     }
 
     @Override
-    public ResponseResult<?> confirmPassword(UUID customerUuid, String password) {
+    public ResponseResult<?> confirmPassword(String jwt, String password) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
         Optional<Customer> mayBeCustomer = customerService.findByUuid(customerUuid);
         if (mayBeCustomer.isEmpty()) {
             return ResponseResult.builder()
@@ -81,7 +86,8 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
     @Transactional
     @Override
-    public ResponseResult<?> resetPassword(UUID customerUuid, String newPassword) {
+    public ResponseResult<?> resetPassword(String jwt, String newPassword) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
         customerService.updatePassword(customerUuid, newPassword);
 
         return ResponseResult.builder()
@@ -92,7 +98,8 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
     @Override
     @Transactional
-    public ResponseResult<?> customerWithdrawal(UUID customerUuid) {
+    public ResponseResult<?> customerWithdrawal(String jwt) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
         customerService.withdrawCustomer(customerUuid);
 
         return ResponseResult.builder()
