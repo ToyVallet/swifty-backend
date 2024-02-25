@@ -64,10 +64,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void logout(UUID customerId) {
         if (!isLoggedOut(customerId)) {
             String key = customerId.toString();
-            Auth prevAuth = authRepository.findAuthByUuid(customerId)
+            RefreshTokenCache prevAuth = authRepository.findAuthByUuid(customerId)
                     .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
 
-            prevAuth.updateAuthContent("LOGOUT");
+            prevAuth.updateRefreshToken("LOGOUT");
 
             refreshTokenRedisService.setData(key, new RefreshTokenCache(customerId, "LOGOUT"));
             return;
@@ -80,7 +80,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         RefreshTokenCache refreshTokenCache = refreshTokenRedisService.getData(customerId.toString());
 
         if (refreshTokenCache == null) {
-            Auth res = findAuthByCustomerId(customerId)
+            RefreshTokenCache res = findAuthByCustomerId(customerId)
                     .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
 
             refreshTokenRedisService.setData(customerId.toString(),
@@ -109,7 +109,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public Optional<Auth> findAuthByCustomerId(UUID customerId) {
+    public Optional<RefreshTokenCache> findAuthByCustomerId(UUID customerId) {
         return authRepository.findAuthByUuid(customerId);
     }
 
@@ -118,9 +118,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void saveRefreshTokenInDataSources(String jwt) {
         UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        Auth newAuth = new Auth(customerId, jwt);
-        authRepository.save(newAuth);
+        RefreshTokenCache prevAuth = refreshTokenRedisService.getData(customerId.toString( ));
+        if (prevAuth == null) {
+            prevAuth = authRepository.findAuthByUuid(customerId)
+                    .orElse(null);
+        }
+
+        if (prevAuth == null) {
+            authRepository.save(new RefreshTokenCache(customerId, jwt));
+        }
+        else {
+            prevAuth.updateRefreshToken(jwt);
+        }
+
         refreshTokenRedisService.setData(customerId.toString(),
-                new RefreshTokenCache(customerId, newAuth.getRefreshToken()));
+                new RefreshTokenCache(customerId, jwt));
     }
 }

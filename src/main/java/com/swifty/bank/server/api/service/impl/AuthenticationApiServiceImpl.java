@@ -142,7 +142,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> reissue(String body) {
-        ObjectMapper mapper = new ObjectMapper();
         UUID customerId;
         try {
             customerId = UUID.fromString(JwtUtil.getClaimByKey(body, "customerId").toString());
@@ -261,7 +260,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         if (previousCache == null) {
             // get refresh token from mysql
-            Auth previousAuth = authenticationService.findAuthByCustomerId(uuid)
+            RefreshTokenCache previousAuth = authenticationService.findAuthByCustomerId(uuid)
                     .orElse(null);
 
             // 마지막으로 저장된 ref. 토큰과 현재 토큰이 맞지 않다면 유효하지 않은 토큰임
