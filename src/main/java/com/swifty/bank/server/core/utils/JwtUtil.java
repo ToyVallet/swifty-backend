@@ -10,6 +10,8 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -109,5 +111,12 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     public void setSecretKey(String secret) {
         JwtUtil.secretKey = secret;
+    }
+
+    public static <T> T getValueByKeyWithObject(String jwt, String key, Class<T> objectClass) {
+        if (objectClass == UUID.class) {
+            return objectClass.cast(UUID.fromString(JwtUtil.getClaimByKey(jwt, key).toString()));
+        }
+        throw new IllegalArgumentException("[ERROR] jwt에서 key를 추출하는 데 지원하지 않는 클래스 양식입니다");
     }
 }

@@ -32,7 +32,7 @@ public class CustomerController {
     @Operation(summary = "get customer's whole information in database", description = "no request body needed")
     public ResponseEntity<?> customerInfo() {
         String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
-        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
+        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
         ResponseResult<?> customerInfo = customerApiService.getCustomerInfo(customerId);
 
@@ -46,7 +46,7 @@ public class CustomerController {
     public ResponseEntity<?> customerInfoUpdate(
             @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
         String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
-        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
+        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
         ResponseResult<?> responseResult = customerApiService.customerInfoUpdate(customerId,
                 customerInfoUpdateCondition);
@@ -60,7 +60,7 @@ public class CustomerController {
     @Operation(summary = "confirm whether input and original password matches", description = "password string needed")
     public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
         String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
-        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
+        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
         ResponseResult responseResult = customerApiService.confirmPassword(customerId, password.getPasswd());
 
@@ -73,7 +73,7 @@ public class CustomerController {
     @Operation(summary = "reset password with input", description = "password string needed in body")
     public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
         String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
-        UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
+        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
         ResponseResult responseResult = customerApiService.resetPassword(customerId, newPassword.getPasswd());
 
