@@ -1,6 +1,7 @@
 package com.swifty.bank.server.core.domain.account;
 
 import com.swifty.bank.server.core.common.constant.Bank;
+import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.BaseEntity;
 import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
 import com.swifty.bank.server.core.domain.customer.Customer;
@@ -34,14 +35,17 @@ public class UnitedAccount extends BaseEntity {
 
     private String nickname;
 
+    private Currency defaultCurrency;
+
     private AccountStatus status;
 
     @Builder
-    public UnitedAccount(Customer customer, String accountNumber, Bank bank, String accountPassword) {
+    public UnitedAccount(Customer customer, String accountNumber, Bank bank, String accountPassword, Currency defaultCurrency) {
         this.customer = customer;
         this.accountNumber = accountNumber;
         this.bank = bank;
         this.accountPassword = accountPassword;
+        this.defaultCurrency = defaultCurrency;
         this.nickname = null;
         this.status = AccountStatus.ACTIVE;
     }

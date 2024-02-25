@@ -32,7 +32,9 @@ public class AccountServiceImpl implements AccountService {
                 .accountPassword(dto.getAccountPassword())
                 .accountNumber(generateAccountNumberWithModulus10())
                 .bank(dto.getBank())
+                .defaultCurrency(dto.getDefaultCurrency())
                 .customer(dto.getCustomer())
+
                 .build();
 
         UnitedAccount createdAccount = unitedAccountRepository.save(ua);
@@ -68,9 +70,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void updateUaPassword(AccountPasswordUpdateDto password) {
-        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(password.getCustomerUuid( ));
+        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(password.getCustomerUuid());
 
-        if (ua.isEmpty( )) {
+        if (ua.isEmpty()) {
             throw new NoSuchUnitedAccountByUuidException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
         }
 
@@ -80,32 +82,32 @@ public class AccountServiceImpl implements AccountService {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 수정 요청자와 소유자가 다릅니다.");
         }
 
-        ua.get().updatePassword(password.getPassword( ));
+        ua.get().updatePassword(password.getPassword());
     }
 
     @Override
     public double retrieveBalanceByCurrency(RetrieveBalanceOfUnitedAccountByCurrencyDto dto) {
-        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(dto.getCustomerUuid( ));
+        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(dto.getCustomerUuid());
 
-        if (ua.isEmpty( )) {
+        if (ua.isEmpty()) {
             throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다");
         }
 
         UUID accountOwnerUuid = ua.get().getCustomer().getId();
 
-        if (accountOwnerUuid.compareTo(dto.getCustomerUuid( )) != 0) {
+        if (accountOwnerUuid.compareTo(dto.getCustomerUuid()) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다");
         }
 
         Optional<SubAccount> sa = subAccountRepository.findSubAccountByCurrencyAndUnitedAccountUuid(
-                ua.get( ), dto.getCurrency( )
+                ua.get(), dto.getCurrency()
         );
 
-        if (sa.isEmpty( )) {
+        if (sa.isEmpty()) {
             throw new NoSuchElementException("[ERROR] 해당 계좌 아이디로 등록된 환 계좌가 없습니다.");
         }
 
-        return sa.get( ).getBalance();
+        return sa.get().getBalance();
     }
 
     // 모듈러스 10 알고리즘 참고

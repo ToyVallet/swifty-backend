@@ -16,5 +16,6 @@ public class AccountSaveDto {
     private Bank bank;
     private String accountPassword;
     private List<Currency> currencies;
+    private Currency defaultCurrency;
     private Customer customer;
 }

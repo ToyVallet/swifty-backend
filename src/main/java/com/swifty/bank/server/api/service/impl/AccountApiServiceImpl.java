@@ -57,6 +57,7 @@ public class AccountApiServiceImpl implements AccountApiService {
                 req.getBank(),
                 req.getAccountPassword(),
                 req.getCurrencies(),
+                req.getDefaultCurrency(),
                 customer.get()
         );
 

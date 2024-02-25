@@ -15,4 +15,5 @@ public class AccountRegisterRequest {
     private Bank bank;
     private String accountPassword;
     private List<Currency> currencies;
+    private Currency defaultCurrency;
 }
