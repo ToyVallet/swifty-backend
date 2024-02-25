@@ -4,6 +4,7 @@ import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.account.SubAccount;
 import com.swifty.bank.server.core.domain.account.UnitedAccount;
 import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
+import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
 import com.swifty.bank.server.core.domain.account.exception.NoSuchUnitedAccountByUuidException;
 import com.swifty.bank.server.core.domain.account.exception.RequestorAndOwnerOfUnitedAccountIsDifferentException;
@@ -61,6 +62,23 @@ public class AccountServiceImpl implements AccountService {
         }
 
         ua.get().updateNickname(dto.getNickname());
+    }
+
+    @Override
+    public void updateUaPassword(AccountPasswordUpdateDto password) {
+        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(password.getCustomerUuid( ));
+
+        if (ua.isEmpty( )) {
+            throw new NoSuchUnitedAccountByUuidException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
+        }
+
+        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+
+        if (accountOwnerUuid.compareTo(password.getCustomerUuid()) != 0) {
+            throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 수정 요청자와 소유자가 다릅니다.");
+        }
+
+        ua.get().updatePassword(password.getPassword( ));
     }
 
     // 모듈러스 10 알고리즘 참고

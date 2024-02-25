@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.domain.account.dto;
+package com.swifty.bank.server.api.controller.dto.account.request;
 
 import com.swifty.bank.server.core.common.constant.Bank;
 import com.swifty.bank.server.core.common.constant.Currency;

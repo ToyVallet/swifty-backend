@@ -2,7 +2,7 @@ package com.swifty.bank.server.api.controller;
 
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.core.domain.account.dto.AccountRegisterRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.AccountRegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;

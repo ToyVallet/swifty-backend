@@ -49,4 +49,8 @@ public class UnitedAccount extends BaseEntity {
     public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
+
+    public void updatePassword(String accountPassword) {
+        this.accountPassword = accountPassword;
+    }
 }

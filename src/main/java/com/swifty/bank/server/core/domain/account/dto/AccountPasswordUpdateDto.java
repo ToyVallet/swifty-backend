@@ -6,10 +6,11 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Getter
-@AllArgsConstructor
 @NoArgsConstructor
-public class ReviseAccountNicknameRequest {
+@AllArgsConstructor
+@Getter
+public class AccountPasswordUpdateDto {
+    private UUID customerUuid;
     private UUID unitedAccountUuid;
-    private String nickname;
+    private String password;
 }
