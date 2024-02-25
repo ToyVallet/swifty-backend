@@ -2,8 +2,10 @@ package com.swifty.bank.server.api.controller;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
+import com.swifty.bank.server.api.service.CustomerApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.impl.CustomerApiServiceImpl;
+import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.authentication.service.impl.AuthenticationServiceImpl;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,8 +27,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Tag(name = "Customer Information API")
 @Slf4j
 public class CustomerController {
-    private final CustomerApiServiceImpl customerApiService;
-    private final AuthenticationServiceImpl authenticationService;
+    private final CustomerApiService customerApiService;
+    private final AuthenticationService authenticationService;
 
     @GetMapping("")
     @Operation(summary = "get customer's whole information in database", description = "no request body needed")

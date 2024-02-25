@@ -46,91 +46,59 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     @Override
     public ResponseResult<?> customerInfoUpdate(UUID customerUuid,
                                                 CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        try {
-            customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
+        customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
 
-            return ResponseResult.builder()
-                    .result(Result.SUCCESS)
-                    .message("성공적으로 회원정보를 수정하였습니다.")
-                    .build();
-
-        } catch (NoSuchElementException e) {
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message(e.getMessage())
-                    .build();
-        }
+        return ResponseResult.builder()
+                .result(Result.SUCCESS)
+                .message("성공적으로 회원정보를 수정하였습니다.")
+                .build();
     }
 
     @Override
     public ResponseResult<?> confirmPassword(UUID customerUuid, String password) {
-        try {
-            Optional<Customer> mayBeCustomer = customerService.findByUuid(customerUuid);
-            if (mayBeCustomer.isEmpty()) {
-                return ResponseResult.builder()
-                        .result(Result.FAIL)
-                        .message("회원이 존재하지 않습니다.")
-                        .build();
-            }
-
-            Customer customer = mayBeCustomer.get();
-
-            if (encoder.matches(password, customer.getPassword())) {
-                return ResponseResult.builder()
-                        .result(Result.SUCCESS)
-                        .message("비밀번호가 일치합니다.")
-                        .build();
-            }
-
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message("비밀번호가 일치하지 않습니다.")
-                    .build();
-
-        } catch (Exception e) {
+        Optional<Customer> mayBeCustomer = customerService.findByUuid(customerUuid);
+        if (mayBeCustomer.isEmpty()) {
             return ResponseResult.builder()
                     .result(Result.FAIL)
                     .message("회원이 존재하지 않습니다.")
-                    .data(e.getMessage())
                     .build();
         }
-    }
+
+        Customer customer = mayBeCustomer.get();
+
+        if (encoder.matches(password, customer.getPassword())) {
+            return ResponseResult.builder()
+                    .result(Result.SUCCESS)
+                    .message("비밀번호가 일치합니다.")
+                    .build();
+        }
+
+        return ResponseResult.builder()
+                .result(Result.FAIL)
+                .message("비밀번호가 일치하지 않습니다.")
+                .build();
+        }
 
     @Transactional
     @Override
     public ResponseResult<?> resetPassword(UUID customerUuid, String newPassword) {
-        try {
-            customerService.updatePassword(customerUuid, newPassword);
+        customerService.updatePassword(customerUuid, newPassword);
 
-            return ResponseResult.builder()
-                    .result(Result.SUCCESS)
-                    .message("성공적으로 비밀번호를 변경하였습니다.")
-                    .build();
-
-        } catch (NoSuchElementException e) {
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message("비밀번호 변경을 실패하였습니다.")
-                    .build();
-        }
+        return ResponseResult.builder()
+                .result(Result.SUCCESS)
+                .message("성공적으로 비밀번호를 변경하였습니다.")
+                .build();
     }
 
-    @Transactional
     @Override
+    @Transactional
     public ResponseResult<?> customerWithdrawal(UUID customerUuid) {
-        try {
-            customerService.withdrawCustomer(customerUuid);
+        customerService.withdrawCustomer(customerUuid);
 
-            return ResponseResult.builder()
-                    .result(Result.SUCCESS)
-                    .message("회원탈퇴를 성공적으로 완료하였습니다.")
-                    .build();
-        } catch (NoSuchElementException e) {
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message("회원탈퇴를 실패하였습니다.")
-                    .build();
-        }
-
+        return ResponseResult.builder()
+                .result(Result.SUCCESS)
+                .message("회원탈퇴를 성공적으로 완료하였습니다.")
+                .build();
     }
+
 }
