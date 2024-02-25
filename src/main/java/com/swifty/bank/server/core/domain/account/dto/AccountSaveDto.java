@@ -1,6 +1,6 @@
 package com.swifty.bank.server.core.domain.account.dto;
 
-import com.swifty.bank.server.core.common.constant.Bank;
+import com.swifty.bank.server.core.common.constant.Product;
 import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AccountSaveDto {
-    private Bank bank;
+    private Product product;
     private String accountPassword;
     private List<Currency> currencies;
     private Currency defaultCurrency;

@@ -54,7 +54,7 @@ public class AccountApiServiceImpl implements AccountApiService {
         }
 
         AccountSaveDto dto = new AccountSaveDto(
-                req.getBank(),
+                req.getProduct(),
                 req.getAccountPassword(),
                 req.getCurrencies(),
                 req.getDefaultCurrency(),

@@ -9,9 +9,7 @@ import com.swifty.bank.server.api.controller.dto.account.request.AccountRegister
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -19,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AccountApiController {
     private final AccountApiService accountApiService;
 
+    @PostMapping(value = "/register_account")
     public ResponseEntity<?> register(@RequestHeader("authorization") String token, @RequestBody AccountRegisterRequest req) {
         ResponseResult<?> res = accountApiService.registerUnitedAccount(token, req);
 
@@ -27,6 +26,7 @@ public class AccountApiController {
                 .body(res);
     }
 
+    @PatchMapping(value = "/update_account_nickname")
     public ResponseEntity<?> updateNickname(
             @RequestHeader("authorization") String token,
             @RequestBody ReviseAccountNicknameRequest req
@@ -38,7 +38,8 @@ public class AccountApiController {
                 .body(res);
     }
 
-    public ResponseEntity<?> register(
+    @PatchMapping(value = "/reset_account_password")
+    public ResponseEntity<?> resetAccountPassword(
             @RequestHeader("authorization")
             String token,
             @RequestBody
@@ -51,7 +52,8 @@ public class AccountApiController {
                 .body(res);
     }
 
-    public ResponseEntity<?> register(
+    @GetMapping("/retrieve_balance")
+    public ResponseEntity<?> retrieveBalanceWithCurrency(
             @RequestHeader("authorization")
             String token,
             @RequestBody

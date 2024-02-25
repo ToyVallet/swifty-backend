@@ -31,7 +31,7 @@ public class AccountServiceImpl implements AccountService {
         UnitedAccount ua = UnitedAccount.builder()
                 .accountPassword(dto.getAccountPassword())
                 .accountNumber(generateAccountNumberWithModulus10())
-                .bank(dto.getBank())
+                .product(dto.getProduct())
                 .defaultCurrency(dto.getDefaultCurrency())
                 .customer(dto.getCustomer())
 
