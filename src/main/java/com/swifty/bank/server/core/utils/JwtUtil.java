@@ -10,6 +10,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
@@ -45,23 +46,12 @@ public class JwtUtil {
     }
 
     public static Object getClaimByKey(String token, String key) {
-        if (token == null || token.isEmpty()) {
-            throw new TokenNotExistException("[ERROR] there is no token");
-        }
-        // parsing
-        if (token.startsWith("Bearer ")) {
-            // IndexOutOfBound error expected
-            token = token.split(" ")[1].trim();
-        }
-        // check if expired
-        if (isExpiredToken(token)) {
-            throw new TokenExpiredException("[ERROR] Token is expired, reissue it");
-        }
+        validateToken(token);
 
         Claims claims = getAllClaims(token);
         // validate key
         if (!claims.containsKey(key)) {
-            throw new TokenContentNotValidException("[ERROR] There is no '" + key + "' in token");
+            throw new IllegalArgumentException("[ERROR] 토큰에 '" + key + "'로 설정된 key가 없습니다");
         }
         return claims.get(key);
     }
