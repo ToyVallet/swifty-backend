@@ -1,6 +1,6 @@
 package com.swifty.bank.server.core.common.authentication.service.impl;
 
-import com.swifty.bank.server.core.common.authentication.RefreshTokenDb;
+import com.swifty.bank.server.core.common.authentication.RefreshToken;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
@@ -64,10 +64,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void logout(UUID customerId) {
         if (!isLoggedOut(customerId)) {
             String key = customerId.toString();
-            RefreshTokenDb prevDbRefreshTokenDb = authRepository.findAuthByUuid(customerId)
+            RefreshToken prevDbRefreshToken = authRepository.findAuthByUuid(customerId)
                     .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
 
-            prevDbRefreshTokenDb.updateRefreshToken("LOGOUT");
+            prevDbRefreshToken.updateRefreshToken("LOGOUT");
             refreshTokenRedisService.setData(key, new RefreshTokenCache("LOGOUT"));
             return;
         }
@@ -79,7 +79,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         RefreshTokenCache refreshTokenCache = refreshTokenRedisService.getData(customerId.toString());
 
         if (refreshTokenCache == null) {
-            RefreshTokenDb res = findAuthByCustomerId(customerId)
+            RefreshToken res = findAuthByCustomerId(customerId)
                     .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
 
             refreshTokenRedisService.setData(customerId.toString(),
@@ -105,7 +105,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public Optional<RefreshTokenDb> findAuthByCustomerId(UUID customerId) {
+    public Optional<RefreshToken> findAuthByCustomerId(UUID customerId) {
         return authRepository.findAuthByUuid(customerId);
     }
 
@@ -115,14 +115,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
         RefreshTokenCache prevCacheAuth = refreshTokenRedisService.getData(customerId.toString( ));
-        RefreshTokenDb prevDbRefreshTokenDb = authRepository.findAuthByUuid(customerId)
+        RefreshToken prevDbRefreshToken = authRepository.findAuthByUuid(customerId)
                 .orElse(null);
 
-        if (prevDbRefreshTokenDb != null) {
-            authRepository.save(new RefreshTokenDb(customerId, jwt));
+        if (prevDbRefreshToken != null) {
+            authRepository.save(new RefreshToken(customerId, jwt));
         }
         else {
-            prevDbRefreshTokenDb.updateRefreshToken(jwt);
+            prevDbRefreshToken.updateRefreshToken(jwt);
         }
 
         refreshTokenRedisService.setData(customerId.toString(), new RefreshTokenCache(jwt));

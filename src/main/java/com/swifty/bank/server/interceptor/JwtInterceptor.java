@@ -5,7 +5,7 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRefreshTokenRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.exception.NotLoggedInCustomerException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +24,7 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final RefreshTokenRefreshTokenRedisServiceImpl refreshTokenRedisService;
+    private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
     private final AuthenticationService authenticationService;
 
     @Override

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class RefreshTokenCache extends BaseEntity {
+public class RefreshTokenCache {
     private String refreshToken;
 
     public RefreshTokenCache(String refreshToken) {

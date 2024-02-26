@@ -1,6 +1,6 @@
 package com.swifty.bank.server.core.common.authentication.repository.auth.impl;
 
-import com.swifty.bank.server.core.common.authentication.RefreshTokenDb;
+import com.swifty.bank.server.core.common.authentication.RefreshToken;
 import com.swifty.bank.server.core.common.authentication.repository.auth.AuthJpqlRepository;
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
@@ -15,9 +15,9 @@ public class AuthJpqlRepositoryImpl implements AuthJpqlRepository {
     private final boolean isDeleted = false;
 
     @Override
-    public Optional<RefreshTokenDb> findAuthByUuid(UUID uuid) {
+    public Optional<RefreshToken> findAuthByUuid(UUID uuid) {
         return em.createQuery(
-                        "SELECT A FROM Auth A WHERE A.isDeleted = :isDeleted AND A.id = :uuid", RefreshTokenDb.class
+                        "SELECT A FROM Auth A WHERE A.isDeleted = :isDeleted AND A.id = :uuid", RefreshToken.class
                 )
                 .setParameter("isDeleted", isDeleted)
                 .setParameter("uuid", uuid)

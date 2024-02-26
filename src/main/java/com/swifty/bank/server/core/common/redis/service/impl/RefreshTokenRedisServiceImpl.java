@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class RefreshTokenRefreshTokenRedisServiceImpl implements RefreshTokenRedisService {
+public class RefreshTokenRedisServiceImpl implements RefreshTokenRedisService {
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     @Value("${jwt.redis.timeout}")

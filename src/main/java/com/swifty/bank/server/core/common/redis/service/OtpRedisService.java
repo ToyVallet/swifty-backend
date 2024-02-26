@@ -2,7 +2,7 @@ package com.swifty.bank.server.core.common.redis.service;
 
 import java.util.concurrent.TimeUnit;
 
-public interface OtpRefreshTokenRedisService {
+public interface OtpRedisService {
     String getData(String key);
 
     void setData(String key, String value);

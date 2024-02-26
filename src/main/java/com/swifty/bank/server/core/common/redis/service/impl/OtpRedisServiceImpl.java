@@ -1,7 +1,7 @@
 package com.swifty.bank.server.core.common.redis.service.impl;
 
 import com.swifty.bank.server.core.common.redis.repository.OtpRedisRepository;
-import com.swifty.bank.server.core.common.redis.service.OtpRefreshTokenRedisService;
+import com.swifty.bank.server.core.common.redis.service.OtpRedisService;
 
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OtpRefreshTokenRedisServiceImpl implements OtpRefreshTokenRedisService {
+public class OtpRedisServiceImpl implements OtpRedisService {
     private final OtpRedisRepository otpRedisRepository;
 
     @Override
