@@ -1,6 +1,6 @@
 package com.swifty.bank.server.core.domain.sms.service.impl;
 
-import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.service.impl.OtpRefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.domain.sms.constant.MessageStatus;
 import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.core.utils.RandomUtil;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class VerifyServiceImpl implements VerifyService {
     private final TwilioMessageService messageService;
-    private final OtpRedisServiceImpl redisService;
+    private final OtpRefreshTokenRedisServiceImpl redisService;
 
     @Override
     public Boolean sendVerificationCode(String phoneNumber) {

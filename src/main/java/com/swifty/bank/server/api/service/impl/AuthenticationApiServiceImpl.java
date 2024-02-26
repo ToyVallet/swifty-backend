@@ -5,10 +5,11 @@ import com.swifty.bank.server.api.controller.dto.auth.request.VerifyCustomerExis
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
+import com.swifty.bank.server.core.common.authentication.RefreshTokenDb;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
-import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
-import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.service.impl.OtpRefreshTokenRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
@@ -29,8 +30,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final AuthenticationService authenticationService;
     private final VerifyService verifyService;
 
-    private final OtpRedisServiceImpl otpRedisService;
-    private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
+    private final OtpRefreshTokenRedisServiceImpl otpRedisService;
+    private final RefreshTokenRefreshTokenRedisServiceImpl refreshTokenRedisService;
 
     @Override
     public ResponseResult<?> verifyCustomerExistence(VerifyCustomerExistenceRequest verifyCustomerExistenceRequest) {
@@ -208,15 +209,24 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         // get refresh token from redis
         RefreshTokenCache previousCache = refreshTokenRedisService.getData(uuid.toString());
+        String prevRefToken = null;
 
         if (previousCache == null) {
             // get refresh token from mysql
-            RefreshTokenCache previousAuth = authenticationService.findAuthByCustomerId(uuid)
+            RefreshTokenDb previousRefreshTokenDb = authenticationService.findAuthByCustomerId(uuid)
                     .orElse(null);
 
             // 마지막으로 저장된 ref. 토큰과 현재 토큰이 맞지 않다면 유효하지 않은 토큰임
-            return previousAuth == null || jwt.equals(previousAuth.getRefreshToken());
+            if (previousRefreshTokenDb == null) {
+                return false;
+            }
+
+            prevRefToken = previousRefreshTokenDb.getRefreshToken( );
         }
-        return true;
+        else {
+            prevRefToken = previousCache.getRefreshToken( );
+        }
+
+        return jwt.equals(prevRefToken);
     }
 }

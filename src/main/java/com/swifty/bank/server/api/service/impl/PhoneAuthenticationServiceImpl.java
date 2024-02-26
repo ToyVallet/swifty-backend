@@ -6,7 +6,7 @@ import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCod
 import com.swifty.bank.server.api.service.PhoneAuthenticationService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.service.impl.OtpRefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.domain.sms.service.impl.VerifyServiceImpl;
 import com.swifty.bank.server.core.utils.RandomUtil;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PhoneAuthenticationServiceImpl implements PhoneAuthenticationService {
     private final VerifyServiceImpl verifyService;
-    private final OtpRedisServiceImpl otpRedisService;
+    private final OtpRefreshTokenRedisServiceImpl otpRedisService;
 
     @Override
     public ResponseResult<?> stealVerificationCode(GetVerificationCodeRequest getVerificationCodeRequest) {

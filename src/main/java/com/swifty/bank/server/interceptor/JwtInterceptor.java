@@ -5,11 +5,9 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
-import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.exception.NotLoggedInCustomerException;
-import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -18,7 +16,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
@@ -27,7 +24,7 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
+    private final RefreshTokenRefreshTokenRedisServiceImpl refreshTokenRedisService;
     private final AuthenticationService authenticationService;
 
     @Override

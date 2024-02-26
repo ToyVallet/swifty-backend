@@ -1,7 +1,7 @@
 package com.swifty.bank.server.core.common.authentication.repository.auth.impl;
 
+import com.swifty.bank.server.core.common.authentication.RefreshTokenDb;
 import com.swifty.bank.server.core.common.authentication.repository.auth.AuthJpqlRepository;
-import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,13 +12,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class AuthJpqlRepositoryImpl implements AuthJpqlRepository {
     private final EntityManager em;
+    private final boolean isDeleted = false;
 
     @Override
-    public Optional<RefreshTokenCache> findAuthByUuid(UUID uuid) {
+    public Optional<RefreshTokenDb> findAuthByUuid(UUID uuid) {
         return em.createQuery(
-                        "SELECT A FROM RefreshTokenCache A WHERE A.isDeleted = :isDeleted AND A.id = :uuid", RefreshTokenCache.class
+                        "SELECT A FROM Auth A WHERE A.isDeleted = :isDeleted AND A.id = :uuid", RefreshTokenDb.class
                 )
-                .setParameter("isDeleted", false)
+                .setParameter("isDeleted", isDeleted)
                 .setParameter("uuid", uuid)
                 .getResultList()
                 .stream()
