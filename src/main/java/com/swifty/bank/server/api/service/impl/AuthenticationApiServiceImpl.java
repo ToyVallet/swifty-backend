@@ -84,7 +84,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             customerService.updateDeviceId(customer.getId(), null);
         }
 
-        Customer customer = customerService.join(JoinDto.createJoinDto(dto));
+        customerService.join(JoinDto.createJoinDto(dto));
         // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
         otpRedisService.deleteData(dto.getPhoneNumber());
 
