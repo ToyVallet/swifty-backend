@@ -118,4 +118,16 @@ public class AccountApiController {
                 .ok()
                 .body(res);
     }
+
+    @GetMapping(value = "/list")
+    public ResponseEntity<?> listUnitedAccount(
+            @RequestHeader("Authorization")
+            String token
+    ) {
+        ResponseResult<?> res = accountApiService.listUnitedAccountWithCustomer(token);
+
+        return ResponseEntity
+                .ok()
+                .body(res);
+    }
 }

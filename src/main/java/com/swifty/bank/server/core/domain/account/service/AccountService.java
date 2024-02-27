@@ -3,6 +3,8 @@ package com.swifty.bank.server.core.domain.account.service;
 import com.swifty.bank.server.core.domain.account.UnitedAccount;
 import com.swifty.bank.server.core.domain.account.dto.*;
 
+import java.util.List;
+
 public interface AccountService {
     public UnitedAccount saveMultipleCurrencyAccount(AccountSaveDto dto);
 
@@ -19,4 +21,6 @@ public interface AccountService {
     public void updateSubAccountStatus(UpdateSubAccountStatusDto dto);
 
     public void updateDefaultCurrency(UpdateDefaultCurrencyDto dto);
+
+    public List<UnitedAccount> listUnitedAccountWithCustomer(ListUnitedAccountWithCustomerDto dto);
 }

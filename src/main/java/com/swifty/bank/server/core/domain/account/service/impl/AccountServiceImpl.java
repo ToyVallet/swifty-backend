@@ -11,10 +11,7 @@ import com.swifty.bank.server.core.domain.account.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -178,6 +175,17 @@ public class AccountServiceImpl implements AccountService {
         }
 
         ua.get().updateDefaultCurrency(dto.getCurrency());
+    }
+
+    @Override
+    public List<UnitedAccount> listUnitedAccountWithCustomer(ListUnitedAccountWithCustomerDto dto) {
+        List<UnitedAccount> unitedAccounts = dto.getCustomer().getUnitedAccounts();
+
+        if (unitedAccounts.size() == 0) {
+            throw new NoSuchElementException("[ERROR] 등록된 계좌들이 없습니다.");
+        }
+
+        return unitedAccounts;
     }
 
     // 모듈러스 10 알고리즘 참고

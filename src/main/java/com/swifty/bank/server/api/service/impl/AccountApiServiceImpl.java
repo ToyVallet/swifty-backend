@@ -300,4 +300,26 @@ public class AccountApiServiceImpl implements AccountApiService {
                 null
         );
     }
+
+    @Override
+    public ResponseResult<?> listUnitedAccountWithCustomer(String jwt) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+
+        Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
+        if (maybeCustomer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] 해당 사용자가 없습니다.",
+                    null
+            );
+        }
+
+        ListUnitedAccountWithCustomerDto dto = new ListUnitedAccountWithCustomerDto(maybeCustomer.get());
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] 특정 고객이 가진 통합 계좌들입니다.",
+                accountService.listUnitedAccountWithCustomer(dto)
+        );
+    }
 }
