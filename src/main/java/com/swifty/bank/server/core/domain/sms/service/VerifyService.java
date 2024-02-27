@@ -4,4 +4,6 @@ public interface VerifyService {
     Boolean sendVerificationCode(String phoneNumber);
 
     Boolean checkVerificationCode(String phoneNumber, String verificationCode);
+
+    boolean isVerified(String phoneNumber);
 }

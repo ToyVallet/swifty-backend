@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.common.utils;
+package com.swifty.bank.server.core.utils;
 
 import com.swifty.bank.server.exception.TokenContentNotValidException;
 import com.swifty.bank.server.exception.TokenExpiredException;
@@ -10,6 +10,9 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,7 +22,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Service
 @Slf4j
 public class JwtUtil {
-    @Value("${jwt.secret}")
     private static String secretKey;
 
     public static String generateToken(Claims claims, Date expiration) {
@@ -44,23 +46,12 @@ public class JwtUtil {
     }
 
     public static Object getClaimByKey(String token, String key) {
-        if (token == null || token.isEmpty()) {
-            throw new TokenNotExistException("[ERROR] there is no token");
-        }
-        // parsing
-        if (token.startsWith("Bearer ")) {
-            // IndexOutOfBound error expected
-            token = token.split(" ")[1].trim();
-        }
-        // check if expired
-        if (isExpiredToken(token)) {
-            throw new TokenExpiredException("[ERROR] Token is expired, reissue it");
-        }
+        validateToken(token);
 
         Claims claims = getAllClaims(token);
         // validate key
         if (!claims.containsKey(key)) {
-            throw new TokenContentNotValidException("[ERROR] There is no '" + key + "' in token");
+            throw new IllegalArgumentException("[ERROR] 토큰에 '" + key + "'로 설정된 key가 없습니다");
         }
         return claims.get(key);
     }
@@ -105,5 +96,17 @@ public class JwtUtil {
 
     private static Key getSecretKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
+
+    @Value("${jwt.secret}")
+    public void setSecretKey(String secret) {
+        JwtUtil.secretKey = secret;
+    }
+
+    public static <T> T getValueByKeyWithObject(String jwt, String key, Class<T> objectClass) {
+        if (objectClass == UUID.class) {
+            return objectClass.cast(UUID.fromString(JwtUtil.getClaimByKey(jwt, key).toString()));
+        }
+        throw new IllegalArgumentException("[ERROR] jwt에서 key를 추출하는 데 지원하지 않는 클래스 양식입니다");
     }
 }

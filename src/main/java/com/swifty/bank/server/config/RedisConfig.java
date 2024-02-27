@@ -1,6 +1,6 @@
 package com.swifty.bank.server.config;
 
-import com.swifty.bank.server.core.common.authentication.Auth;
+import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,22 +20,16 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisHost, redisPort);
-        return lettuceConnectionFactory;
+        return new LettuceConnectionFactory(redisHost, redisPort);
     }
 
     @Bean
-    public RedisTemplate<String, Auth> redisAuthTemplate(RedisConnectionFactory connectionFactory) {
-        return createRedisTemplate(connectionFactory, Auth.class);
+    public RedisTemplate<String, RefreshTokenCache> redisAuthTemplate(RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory, RefreshTokenCache.class);
     }
 
-    @Bean
-    public RedisTemplate<String, String> redisStringTemplate(RedisConnectionFactory connectionFactory) {
-        return createRedisTemplate(connectionFactory, String.class);
-    }
-
-    private <T> RedisTemplate<String, T> createRedisTemplate(RedisConnectionFactory redisConnectionFactory,
-                                                             Class<T> type) {
+    public <T> RedisTemplate<String, T> createRedisTemplate(RedisConnectionFactory redisConnectionFactory,
+                                                            Class<T> type) {
         RedisTemplate<String, T> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory);
         Jackson2JsonRedisSerializer<T> serializer = new Jackson2JsonRedisSerializer<>(type);

@@ -1,5 +1,6 @@
 package com.swifty.bank.server.core.domain.customer;
 
+import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.domain.BaseEntity;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
@@ -16,6 +17,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
+
+import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
@@ -58,10 +61,10 @@ public class Customer extends BaseEntity {
 
     private String password;
 
-    private GrantedAuthority roles;
+    private UserRole roles;
 
     @Builder
-    public Customer(UUID id, String deviceId, String name, String phoneNumber, Gender gender, String birthDate, Nationality nationality, CustomerStatus customerStatus, String password, GrantedAuthority roles) {
+    public Customer(UUID id, String deviceId, String name, String phoneNumber, Gender gender, String birthDate, Nationality nationality, CustomerStatus customerStatus, String password, GrantedAuthority roles, UserRole userRole) {
         this.id = id;
         this.deviceId = deviceId;
         this.name = name;
@@ -71,7 +74,7 @@ public class Customer extends BaseEntity {
         this.nationality = nationality;
         this.customerStatus = customerStatus;
         this.password = password;
-        this.roles = roles;
+        this.roles = userRole;
     }
 
     public void updatePhoneNumber(String phoneNumber) {

@@ -4,17 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.utils.JwtUtil;
-import com.swifty.bank.server.core.common.utils.RedisUtil;
-import com.swifty.bank.server.exception.StoredAuthValueNotExistException;
+import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
+import com.swifty.bank.server.core.utils.JwtUtil;
+import com.swifty.bank.server.exception.NotLoggedInCustomerException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
@@ -23,7 +24,8 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final RedisUtil redisUtil;
+    private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
+    private final AuthenticationService authenticationService;
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws IOException {
@@ -34,8 +36,10 @@ public class JwtInterceptor implements HandlerInterceptor {
 
             String accessToken = JwtUtil.extractJwtFromCurrentRequestHeader();
             JwtUtil.validateToken(accessToken);
-            if (isLoggedOut(JwtUtil.getClaimByKey(accessToken, "customerId").toString())) {
-                throw new IllegalArgumentException("로그아웃 상태의 토큰입니다.");
+            if (authenticationService.isLoggedOut(
+                    UUID.fromString(JwtUtil.getClaimByKey(accessToken, "customerId").toString())
+                    )) {
+                throw new NotLoggedInCustomerException("로그아웃 상태의 토큰입니다.");
             }
             return true;
         } catch (Exception e) {
@@ -67,13 +71,5 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         return false;
-    }
-
-    private boolean isLoggedOut(String key) {
-        Auth res = redisUtil.getRedisAuthValue(key);
-        if (ObjectUtils.isEmpty(res)) {
-            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
-        }
-        return res.getRefreshToken().equals("LOGOUT");
     }
 }

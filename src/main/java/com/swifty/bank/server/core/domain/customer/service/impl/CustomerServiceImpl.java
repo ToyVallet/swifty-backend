@@ -38,7 +38,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .customerStatus(CustomerStatus.ACTIVE)  // 일단 default
                 .nationality(joinDto.getNationality())
                 .phoneNumber(joinDto.getPhoneNumber())
-                .password(joinDto.getPassword())
+                .password(encoder.encode(joinDto.getPassword()))
                 .deviceId(joinDto.getDeviceId())
                 .build();
 

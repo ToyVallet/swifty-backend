@@ -4,7 +4,11 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.LoginWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.VerifyCustomerExistenceRequest;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.service.dto.Result;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,15 +28,37 @@ public class AuthenticationController {
     private final AuthenticationApiService authenticationApiService;
 
     @PassAuth
+    @PostMapping("/verify-customer-existence")
+    public ResponseEntity<?> VerifyCustomerExistence(
+            @RequestBody VerifyCustomerExistenceRequest body
+    ) {
+        ResponseResult res = authenticationApiService.verifyCustomerExistence(body);
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
+        return ResponseEntity
+                .ok()
+                .body(res);
+    }
+
+    @PassAuth
     @PostMapping("/sign-in-with-form")
     @Operation(summary = "sign in with form when user exist but doesn't have an access token to log in",
             description = "operate based on retrieval result of phone number and device id")
     public ResponseEntity<?> signInWithForm(
             @RequestBody LoginWithFormRequest body
     ) {
+        ResponseResult res = authenticationApiService.loginWithForm(body.getDeviceId(), body.getPhoneNumber());
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(authenticationApiService.loginWithForm(body.getDeviceId(), body.getPhoneNumber()));
+                .body(res);
     }
 
     @PassAuth
@@ -42,9 +68,15 @@ public class AuthenticationController {
     public ResponseEntity<?> signUpWithForm(
             @RequestBody JoinRequest body
     ) {
+        ResponseResult res = authenticationApiService.join(body);
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(authenticationApiService.join(body));
+                .body(res);
     }
 
     @PassAuth
@@ -54,10 +86,15 @@ public class AuthenticationController {
     public ResponseEntity<?> reissueTokens(
             @RequestBody ReissueRequest refToken
     ) {
+        ResponseResult res = authenticationApiService.reissue(refToken.getRefreshToken());
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(authenticationApiService.reissue(refToken.getRefreshToken())
-                );
+                .body(res);
     }
 
     @PostMapping("/log-out")
@@ -67,9 +104,15 @@ public class AuthenticationController {
                     , example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
+        ResponseResult res = authenticationApiService.logout(JwtUtil.extractJwtFromCurrentRequestHeader());
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(authenticationApiService.logout(token));
+                .body(res);
     }
 
     @PostMapping("/sign-out")
@@ -79,8 +122,14 @@ public class AuthenticationController {
                     , example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
+        ResponseResult res = authenticationApiService.signOut(JwtUtil.extractJwtFromCurrentRequestHeader());
+        if (res.getResult().equals(Result.FAIL)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(res);
+        }
         return ResponseEntity
                 .ok()
-                .body(authenticationApiService.signOut(token));
+                .body(res);
     }
 }
