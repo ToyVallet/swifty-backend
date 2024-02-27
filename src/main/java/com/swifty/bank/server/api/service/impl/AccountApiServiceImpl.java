@@ -5,19 +5,17 @@ import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountPa
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.common.utils.JwtUtil;
 import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
 import com.swifty.bank.server.api.controller.dto.account.request.AccountRegisterRequest;
 import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
 import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountNicknameRequest;
 import com.swifty.bank.server.core.domain.account.dto.RetrieveBalanceOfUnitedAccountByCurrencyDto;
-import com.swifty.bank.server.core.domain.account.exception.NoSuchUnitedAccountByUuidException;
-import com.swifty.bank.server.core.domain.account.exception.RequestorAndOwnerOfUnitedAccountIsDifferentException;
+import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.exception.AuthenticationException;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,21 +26,10 @@ import java.util.*;
 public class AccountApiServiceImpl implements AccountApiService {
     private final AccountService accountService;
     private final CustomerService customerService;
-    private final JwtUtil jwtUtil;
 
     @Override
     public ResponseResult<?> registerUnitedAccount(String token, AccountRegisterRequest req) {
-        UUID uuid;
-
-        try {
-            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
+        UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(uuid);
         if (customer.isEmpty()) {
@@ -80,16 +67,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> reviseAccountNickname(String token, ReviseAccountNicknameRequest req) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
+        UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
         AccountNicknameUpdateDto dto = new AccountNicknameUpdateDto(
                 uuid,
@@ -99,12 +77,6 @@ public class AccountApiServiceImpl implements AccountApiService {
 
         try {
             accountService.updateUaNickname(dto);
-        } catch (NoSuchUnitedAccountByUuidException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -122,28 +94,13 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> resetAccountPassword(String token, ReviseAccountPasswordRequest req) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
+        UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
         try {
             AccountPasswordUpdateDto dto = new AccountPasswordUpdateDto(
                     uuid, req.getAccountUuid(), req.getPassword()
             );
             accountService.updateUaPassword(dto);
-        } catch (NoSuchUnitedAccountByUuidException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -161,16 +118,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(JwtUtil.getClaimByKey(token, "customerId").toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
+        UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
         Map<String, Object> res = new HashMap<>();
         try {
@@ -178,12 +126,6 @@ public class AccountApiServiceImpl implements AccountApiService {
                     uuid, req.getUnitedAccountUuid(), req.getCurrency()
             );
             res.put("balance", accountService.retrieveBalanceByCurrency(dto));
-        } catch (NoSuchUnitedAccountByUuidException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -195,7 +137,7 @@ public class AccountApiServiceImpl implements AccountApiService {
         return new ResponseResult<>(
                 Result.SUCCESS,
                 "[INFO] 계좌 조회가 성공적으로 완료되었습니다.",
-                    res
-                );
+                res
+        );
     }
 }

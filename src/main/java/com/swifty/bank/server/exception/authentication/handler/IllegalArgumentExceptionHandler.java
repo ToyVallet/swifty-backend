@@ -1,19 +1,19 @@
-package com.swifty.bank.server.exception.handler;
+package com.swifty.bank.server.exception.authentication.handler;
 
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.exception.AuthenticationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
-public class AuthenticationExceptionHandler {
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<?> handleAuthenticationException(AuthenticationException e) {
+public class IllegalArgumentExceptionHandler {
+
+    @ExceptionHandler
+    public ResponseEntity<?> handlerIllegalArgumentException(IllegalArgumentException e) {
         ResponseResult res = new ResponseResult(
                 Result.FAIL,
-                "[ERROR] 인증에 실패했습니다. 입력을 확인해 주세요",
+                "[ERROR] 유효하지 않은 입력입니다. 입력을 검토하거나 백엔드 팀에 문의하세요",
                 null
         );
         return ResponseEntity

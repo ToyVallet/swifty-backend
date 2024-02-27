@@ -7,8 +7,7 @@ import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
 import com.swifty.bank.server.core.domain.account.dto.RetrieveBalanceOfUnitedAccountByCurrencyDto;
-import com.swifty.bank.server.core.domain.account.exception.NoSuchUnitedAccountByUuidException;
-import com.swifty.bank.server.core.domain.account.exception.RequestorAndOwnerOfUnitedAccountIsDifferentException;
+import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import com.swifty.bank.server.core.domain.account.repository.SubAccountRepository;
 import com.swifty.bank.server.core.domain.account.repository.UnitedAccountRepository;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
@@ -56,7 +55,7 @@ public class AccountServiceImpl implements AccountService {
         Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(dto.getUaUuid());
 
         if (ua.isEmpty()) {
-            throw new NoSuchUnitedAccountByUuidException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
+            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
         }
 
         UUID accountOwnerUuid = ua.get().getCustomer().getId();
@@ -73,7 +72,7 @@ public class AccountServiceImpl implements AccountService {
         Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(password.getCustomerUuid());
 
         if (ua.isEmpty()) {
-            throw new NoSuchUnitedAccountByUuidException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
+            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
         }
 
         UUID accountOwnerUuid = ua.get().getCustomer().getId();
