@@ -17,4 +17,6 @@ public interface AccountApiService {
     public ResponseResult<?> updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req);
 
     public ResponseResult<?> updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req);
+
+    public ResponseResult<?> updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req);
 }

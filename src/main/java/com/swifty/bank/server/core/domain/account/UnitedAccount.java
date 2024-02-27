@@ -95,4 +95,8 @@ public class UnitedAccount extends BaseEntity {
 
         subAccount.get().delete( );
     }
+
+    public void updateDefaultCurrency(Currency currency) {
+        this.defaultCurrency = currency;
+    }
 }

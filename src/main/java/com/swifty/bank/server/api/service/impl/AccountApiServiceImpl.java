@@ -265,4 +265,39 @@ public class AccountApiServiceImpl implements AccountApiService {
                 null
         );
     }
+
+    @Override
+    public ResponseResult<?> updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+
+        Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
+        if (maybeCustomer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] 해당 사용자가 없습니다.",
+                    null
+            );
+        }
+
+        try {
+            UpdateDefaultCurrencyDto dto = new UpdateDefaultCurrencyDto(
+                    maybeCustomer.get(),
+                    req.getUnitedAccountUuid(),
+                    req.getDefaultCurrency()
+            );
+            accountService.updateDefaultCurrency(dto);
+        } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] 통합 계좌의 기본 환이 변경되었습니다.",
+                null
+        );
+    }
 }

@@ -1,7 +1,5 @@
 package com.swifty.bank.server.core.domain.account.service.impl;
 
-import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.account.SubAccount;
 import com.swifty.bank.server.core.domain.account.UnitedAccount;
@@ -163,6 +161,23 @@ public class AccountServiceImpl implements AccountService {
         }
 
         sa.get().updateSubAccountStatus(dto.getStatus());
+    }
+
+    @Override
+    public void updateDefaultCurrency(UpdateDefaultCurrencyDto dto) {
+        Optional<UnitedAccount> ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
+
+        if (ua.isEmpty()) {
+            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
+        }
+
+        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+
+        if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) == 0) {
+            throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다.");
+        }
+
+        ua.get().updateDefaultCurrency(dto.getCurrency());
     }
 
     // 모듈러스 10 알고리즘 참고

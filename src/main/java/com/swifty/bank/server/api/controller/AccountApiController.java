@@ -104,4 +104,18 @@ public class AccountApiController {
                 .ok()
                 .body(res);
     }
+
+    @PostMapping(value = "/update_default_currency")
+    public ResponseEntity<?> updateSubAccount(
+            @RequestHeader("Authorization")
+            String token,
+            @RequestBody
+            UpdateDefaultCurrencyRequest req
+    ) {
+        ResponseResult<?> res = accountApiService.updateDefaultCurrency(token, req);
+
+        return ResponseEntity
+                .ok()
+                .body(res);
+    }
 }
