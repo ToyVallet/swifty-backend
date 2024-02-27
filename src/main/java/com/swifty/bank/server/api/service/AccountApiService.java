@@ -1,10 +1,7 @@
 package com.swifty.bank.server.api.service;
 
-import com.swifty.bank.server.api.controller.dto.account.request.RetrieveBalanceWithCurrencyRequest;
-import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountPasswordRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.*;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.controller.dto.account.request.AccountRegisterRequest;
-import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountNicknameRequest;
 
 public interface AccountApiService {
     public ResponseResult<?> registerUnitedAccount(String token, AccountRegisterRequest req);
@@ -14,4 +11,6 @@ public interface AccountApiService {
     public ResponseResult<?> resetAccountPassword(String token, ReviseAccountPasswordRequest req);
 
     public ResponseResult<?> retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req);
+
+    public ResponseResult<?> withdrawUnitedAccount(String token, WithdrawUnitedAccountRequest req);
 }

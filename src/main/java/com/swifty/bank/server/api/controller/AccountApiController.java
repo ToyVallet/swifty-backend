@@ -1,11 +1,8 @@
 package com.swifty.bank.server.api.controller;
 
-import com.swifty.bank.server.api.controller.dto.account.request.RetrieveBalanceWithCurrencyRequest;
-import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountNicknameRequest;
-import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountPasswordRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.*;
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.controller.dto.account.request.AccountRegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -63,6 +60,20 @@ public class AccountApiController {
 
         return ResponseEntity
                 .ok()
+                .body(res);
+    }
+
+    @PostMapping("/withdraw_account")
+    public ResponseEntity<?> withdrawAccount(
+            @RequestHeader("Authorization")
+            String token,
+            @RequestBody
+            WithdrawUnitedAccountRequest req
+    ) {
+        ResponseResult<?> res = accountApiService.withdrawUnitedAccount(token, req);
+
+        return ResponseEntity
+                .ok( )
                 .body(res);
     }
 }

@@ -1,16 +1,10 @@
 package com.swifty.bank.server.api.service.impl;
 
-import com.swifty.bank.server.api.controller.dto.account.request.RetrieveBalanceWithCurrencyRequest;
-import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountPasswordRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.*;
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
-import com.swifty.bank.server.api.controller.dto.account.request.AccountRegisterRequest;
-import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
-import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
-import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountNicknameRequest;
-import com.swifty.bank.server.core.domain.account.dto.RetrieveBalanceOfUnitedAccountByCurrencyDto;
+import com.swifty.bank.server.core.domain.account.dto.*;
 import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
@@ -105,9 +99,18 @@ public class AccountApiServiceImpl implements AccountApiService {
     public ResponseResult<?> resetAccountPassword(String token, ReviseAccountPasswordRequest req) {
         UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
+        Optional<Customer> mayCustomer = customerService.findByUuid(uuid);
+        if (mayCustomer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] 해당 사용자가 없습니다.",
+                    null
+            );
+        }
+
         try {
             AccountPasswordUpdateDto dto = new AccountPasswordUpdateDto(
-                    uuid, req.getAccountUuid(), req.getPassword()
+                    mayCustomer.get(), req.getAccountUuid(), req.getPassword()
             );
             accountService.updateUaPassword(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
@@ -129,10 +132,19 @@ public class AccountApiServiceImpl implements AccountApiService {
     public ResponseResult<?> retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
         UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
+        Optional<Customer> mayCustomer = customerService.findByUuid(uuid);
+        if (mayCustomer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] 해당 사용자가 없습니다.",
+                    null
+            );
+        }
+
         Map<String, Object> res = new HashMap<>();
         try {
             RetrieveBalanceOfUnitedAccountByCurrencyDto dto = new RetrieveBalanceOfUnitedAccountByCurrencyDto(
-                    uuid, req.getUnitedAccountUuid(), req.getCurrency()
+                    mayCustomer.get(), req.getUnitedAccountUuid(), req.getCurrency()
             );
             res.put("balance", accountService.retrieveBalanceByCurrency(dto));
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
@@ -147,6 +159,39 @@ public class AccountApiServiceImpl implements AccountApiService {
                 Result.SUCCESS,
                 "[INFO] 계좌 조회가 성공적으로 완료되었습니다.",
                 res
+        );
+    }
+
+    @Override
+    public ResponseResult<?> withdrawUnitedAccount(String token, WithdrawUnitedAccountRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+
+        Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
+        if (maybeCustomer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] 해당 사용자가 존재하지 않습니다.",
+                    null
+            );
+        }
+
+        try {
+            WithdrawUnitedAccountDto dto = new WithdrawUnitedAccountDto(
+                    maybeCustomer.get(), req.getUnitedAccountId()
+            );
+            accountService.withdrawUnitedAccount(dto);
+        } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] 계좌 폐지가 성공적으로 마무리 되었습니다.",
+                null
         );
     }
 }
