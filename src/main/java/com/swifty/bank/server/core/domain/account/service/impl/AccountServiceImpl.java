@@ -118,11 +118,28 @@ public class AccountServiceImpl implements AccountService {
 
         UUID accountOwnerUuid = ua.get().getCustomer().getId();
 
-        if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) == 0) {
+        if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다.");
         }
 
         ua.get().delete();
+    }
+
+    @Override
+    public void updateUnitedAccountStatus(UpdateUnitedAccountStatusDto dto) {
+        Optional<UnitedAccount> ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
+
+        if (ua.isEmpty()) {
+            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
+        }
+
+        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+
+        if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) == 0) {
+            throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROr] 계좌의 조회 요청자와 소유자가 다릅니다.");
+        }
+
+        ua.get().updateStatus(dto.getAccountStatus());
     }
 
     // 모듈러스 10 알고리즘 참고
@@ -133,7 +150,7 @@ public class AccountServiceImpl implements AccountService {
 
         int checkSum = calculateChecksum(baseNumber);
 
-        return String.valueOf(baseNumber) + checkSum;
+        return accountNumber + baseNumber + checkSum;
     }
 
     private int calculateChecksum(long baseNumber) {

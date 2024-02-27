@@ -69,6 +69,10 @@ public class UnitedAccount extends BaseEntity {
         this.accountPassword = accountPassword;
     }
 
+    public void updateStatus(AccountStatus status) {
+        this.status = status;
+    }
+
     public void addSubAccount(SubAccount subAccount) {
         this.subAccounts.add(subAccount);
     }

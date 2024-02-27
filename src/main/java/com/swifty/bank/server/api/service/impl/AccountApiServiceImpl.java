@@ -194,4 +194,39 @@ public class AccountApiServiceImpl implements AccountApiService {
                 null
         );
     }
+
+    @Override
+    public ResponseResult<?> updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+
+        Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
+        if (maybeCustomer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] 해당 사용자가 없습니다.",
+                    null
+            );
+        }
+
+        try {
+            UpdateUnitedAccountStatusDto dto = new UpdateUnitedAccountStatusDto(
+                    maybeCustomer.get(),
+                    req.getUnitedAccountUuid(),
+                    req.getStatus()
+            );
+            accountService.updateUnitedAccountStatus(dto);
+        } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    e.getMessage(),
+                    null
+            );
+        }
+
+        return new ResponseResult<>(
+                Result.SUCCESS,
+                "[INFO] 통합 계좌 상태 업데이트가 성공적으로 마무리 되었습니다.",
+                null
+        );
+    }
 }
