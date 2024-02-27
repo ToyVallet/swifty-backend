@@ -39,4 +39,8 @@ public class SubAccount extends BaseEntity {
         this.balance = 0;
         this.status = AccountStatus.ACTIVE;
     }
+
+    public void updateSubAccountStatus(AccountStatus status) {
+        this.status = status;
+    }
 }

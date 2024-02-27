@@ -17,4 +17,6 @@ public interface AccountService {
     public void withdrawUnitedAccount(WithdrawUnitedAccountDto dto);
 
     public void updateUnitedAccountStatus(UpdateUnitedAccountStatusDto dto);
+
+    public void updateSubAccountStatus(UpdateSubAccountStatusDto dto);
 }

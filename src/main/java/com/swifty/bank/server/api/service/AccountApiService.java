@@ -15,4 +15,6 @@ public interface AccountApiService {
     public ResponseResult<?> withdrawUnitedAccount(String jwt, WithdrawUnitedAccountRequest req);
 
     public ResponseResult<?> updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req);
+
+    public ResponseResult<?> updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req);
 }

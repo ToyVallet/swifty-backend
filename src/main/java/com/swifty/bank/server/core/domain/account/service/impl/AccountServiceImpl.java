@@ -142,6 +142,29 @@ public class AccountServiceImpl implements AccountService {
         ua.get().updateStatus(dto.getAccountStatus());
     }
 
+    @Override
+    public void updateSubAccountStatus(UpdateSubAccountStatusDto dto) {
+        Optional<UnitedAccount> ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
+
+        if (ua.isEmpty()) {
+            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
+        }
+
+        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+
+        if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) == 0) {
+            throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다.");
+        }
+
+        Optional<SubAccount> sa = ua.get().findSubAccountByCurrency(dto.getCurrency());
+
+        if (sa.isEmpty()) {
+            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 환 계좌가 없습니다.");
+        }
+
+        sa.get().updateSubAccountStatus(dto.getStatus());
+    }
+
     // 모듈러스 10 알고리즘 참고
     private String generateAccountNumberWithModulus10() {
         String accountNumber = "700";

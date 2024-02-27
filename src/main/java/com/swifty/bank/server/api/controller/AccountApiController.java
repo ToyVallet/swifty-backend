@@ -78,13 +78,27 @@ public class AccountApiController {
     }
 
     @PostMapping("/update_united_account")
-    public ResponseEntity<?> withdrawAccount(
+    public ResponseEntity<?> updateUnitedAccount(
             @RequestHeader("Authorization")
             String token,
             @RequestBody
             UpdateUnitedAccountStatusRequest req
     ) {
         ResponseResult<?> res = accountApiService.updateUnitedAccountStatus(token, req);
+
+        return ResponseEntity
+                .ok()
+                .body(res);
+    }
+
+    @PostMapping("/update_sub_account")
+    public ResponseEntity<?> updateSubAccount(
+            @RequestHeader("Authorization")
+            String token,
+            @RequestBody
+            UpdateSubAccountStatusRequest req
+    ) {
+        ResponseResult<?> res = accountApiService.updateSubAccountStatus(token, req);
 
         return ResponseEntity
                 .ok()
