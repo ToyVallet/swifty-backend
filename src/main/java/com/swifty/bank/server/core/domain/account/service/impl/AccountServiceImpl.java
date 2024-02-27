@@ -24,7 +24,6 @@ import java.util.UUID;
 public class AccountServiceImpl implements AccountService {
     private final UnitedAccountRepository unitedAccountRepository;
     private final SubAccountRepository subAccountRepository;
-
     @Override
     public UnitedAccount saveMultipleCurrencyAccount(AccountSaveDto dto) {
         UnitedAccount ua = UnitedAccount.builder()
@@ -36,6 +35,8 @@ public class AccountServiceImpl implements AccountService {
 
                 .build();
 
+        dto.getCustomer().addUnitedAccount(ua);
+
         UnitedAccount createdAccount = unitedAccountRepository.save(ua);
 
         for (Currency cur : dto.getCurrencies()) {
@@ -45,6 +46,7 @@ public class AccountServiceImpl implements AccountService {
                     .build();
 
             subAccountRepository.save(sa);
+            ua.addSubAccount(sa);
         }
 
         return createdAccount;
@@ -52,7 +54,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void updateUaNickname(AccountNicknameUpdateDto dto) {
-        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(dto.getUaUuid());
+        Optional<UnitedAccount> ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUaUuid( ));
 
         if (ua.isEmpty()) {
             throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
@@ -60,7 +62,7 @@ public class AccountServiceImpl implements AccountService {
 
         UUID accountOwnerUuid = ua.get().getCustomer().getId();
 
-        if (accountOwnerUuid.compareTo(dto.getCustomerUuid()) != 0) {
+        if (accountOwnerUuid.compareTo(dto.getCustomer( ).getId( )) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 수정 요청자와 소유자가 다릅니다.");
         }
 
@@ -68,8 +70,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void updateUaPassword(AccountPasswordUpdateDto password) {
-        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(password.getCustomerUuid());
+    public void updateUaPassword(AccountPasswordUpdateDto dto) {
+        Optional<UnitedAccount> ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid( ));
 
         if (ua.isEmpty()) {
             throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
@@ -77,16 +79,16 @@ public class AccountServiceImpl implements AccountService {
 
         UUID accountOwnerUuid = ua.get().getCustomer().getId();
 
-        if (accountOwnerUuid.compareTo(password.getCustomerUuid()) != 0) {
+        if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 수정 요청자와 소유자가 다릅니다.");
         }
 
-        ua.get().updatePassword(password.getPassword());
+        ua.get().updatePassword(dto.getPassword());
     }
 
     @Override
     public double retrieveBalanceByCurrency(RetrieveBalanceOfUnitedAccountByCurrencyDto dto) {
-        Optional<UnitedAccount> ua = unitedAccountRepository.findByUuid(dto.getCustomerUuid());
+        Optional<UnitedAccount> ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUntiedAccountId( ));
 
         if (ua.isEmpty()) {
             throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다");
@@ -94,13 +96,11 @@ public class AccountServiceImpl implements AccountService {
 
         UUID accountOwnerUuid = ua.get().getCustomer().getId();
 
-        if (accountOwnerUuid.compareTo(dto.getCustomerUuid()) != 0) {
+        if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다");
         }
 
-        Optional<SubAccount> sa = subAccountRepository.findSubAccountByCurrencyAndUnitedAccountUuid(
-                ua.get(), dto.getCurrency()
-        );
+        Optional<SubAccount> sa = ua.get().findSubAccountByCurrency(dto.getCurrency( ));
 
         if (sa.isEmpty()) {
             throw new NoSuchElementException("[ERROR] 해당 계좌 아이디로 등록된 환 계좌가 없습니다.");

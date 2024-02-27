@@ -69,8 +69,17 @@ public class AccountApiServiceImpl implements AccountApiService {
     public ResponseResult<?> reviseAccountNickname(String token, ReviseAccountNicknameRequest req) {
         UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
+        Optional<Customer> customer = customerService.findByUuid(uuid);
+        if (customer.isEmpty()) {
+            return new ResponseResult<>(
+                    Result.FAIL,
+                    "[ERROR] 해당 고객이 존재하지 않습니다.",
+                    null
+            );
+        }
+
         AccountNicknameUpdateDto dto = new AccountNicknameUpdateDto(
-                uuid,
+                customer.get( ),
                 req.getUnitedAccountUuid(),
                 req.getNickname()
         );

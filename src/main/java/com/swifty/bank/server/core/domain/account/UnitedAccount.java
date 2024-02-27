@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Getter
@@ -39,13 +39,17 @@ public class UnitedAccount extends BaseEntity {
 
     private AccountStatus status;
 
+    @OneToMany(mappedBy = "unitedAccount", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<SubAccount> subAccounts;
+
     @Builder
     public UnitedAccount(
             Customer customer,
             String accountNumber,
             Product product,
             String accountPassword,
-            Currency defaultCurrency
+            Currency defaultCurrency,
+            List<SubAccount> subAccounts
     ) {
         this.customer = customer;
         this.accountNumber = accountNumber;
@@ -54,6 +58,7 @@ public class UnitedAccount extends BaseEntity {
         this.defaultCurrency = defaultCurrency;
         this.nickname = null;
         this.status = AccountStatus.ACTIVE;
+        this.subAccounts = new ArrayList<>( );
     }
 
     public void updateNickname(String nickname) {
@@ -62,5 +67,28 @@ public class UnitedAccount extends BaseEntity {
 
     public void updatePassword(String accountPassword) {
         this.accountPassword = accountPassword;
+    }
+
+    public void addSubAccount(SubAccount subAccount) {
+        this.subAccounts.add(subAccount);
+    }
+
+    public Optional<SubAccount> findSubAccountByCurrency(Currency currency) {
+        return this.subAccounts
+                .stream()
+                .filter(subAccount -> {
+                    return currency.equals(subAccount.getCurrency( ));
+                })
+                .findAny();
+    }
+
+    public void withdrawSubAccountByCurrency(Currency currency) {
+        Optional<SubAccount> subAccount = findSubAccountByCurrency(currency);
+
+        if (subAccount.isEmpty()) {
+            throw new NoSuchElementException("[ERROR] 해당 계좌의 특정 환 계좌가 없습니다");
+        }
+
+        subAccount.get().delete( );
     }
 }
