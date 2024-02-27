@@ -1,4 +1,0 @@
-[submodule "submodule-config"]
-    path = submodule-config
-    url = https://github.com/ToyVallet/submodule-config.git
-    branch = main
