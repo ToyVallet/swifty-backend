@@ -7,6 +7,8 @@ import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCod
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.impl.PhoneAuthenticationServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +29,11 @@ public class PhoneAuthenticationController {
     private final PhoneAuthenticationServiceImpl phoneAuthenticationService;
 
     @PassAuth
-    @Operation(summary = "send verification code in response body")
+    @Operation(summary = "인증번호 훔치기", description = "생성된 인증번호를 훔쳐봅니다.")
     @PostMapping(value = "/steal-verification-code")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증번호 훔치기에 성공했습니다."),
+    })
     public ResponseEntity<?> stealVerificationCode(
             @RequestBody @Valid GetVerificationCodeRequest getVerificationCodeRequest) {
         ResponseResult<?> responseResult = phoneAuthenticationService.stealVerificationCode(
@@ -36,11 +41,15 @@ public class PhoneAuthenticationController {
 
         return ResponseEntity
                 .ok()
-                .body(responseResult);
+                .body(responseResult.getData());
     }
 
     @PassAuth
-    @Operation(summary = "send a verification code message")
+    @Operation(summary = "인증번호 발송", description = "요청받은 전화번호로 인증번호를 발송합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증번호가 정상적으로 발송되었습니다."),
+            @ApiResponse(responseCode = "400", description = "인증번호 발송에 실패했습니다. (전화번호가 잘못된 경우, Twilio 서비스가 실패한 경우 등"),
+    })
     @PostMapping(value = "/send-verification-code")
     public ResponseEntity<?> sendVerificationCode(
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
@@ -53,7 +62,11 @@ public class PhoneAuthenticationController {
     }
 
     @PassAuth
-    @Operation(summary = "check whether verification code is equal or not")
+    @Operation(summary = "인증번호 확인", description = "인증번호가 올바른지 검증합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증번호가 일치합니다."),
+            @ApiResponse(responseCode = "400", description = "인증번호가 올바르지 않습니다."),
+    })
     @PostMapping(value = "/check-verification-code")
     public ResponseEntity<?> checkVerificationCode(
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
