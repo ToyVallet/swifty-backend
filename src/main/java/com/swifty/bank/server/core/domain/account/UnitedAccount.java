@@ -5,6 +5,7 @@ import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.BaseEntity;
 import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.exception.common.NonExistOrOverOneResultException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -77,23 +78,19 @@ public class UnitedAccount extends BaseEntity {
         this.subAccounts.add(subAccount);
     }
 
-    public Optional<SubAccount> findSubAccountByCurrency(Currency currency) {
-        return this.subAccounts
+    public SubAccount findSubAccountByCurrency(Currency currency) {
+        List<SubAccount> subAccounts = this.subAccounts
                 .stream()
                 .filter(subAccount -> {
                     return currency.equals(subAccount.getCurrency( ));
                 })
-                .findAny();
-    }
+                .toList();
 
-    public void withdrawSubAccountByCurrency(Currency currency) {
-        Optional<SubAccount> subAccount = findSubAccountByCurrency(currency);
-
-        if (subAccount.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 계좌의 특정 환 계좌가 없습니다");
+        if (subAccounts.size( ) == 1) {
+            return subAccounts.get(0);
         }
 
-        subAccount.get().delete( );
+        throw new NonExistOrOverOneResultException();
     }
 
     public void updateDefaultCurrency(Currency currency) {

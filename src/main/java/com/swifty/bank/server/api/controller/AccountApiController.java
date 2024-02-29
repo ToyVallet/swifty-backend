@@ -14,35 +14,35 @@ import org.springframework.web.bind.annotation.*;
 public class AccountApiController {
     private final AccountApiService accountApiService;
 
-    @PostMapping(value = "/register_account")
-    public ResponseEntity<?> register(@RequestHeader("authorization") String token, @RequestBody AccountRegisterRequest req) {
-        ResponseResult<?> res = accountApiService.registerUnitedAccount(token, req);
+    @PostMapping(value = "/register")
+    public ResponseEntity<?> register(@RequestHeader("Authorization") String jwt, @RequestBody AccountRegisterRequest req) {
+        ResponseResult<?> res = accountApiService.register(jwt, req);
 
         return ResponseEntity
                 .ok()
                 .body(res);
     }
 
-    @PatchMapping(value = "/update_account_nickname")
+    @PatchMapping(value = "/update_nickname")
     public ResponseEntity<?> updateNickname(
-            @RequestHeader("authorization") String token,
+            @RequestHeader("Authorization") String jwt,
             @RequestBody ReviseAccountNicknameRequest req
     ) {
-        ResponseResult<?> res = accountApiService.reviseAccountNickname(token, req);
+        ResponseResult<?> res = accountApiService.updateNickname(jwt, req);
 
         return ResponseEntity
                 .ok()
                 .body(res);
     }
 
-    @PatchMapping(value = "/reset_account_password")
-    public ResponseEntity<?> resetAccountPassword(
-            @RequestHeader("authorization")
-            String token,
+    @PatchMapping(value = "/update_password")
+    public ResponseEntity<?> updatePassword(
+            @RequestHeader("Authorization")
+            String jwt,
             @RequestBody
-            ReviseAccountPasswordRequest req
+            ReviseUnitedAccountPasswordRequest req
     ) {
-        ResponseResult<?> res = accountApiService.resetAccountPassword(token, req);
+        ResponseResult<?> res = accountApiService.updatePassword(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -52,53 +52,53 @@ public class AccountApiController {
     @GetMapping("/retrieve_balance")
     public ResponseEntity<?> retrieveBalanceWithCurrency(
             @RequestHeader("authorization")
-            String token,
+            String jwt,
             @RequestBody
             RetrieveBalanceWithCurrencyRequest req
     ) {
-        ResponseResult<?> res = accountApiService.retrieveBalanceWithCurrency(token, req);
+        ResponseResult<?> res = accountApiService.retrieveBalanceWithCurrency(jwt, req);
 
         return ResponseEntity
                 .ok()
                 .body(res);
     }
 
-    @PostMapping("/withdraw_account")
+    @PostMapping("/withdraw")
     public ResponseEntity<?> withdrawAccount(
             @RequestHeader("Authorization")
-            String token,
+            String jwt,
             @RequestBody
             WithdrawUnitedAccountRequest req
     ) {
-        ResponseResult<?> res = accountApiService.withdrawUnitedAccount(token, req);
+        ResponseResult<?> res = accountApiService.withdraw(jwt, req);
 
         return ResponseEntity
                 .ok()
                 .body(res);
     }
 
-    @PostMapping("/update_united_account")
+    @PostMapping("/update_status")
     public ResponseEntity<?> updateUnitedAccount(
             @RequestHeader("Authorization")
-            String token,
+            String jwt,
             @RequestBody
             UpdateUnitedAccountStatusRequest req
     ) {
-        ResponseResult<?> res = accountApiService.updateUnitedAccountStatus(token, req);
+        ResponseResult<?> res = accountApiService.updateUnitedAccountStatus(jwt, req);
 
         return ResponseEntity
                 .ok()
                 .body(res);
     }
 
-    @PostMapping("/update_sub_account")
-    public ResponseEntity<?> updateSubAccount(
+    @PostMapping("/update_currency_status")
+    public ResponseEntity<?> updateSubAccountStatus(
             @RequestHeader("Authorization")
-            String token,
+            String jwt,
             @RequestBody
             UpdateSubAccountStatusRequest req
     ) {
-        ResponseResult<?> res = accountApiService.updateSubAccountStatus(token, req);
+        ResponseResult<?> res = accountApiService.updateSubAccountStatus(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -106,13 +106,13 @@ public class AccountApiController {
     }
 
     @PostMapping(value = "/update_default_currency")
-    public ResponseEntity<?> updateSubAccount(
+    public ResponseEntity<?> updateSubAccountStatus(
             @RequestHeader("Authorization")
-            String token,
+            String jwt,
             @RequestBody
             UpdateDefaultCurrencyRequest req
     ) {
-        ResponseResult<?> res = accountApiService.updateDefaultCurrency(token, req);
+        ResponseResult<?> res = accountApiService.updateDefaultCurrency(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -120,11 +120,11 @@ public class AccountApiController {
     }
 
     @GetMapping(value = "/list")
-    public ResponseEntity<?> listUnitedAccount(
+    public ResponseEntity<?> listUnitedAccountWithCustomer(
             @RequestHeader("Authorization")
-            String token
+            String jwt
     ) {
-        ResponseResult<?> res = accountApiService.listUnitedAccountWithCustomer(token);
+        ResponseResult<?> res = accountApiService.listUnitedAccountWithCustomer(jwt);
 
         return ResponseEntity
                 .ok()

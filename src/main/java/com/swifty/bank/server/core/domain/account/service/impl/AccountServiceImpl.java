@@ -19,7 +19,7 @@ public class AccountServiceImpl implements AccountService {
     private final UnitedAccountRepository unitedAccountRepository;
     private final SubAccountRepository subAccountRepository;
     @Override
-    public UnitedAccount saveMultipleCurrencyAccount(AccountSaveDto dto) {
+    public UnitedAccount saveUnitedAccountAndSubAccounts(AccountSaveDto dto) {
         UnitedAccount ua = UnitedAccount.builder()
                 .accountPassword(dto.getAccountPassword())
                 .accountNumber(generateAccountNumberWithModulus10())
@@ -47,134 +47,98 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void updateUaNickname(AccountNicknameUpdateDto dto) {
-        Optional<UnitedAccount> ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUaUuid( ));
+    public void updateUnitedAccountNickname(AccountNicknameUpdateDto dto) {
+        UnitedAccount ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUaUuid( ));
 
-        if (ua.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
-        }
-
-        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+        UUID accountOwnerUuid = ua.getCustomer().getId();
 
         if (accountOwnerUuid.compareTo(dto.getCustomer( ).getId( )) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 수정 요청자와 소유자가 다릅니다.");
         }
 
-        ua.get().updateNickname(dto.getNickname());
+        ua.updateNickname(dto.getNickname());
     }
 
     @Override
-    public void updateUaPassword(AccountPasswordUpdateDto dto) {
-        Optional<UnitedAccount> ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid( ));
+    public void updateUnitedAccountPassword(AccountPasswordUpdateDto dto) {
+        UnitedAccount ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid( ));
 
-        if (ua.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
-        }
-
-        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+        UUID accountOwnerUuid = ua.getCustomer().getId();
 
         if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 수정 요청자와 소유자가 다릅니다.");
         }
 
-        ua.get().updatePassword(dto.getPassword());
+        ua.updatePassword(dto.getPassword());
     }
 
     @Override
     public double retrieveBalanceByCurrency(RetrieveBalanceOfUnitedAccountByCurrencyDto dto) {
-        Optional<UnitedAccount> ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUntiedAccountId( ));
+        UnitedAccount ua = dto.getCustomer( ).findUnitedAccountByUnitedAccountId(dto.getUntiedAccountId( ));
 
-        if (ua.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다");
-        }
-
-        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+        UUID accountOwnerUuid = ua.getCustomer().getId();
 
         if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다");
         }
 
-        Optional<SubAccount> sa = ua.get().findSubAccountByCurrency(dto.getCurrency( ));
+        SubAccount sa = ua.findSubAccountByCurrency(dto.getCurrency( ));
 
-        if (sa.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 계좌 아이디로 등록된 환 계좌가 없습니다.");
-        }
-
-        return sa.get().getBalance();
+        return sa.getBalance();
     }
 
     @Override
     public void withdrawUnitedAccount(WithdrawUnitedAccountDto dto) {
-        Optional<UnitedAccount> ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid( ));
+        UnitedAccount ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid( ));
 
-        if (ua.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
-        }
-
-        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+        UUID accountOwnerUuid = ua.getCustomer().getId();
 
         if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) != 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다.");
         }
 
-        ua.get().delete();
+        ua.delete();
     }
 
     @Override
     public void updateUnitedAccountStatus(UpdateUnitedAccountStatusDto dto) {
-        Optional<UnitedAccount> ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
+        UnitedAccount ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
 
-        if (ua.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
-        }
-
-        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+        UUID accountOwnerUuid = ua.getCustomer().getId();
 
         if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) == 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROr] 계좌의 조회 요청자와 소유자가 다릅니다.");
         }
 
-        ua.get().updateStatus(dto.getAccountStatus());
+        ua.updateStatus(dto.getAccountStatus());
     }
 
     @Override
     public void updateSubAccountStatus(UpdateSubAccountStatusDto dto) {
-        Optional<UnitedAccount> ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
+        UnitedAccount ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
 
-        if (ua.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
-        }
-
-        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+        UUID accountOwnerUuid = ua.getCustomer().getId();
 
         if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) == 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다.");
         }
 
-        Optional<SubAccount> sa = ua.get().findSubAccountByCurrency(dto.getCurrency());
+        SubAccount sa = ua.findSubAccountByCurrency(dto.getCurrency());
 
-        if (sa.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 환 계좌가 없습니다.");
-        }
-
-        sa.get().updateSubAccountStatus(dto.getStatus());
+        sa.updateSubAccountStatus(dto.getStatus());
     }
 
     @Override
     public void updateDefaultCurrency(UpdateDefaultCurrencyDto dto) {
-        Optional<UnitedAccount> ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
+        UnitedAccount ua = dto.getCustomer().findUnitedAccountByUnitedAccountId(dto.getUnitedAccountUuid());
 
-        if (ua.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 UUID로 등록된 통합 계좌가 없습니다.");
-        }
-
-        UUID accountOwnerUuid = ua.get().getCustomer().getId();
+        UUID accountOwnerUuid = ua.getCustomer().getId();
 
         if (accountOwnerUuid.compareTo(dto.getCustomer().getId()) == 0) {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 조회 요청자와 소유자가 다릅니다.");
         }
 
-        ua.get().updateDefaultCurrency(dto.getCurrency());
+        ua.updateDefaultCurrency(dto.getCurrency());
     }
 
     @Override

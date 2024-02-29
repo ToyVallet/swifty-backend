@@ -6,6 +6,7 @@ import com.swifty.bank.server.core.domain.account.UnitedAccount;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
+import com.swifty.bank.server.exception.common.NonExistOrOverOneResultException;
 import jakarta.persistence.*;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -111,21 +112,21 @@ public class Customer extends BaseEntity {
         this.unitedAccounts.add(ua);
     }
 
-    public Optional<UnitedAccount> findUnitedAccountByUnitedAccountId(UUID unitedAccountId) {
-        return this.unitedAccounts.stream()
+    public UnitedAccount findUnitedAccountByUnitedAccountId(UUID unitedAccountId) {
+        List<UnitedAccount> unitedAccounts =  this.unitedAccounts.stream()
                 .filter(unitedAccount -> {
                     return unitedAccountId.compareTo(unitedAccount.getUnitedAccountUuid()) == 0;
-                })
-                .findAny();
+                }).toList();
+
+        if (unitedAccounts.size() == 1) {
+            return unitedAccounts.get(0);
+        }
+
+        throw new NonExistOrOverOneResultException( );
     }
 
     public void removeUnitedAccountByUnitedAccountId(UUID unitedAccountId) {
-        Optional<UnitedAccount> maybeUnitedAccount = findUnitedAccountByUnitedAccountId(unitedAccountId);
-
-        if (maybeUnitedAccount.isEmpty()) {
-            throw new NoSuchElementException("[ERROR] 해당 계좌가 존재하지 않습니다");
-        }
-
-        maybeUnitedAccount.get().delete();
+        UnitedAccount unitedAccount = findUnitedAccountByUnitedAccountId(unitedAccountId);
+        unitedAccount.delete();
     }
 }

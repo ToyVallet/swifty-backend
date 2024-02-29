@@ -6,11 +6,11 @@ import com.swifty.bank.server.core.domain.account.dto.*;
 import java.util.List;
 
 public interface AccountService {
-    public UnitedAccount saveMultipleCurrencyAccount(AccountSaveDto dto);
+    public UnitedAccount saveUnitedAccountAndSubAccounts(AccountSaveDto dto);
 
-    public void updateUaNickname(AccountNicknameUpdateDto nickname);
+    public void updateUnitedAccountNickname(AccountNicknameUpdateDto nickname);
 
-    public void updateUaPassword(AccountPasswordUpdateDto password);
+    public void updateUnitedAccountPassword(AccountPasswordUpdateDto password);
 
     public double retrieveBalanceByCurrency(RetrieveBalanceOfUnitedAccountByCurrencyDto dto);
 

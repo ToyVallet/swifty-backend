@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
-public class ReviseAccountPasswordRequest {
+public class ReviseUnitedAccountPasswordRequest {
     private UUID accountUuid;
     private String password;
 }

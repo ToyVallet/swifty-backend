@@ -22,15 +22,15 @@ public class AccountApiServiceImpl implements AccountApiService {
     private final CustomerService customerService;
 
     @Override
-    public ResponseResult<?> registerUnitedAccount(String token, AccountRegisterRequest req) {
-        UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+    public ResponseResult<?> register(String token, AccountRegisterRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
-        Optional<Customer> customer = customerService.findByUuid(uuid);
+        Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
             return new ResponseResult<>(
                     Result.FAIL,
                     "[ERROR] 등록된 사용자가 없습니다. 오류가 발생한 UUID : ",
-                    uuid
+                    customerUuid
             );
         }
 
@@ -42,15 +42,7 @@ public class AccountApiServiceImpl implements AccountApiService {
                 customer.get()
         );
 
-        try {
-            accountService.saveMultipleCurrencyAccount(dto);
-        } catch (Exception e) { // 추후 구체적인 Customer Exception으로 교체 요망
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
+        accountService.saveUnitedAccountAndSubAccounts(dto);
 
         return new ResponseResult<>(
                 Result.SUCCESS,
@@ -60,10 +52,10 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public ResponseResult<?> reviseAccountNickname(String token, ReviseAccountNicknameRequest req) {
-        UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+    public ResponseResult<?> updateNickname(String token, ReviseAccountNicknameRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
-        Optional<Customer> customer = customerService.findByUuid(uuid);
+        Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -79,7 +71,7 @@ public class AccountApiServiceImpl implements AccountApiService {
         );
 
         try {
-            accountService.updateUaNickname(dto);
+            accountService.updateUnitedAccountNickname(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -90,16 +82,16 @@ public class AccountApiServiceImpl implements AccountApiService {
 
         return new ResponseResult<>(
                 Result.SUCCESS,
-                "[INFO] " + uuid.toString() + "의 계좌 닉네임 변경이 완료 되었습니다",
+                "[INFO] " + customerUuid.toString() + "의 계좌 닉네임 변경이 완료 되었습니다",
                 null
         );
     }
 
     @Override
-    public ResponseResult<?> resetAccountPassword(String token, ReviseAccountPasswordRequest req) {
-        UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+    public ResponseResult<?> updatePassword(String token, ReviseUnitedAccountPasswordRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
-        Optional<Customer> mayCustomer = customerService.findByUuid(uuid);
+        Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -112,7 +104,7 @@ public class AccountApiServiceImpl implements AccountApiService {
             AccountPasswordUpdateDto dto = new AccountPasswordUpdateDto(
                     mayCustomer.get(), req.getAccountUuid(), req.getPassword()
             );
-            accountService.updateUaPassword(dto);
+            accountService.updateUnitedAccountPassword(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -130,9 +122,9 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
-        UUID uuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
-        Optional<Customer> mayCustomer = customerService.findByUuid(uuid);
+        Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
             return new ResponseResult<>(
                     Result.FAIL,
@@ -163,7 +155,7 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public ResponseResult<?> withdrawUnitedAccount(String token, WithdrawUnitedAccountRequest req) {
+    public ResponseResult<?> withdraw(String token, WithdrawUnitedAccountRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
