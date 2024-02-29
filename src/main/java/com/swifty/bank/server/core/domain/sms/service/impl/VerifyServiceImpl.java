@@ -14,6 +14,9 @@ public class VerifyServiceImpl implements VerifyService {
     private final TwilioMessageService messageService;
     private final OtpRedisServiceImpl redisService;
 
+    private final Long verificationTimeout = 5L;
+    private final Long verificationRetentionTimeout = 10L;
+
     @Override
     public Boolean sendVerificationCode(String phoneNumber) {
         String otp = RandomUtil.generateOtp(6);
@@ -30,7 +33,7 @@ public class VerifyServiceImpl implements VerifyService {
         redisService.setData(
                 phoneNumber,
                 otp,
-                5L,
+                verificationTimeout,
                 TimeUnit.MINUTES
         );
         return true;
@@ -54,7 +57,7 @@ public class VerifyServiceImpl implements VerifyService {
         redisService.setData(
                 phoneNumber,
                 "true",
-                10L,
+                verificationRetentionTimeout,
                 TimeUnit.MINUTES
         );
         return true;
