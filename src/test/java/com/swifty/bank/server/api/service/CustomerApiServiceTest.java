@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -26,12 +27,11 @@ import java.util.UUID;
 @Testcontainers
 class CustomerApiServiceTest {
 
-
     @Container
     private static MySQLContainer mysqlContainer  = new MySQLContainer("mysql:8.0.33")
             .withDatabaseName("bank_db")
-            .withUsername("root")
-            .withPassword("swifty,Bank,DB2024");
+            .withUsername("test")
+            .withPassword("test");
 //    @Container
 //    private static GenericContainer redisContainer = new GenericContainer("redis")
 //            .withExposedPorts(6379);
