@@ -7,7 +7,7 @@ import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
 import com.swifty.bank.server.core.utils.JwtUtil;
-import com.swifty.bank.server.exception.NotLoggedInCustomerException;
+import com.swifty.bank.server.exception.authentication.NotLoggedInCustomerException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;

@@ -1,6 +1,6 @@
 package com.swifty.bank.server.core.common.constant;
 
-public enum Bank {
+public enum Product {
     SEED,
     MOUNTAIN,
     WIRACLE,

@@ -1,8 +1,5 @@
 package com.swifty.bank.server.core.utils;
 
-import com.swifty.bank.server.exception.TokenContentNotValidException;
-import com.swifty.bank.server.exception.TokenExpiredException;
-import com.swifty.bank.server.exception.TokenNotExistException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -10,7 +7,6 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;

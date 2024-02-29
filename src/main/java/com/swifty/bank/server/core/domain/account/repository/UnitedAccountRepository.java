@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface UnitedAccountRepository extends JpaRepository<UnitedAccount, UUID> {
+    @Override
+    <UA extends UnitedAccount> UA save(UA entity);
 }
