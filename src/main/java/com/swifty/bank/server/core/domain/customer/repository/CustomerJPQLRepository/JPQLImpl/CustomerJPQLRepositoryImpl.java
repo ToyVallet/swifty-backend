@@ -57,7 +57,7 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     @Override
     public Optional<CustomerInfoResponse> findCustomerInfoResponseByUUID(UUID uuid) {
         return em.createQuery(
-                        "SELECT new com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse(" +
+                        "SELECT new com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse(" +
                                 "C.name" +
                                 ",C.phoneNumber" +
                                 ",C.gender" +
