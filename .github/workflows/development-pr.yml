@@ -18,6 +18,10 @@ jobs:
       # Github 레포지토리로부터 CI서버로 소스코드를 내려받은 후에 지정한 브랜치로 전환하는 역할
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # submodule 적용
+          token: ${{ secrets.PAT }}
+          submodules: true
 
       # Java 17 버전 세팅
       - name: Set up JDK 17
