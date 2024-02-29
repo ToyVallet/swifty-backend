@@ -128,9 +128,11 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findCustomerInfoResponseByUUID(customerId);
     }
 
+    @Transactional
     @Override
     public void updatePassword(UUID customerId, String newPassword) {
         String encodePassword = encoder.encode(newPassword);
+
         Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
 
