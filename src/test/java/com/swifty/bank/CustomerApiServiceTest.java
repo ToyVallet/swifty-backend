@@ -1,6 +1,7 @@
-package com.swifty.bank.server.api.service;
+package com.swifty.bank;
 
-import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -9,11 +10,9 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Slf4j
 @SpringBootTest
 @Testcontainers
-class CustomerApiServiceTest {
-
+public class CustomerApiServiceTest {
     @Container
     private static MySQLContainer mysqlContainer = new MySQLContainer("mysql:8.0.33")
             .withDatabaseName("bank_db")
@@ -32,5 +31,11 @@ class CustomerApiServiceTest {
 
         registry.add("spring.data.redis.host", redisContainer::getHost);
         registry.add("spring.data.redis.port", redisContainer::getExposedPorts);
+    }
+
+    @Test
+    public void testEquals() {
+        int a = 1;
+        Assertions.assertThat(1).isEqualTo(a);
     }
 }
