@@ -9,9 +9,9 @@ import com.swifty.bank.server.core.common.redis.service.RefreshTokenRedisService
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.utils.DateUtil;
 import com.swifty.bank.server.core.utils.JwtUtil;
-import com.swifty.bank.server.exception.AuthenticationException;
-import com.swifty.bank.server.exception.NoSuchAuthByUuidException;
-import com.swifty.bank.server.exception.NotLoggedInCustomerException;
+import com.swifty.bank.server.exception.authentication.AuthenticationException;
+import com.swifty.bank.server.exception.authentication.NoSuchAuthByUuidException;
+import com.swifty.bank.server.exception.authentication.NotLoggedInCustomerException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.util.Date;

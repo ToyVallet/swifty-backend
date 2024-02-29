@@ -15,7 +15,7 @@ import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.core.utils.JwtUtil;
-import com.swifty.bank.server.exception.NoSuchAuthByUuidException;
+import com.swifty.bank.server.exception.authentication.NoSuchAuthByUuidException;
 
 import java.util.*;
 
