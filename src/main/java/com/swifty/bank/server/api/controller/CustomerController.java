@@ -2,104 +2,70 @@ package com.swifty.bank.server.api.controller;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
+import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.api.service.impl.CustomerApiServiceImpl;
-import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.authentication.service.impl.AuthenticationServiceImpl;
+import com.swifty.bank.server.api.service.dto.Response;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RequiredArgsConstructor
-@Controller
+@RestController
 @RequestMapping(value = "/customer")
 @Tag(name = "Customer Information API")
 @Slf4j
 public class CustomerController {
     private final CustomerApiService customerApiService;
-    private final AuthenticationService authenticationService;
+    private JwtUtil jwtUtil;
 
     @GetMapping("")
     @Operation(summary = "get customer's whole information in database", description = "no request body needed")
     public ResponseEntity<?> customerInfo() {
-        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        ResponseResult<?> res = customerApiService.getCustomerInfo(jwt);
+        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(customerId);
 
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
-        return ResponseEntity
-                .ok()
-                .body(res);
+        return Response.SUCCESS.setData(customerInfo);
     }
 
     @PatchMapping("")
     @Operation(summary = "change customer's whole information in database", description = "specific DTO required")
     public ResponseEntity<?> customerInfoUpdate(
             @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        ResponseResult<?> res = customerApiService.customerInfoUpdate(jwt,
-                customerInfoUpdateCondition);
+        customerApiService.customerInfoUpdate(customerId, customerInfoUpdateCondition);
 
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
-        return ResponseEntity
-                .ok()
-                .body(res);
+        return Response.SUCCESS.get();
     }
 
     @PostMapping("/password")
     @Operation(summary = "confirm whether input and original password matches", description = "password string needed")
     public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
-        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        ResponseResult res = customerApiService.confirmPassword(jwt, password.getPasswd());
+        boolean isSamePassword = customerApiService.confirmPassword(customerId, password.getPasswd());
 
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
+        if (isSamePassword) {
+            return Response.SUCCESS.setMessage("비밀번호가 일치합니다.");
         }
-        return ResponseEntity
-                .ok()
-                .body(res);
+
+        return Response.FAIL.setMessage("비밀번호가 일치하지 않습니다.");
     }
 
     @PatchMapping("/password")
     @Operation(summary = "reset password with input", description = "password string needed in body")
     public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
-        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        ResponseResult res = customerApiService.resetPassword(jwt, newPassword.getPasswd());
+        customerApiService.resetPassword(customerId, newPassword.getPasswd());
 
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
-        return ResponseEntity
-                .ok()
-                .body(res);
+        return Response.SUCCESS.setMessage("비밀번호를 변경하였습니다.");
     }
 }
