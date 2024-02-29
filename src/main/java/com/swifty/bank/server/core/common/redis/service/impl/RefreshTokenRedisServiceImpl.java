@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class RefreshTokenRedisServiceImpl implements RefreshTokenRedisService {
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
-    @Value("${jwt.redis.timeout}")
+    @Value("${jwt.redis.refresh-token-timeout-minutes}")
     private Long timeout;
 
     @Override
@@ -24,6 +24,11 @@ public class RefreshTokenRedisServiceImpl implements RefreshTokenRedisService {
     @Override
     public void setData(String key, RefreshTokenCache value) {
         refreshTokenRedisRepository.setData(key, value, timeout, TimeUnit.HOURS);
+    }
+
+    @Override
+    public void setDataIfAbsent(String key, RefreshTokenCache value) {
+        refreshTokenRedisRepository.setDataIfAbsent(key, value, timeout, TimeUnit.HOURS);
     }
 
     @Override

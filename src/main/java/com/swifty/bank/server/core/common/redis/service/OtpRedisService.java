@@ -9,5 +9,9 @@ public interface OtpRedisService {
 
     void setData(String key, String value, Long timeout, TimeUnit timeUnit);
 
+    void setDataIfAbsent(String key, String value);
+
+    void setDataIfAbsent(String key, String value, Long timeout, TimeUnit timeUnit);
+
     boolean deleteData(String key);
 }
