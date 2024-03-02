@@ -7,7 +7,7 @@ import com.swifty.bank.server.api.controller.dto.sms.response.CheckVerificationC
 import com.swifty.bank.server.api.controller.dto.sms.response.SendVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.sms.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.service.SmsService;
-import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.service.OtpRedisService;
 import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.core.utils.RandomUtil;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class SmsServiceImpl implements SmsService {
     private final VerifyService verifyService;
-    private final OtpRedisServiceImpl otpRedisService;
+    private final OtpRedisService otpRedisService;
 
     @Override
     public StealVerificationCodeResponse stealVerificationCode(

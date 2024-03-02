@@ -1,8 +1,5 @@
 package com.swifty.bank.server.core.utils;
 
-import com.swifty.bank.server.exception.TokenContentNotValidException;
-import com.swifty.bank.server.exception.TokenExpiredException;
-import com.swifty.bank.server.exception.TokenNotExistException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -45,23 +42,12 @@ public class JwtUtil {
     }
 
     public static Object getClaimByKey(String token, String key) {
-        if (token == null || token.isEmpty()) {
-            throw new TokenNotExistException("[ERROR] there is no token");
-        }
-        // parsing
-        if (token.startsWith("Bearer ")) {
-            // IndexOutOfBound error expected
-            token = token.split(" ")[1].trim();
-        }
-        // check if expired
-        if (isExpiredToken(token)) {
-            throw new TokenExpiredException("[ERROR] Token is expired, reissue it");
-        }
+        validateToken(token);
 
         Claims claims = getAllClaims(token);
         // validate key
         if (!claims.containsKey(key)) {
-            throw new TokenContentNotValidException("[ERROR] There is no '" + key + "' in token");
+            throw new IllegalArgumentException("[ERROR] 토큰에 '" + key + "'로 설정된 key가 없습니다");
         }
         return claims.get(key);
     }

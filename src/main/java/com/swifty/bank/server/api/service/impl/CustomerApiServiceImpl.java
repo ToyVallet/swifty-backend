@@ -10,6 +10,8 @@ import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.swifty.bank.server.core.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,8 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     private final BCryptPasswordEncoder encoder;
 
     @Override
-    public ResponseResult<?> getCustomerInfo(UUID customerUuid) {
+    public ResponseResult<?> getCustomerInfo(String jwt) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
         Optional<CustomerInfoResponse> mayBeCustomerInfo = customerService.findCustomerInfoDtoByUuid(customerUuid);
         if (mayBeCustomerInfo.isEmpty()) {
@@ -44,93 +47,65 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
 
     @Override
-    public ResponseResult<?> customerInfoUpdate(UUID customerUuid,
+    public ResponseResult<?> customerInfoUpdate(String jwt,
                                                 CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        try {
-            customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
 
-            return ResponseResult.builder()
-                    .result(Result.SUCCESS)
-                    .message("성공적으로 회원정보를 수정하였습니다.")
-                    .build();
-
-        } catch (NoSuchElementException e) {
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message(e.getMessage())
-                    .build();
-        }
+        return ResponseResult.builder()
+                .result(Result.SUCCESS)
+                .message("성공적으로 회원정보를 수정하였습니다.")
+                .build();
     }
 
     @Override
-    public ResponseResult<?> confirmPassword(UUID customerUuid, String password) {
-        try {
-            Optional<Customer> mayBeCustomer = customerService.findByUuid(customerUuid);
-            if (mayBeCustomer.isEmpty()) {
-                return ResponseResult.builder()
-                        .result(Result.FAIL)
-                        .message("회원이 존재하지 않습니다.")
-                        .build();
-            }
-
-            Customer customer = mayBeCustomer.get();
-
-            if (encoder.matches(password, customer.getPassword())) {
-                return ResponseResult.builder()
-                        .result(Result.SUCCESS)
-                        .message("비밀번호가 일치합니다.")
-                        .build();
-            }
-
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message("비밀번호가 일치하지 않습니다.")
-                    .build();
-
-        } catch (Exception e) {
+    public ResponseResult<?> confirmPassword(String jwt, String password) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        Optional<Customer> mayBeCustomer = customerService.findByUuid(customerUuid);
+        if (mayBeCustomer.isEmpty()) {
             return ResponseResult.builder()
                     .result(Result.FAIL)
                     .message("회원이 존재하지 않습니다.")
-                    .data(e.getMessage())
                     .build();
         }
-    }
+
+        Customer customer = mayBeCustomer.get();
+
+        if (encoder.matches(password, customer.getPassword())) {
+            return ResponseResult.builder()
+                    .result(Result.SUCCESS)
+                    .message("비밀번호가 일치합니다.")
+                    .build();
+        }
+
+        return ResponseResult.builder()
+                .result(Result.FAIL)
+                .message("비밀번호가 일치하지 않습니다.")
+                .build();
+        }
 
     @Transactional
     @Override
-    public ResponseResult<?> resetPassword(UUID customerUuid, String newPassword) {
-        try {
-            customerService.updatePassword(customerUuid, newPassword);
+    public ResponseResult<?> resetPassword(String jwt, String newPassword) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        customerService.updatePassword(customerUuid, newPassword);
 
-            return ResponseResult.builder()
-                    .result(Result.SUCCESS)
-                    .message("성공적으로 비밀번호를 변경하였습니다.")
-                    .build();
-
-        } catch (NoSuchElementException e) {
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message("비밀번호 변경을 실패하였습니다.")
-                    .build();
-        }
+        return ResponseResult.builder()
+                .result(Result.SUCCESS)
+                .message("성공적으로 비밀번호를 변경하였습니다.")
+                .build();
     }
 
-    @Transactional
     @Override
-    public ResponseResult<?> customerWithdrawal(UUID customerUuid) {
-        try {
-            customerService.withdrawCustomer(customerUuid);
+    @Transactional
+    public ResponseResult<?> customerWithdrawal(String jwt) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        customerService.withdrawCustomer(customerUuid);
 
-            return ResponseResult.builder()
-                    .result(Result.SUCCESS)
-                    .message("회원탈퇴를 성공적으로 완료하였습니다.")
-                    .build();
-        } catch (NoSuchElementException e) {
-            return ResponseResult.builder()
-                    .result(Result.FAIL)
-                    .message("회원탈퇴를 실패하였습니다.")
-                    .build();
-        }
-
+        return ResponseResult.builder()
+                .result(Result.SUCCESS)
+                .message("회원탈퇴를 성공적으로 완료하였습니다.")
+                .build();
     }
+
 }

@@ -5,6 +5,7 @@ import com.swifty.bank.server.core.domain.BaseEntity;
 import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,11 +24,23 @@ public class SubAccount extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unitedAccountUuid", foreignKey = @ForeignKey(name = "FK_united_account"))
-    private UnitedAccount unitedAccountUuid;
+    private UnitedAccount unitedAccount;
 
     private Currency currency;
 
     private double balance;
 
     private AccountStatus status;
+
+    @Builder
+    public SubAccount(UnitedAccount ua, Currency cur) {
+        this.unitedAccount = ua;
+        this.currency = cur;
+        this.balance = 0;
+        this.status = AccountStatus.ACTIVE;
+    }
+
+    public void updateSubAccountStatus(AccountStatus status) {
+        this.status = status;
+    }
 }
