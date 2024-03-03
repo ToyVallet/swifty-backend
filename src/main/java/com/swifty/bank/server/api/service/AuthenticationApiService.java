@@ -1,11 +1,13 @@
 package com.swifty.bank.server.api.service;
 
+import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.VerifyCustomerExistenceRequest;
+import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 
 public interface AuthenticationApiService {
-    ResponseResult<?> verifyCustomerExistence(VerifyCustomerExistenceRequest verifyCustomerExistenceRequest);
+    CheckLoginAvailabilityResponse checkLoginAvailability(
+            CheckLoginAvailabilityRequest checkLoginAvailabilityRequest);
 
     ResponseResult<?> join(JoinRequest dto);
 

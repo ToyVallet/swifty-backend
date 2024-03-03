@@ -1,6 +1,6 @@
 package com.swifty.bank.server.api.controller;
 
-import com.swifty.bank.server.api.controller.annotation.PassAuth;
+import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.sms.request.CheckVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCodeRequest;
@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SmsController {
     private final SmsService smsService;
 
-    @PassAuth
+    @TemporaryAuth
     @PostMapping(value = "/steal-verification-code")
     @Operation(summary = "인증번호 훔쳐보기", description = "생성된 인증번호를 훔쳐봅니다.")
     @ApiResponses(value = {
@@ -63,7 +63,7 @@ public class SmsController {
                 .body(res);
     }
 
-    @PassAuth
+    @TemporaryAuth
     @PostMapping(value = "/send-verification-code")
     @Operation(summary = "인증번호 발송", description = "요청받은 전화번호로 인증번호를 발송합니다.")
     @ApiResponses(value = {
@@ -94,7 +94,7 @@ public class SmsController {
                 .body(res);
     }
 
-    @PassAuth
+    @TemporaryAuth
     @PostMapping(value = "/check-verification-code")
     @Operation(summary = "인증번호 검증", description = "인증번호를 검증합니다.")
     @ApiResponses(value = {

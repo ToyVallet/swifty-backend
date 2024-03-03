@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Schema(description = "Request for verifying customer existence")
-public class VerifyCustomerExistenceRequest {
+public class CheckLoginAvailabilityRequest {
     @NotNull
     @NotBlank
     @Schema(description = "고객 이름",
