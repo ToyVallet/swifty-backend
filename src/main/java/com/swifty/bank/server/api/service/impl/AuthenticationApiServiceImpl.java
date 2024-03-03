@@ -1,24 +1,28 @@
 package com.swifty.bank.server.api.service.impl;
 
+import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.VerifyCustomerExistenceRequest;
+import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.RefreshToken;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
+import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
 import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
 import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
+import com.swifty.bank.server.core.common.redis.value.RefreshTokenCache;
+import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.exception.authentication.NoSuchAuthByUuidException;
-
-import java.util.*;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,33 +34,45 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final AuthenticationService authenticationService;
     private final VerifyService verifyService;
 
+    private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
     private final OtpRedisServiceImpl otpRedisService;
     private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
 
     @Override
-    public ResponseResult<?> verifyCustomerExistence(VerifyCustomerExistenceRequest verifyCustomerExistenceRequest) {
-        String phoneNumber = verifyCustomerExistenceRequest.getPhoneNumber();
-        if (!verifyService.isVerified(phoneNumber)) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "먼저 휴대폰 인증이 필요합니다.",
-                    false
-            );
+    public CheckLoginAvailabilityResponse checkLoginAvailability(
+            CheckLoginAvailabilityRequest checkLoginAvailabilityRequest) {
+        String phoneNumber = checkLoginAvailabilityRequest.getPhoneNumber();
+
+        Optional<Customer> maybeCustomer = customerService.findByPhoneNumber(phoneNumber);
+        // 기존에 가입된 번호인 경우, db 내용과 요청 폼이 일치하는지 확인
+        // 현재 프론트에서 입력받는 데이터(성명, 주민등록번호, 통신사, 휴대폰 번호)와 백엔드에서 저장하는 고객의 데이터(이름, 국적, 성별, 생일 등등)가 상이하므로 일단 일부(이름, 휴대폰 번호)만 비교하도록 처리했음
+        if (maybeCustomer.isPresent()) {
+            Customer customer = maybeCustomer.get();
+
+            // 이름과 휴대폰 번호가 같지 않으면 회원가입/로그인 진행 불가
+            if (!(checkLoginAvailabilityRequest.getName().equals(customer.getName())
+                    && checkLoginAvailabilityRequest.getPhoneNumber().equals(customer.getPhoneNumber()))) {
+                return CheckLoginAvailabilityResponse.builder()
+                        .isAvailable(false)
+                        .temporaryToken("")
+                        .build();
+            }
         }
 
-        if (customerService.findByPhoneNumber(phoneNumber).isPresent()) {
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "이미 가입된 회원입니다.",
-                    false
-            );
-        }
-
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "회원가입이 가능합니다.",
-                true
+        String temporaryToken = authenticationService.createTemporaryToken();
+        temporarySignUpFormRedisService.setData(
+                temporaryToken,
+                TemporarySignUpForm.builder()
+                        .name(checkLoginAvailabilityRequest.getName())
+                        .residentRegistrationNumber(checkLoginAvailabilityRequest.getResidentRegistrationNumber())
+                        .MobileCarrier(checkLoginAvailabilityRequest.getMobileCarrier())
+                        .phoneNumber(checkLoginAvailabilityRequest.getPhoneNumber())
+                        .build()
         );
+        return CheckLoginAvailabilityResponse.builder()
+                .isAvailable(true)
+                .temporaryToken(temporaryToken)
+                .build();
     }
 
     @Override
@@ -138,7 +154,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ResponseResult<?> reissue(String jwt) {
-        Map<String, Object> result = new HashMap<>( );
+        Map<String, Object> result = new HashMap<>();
         UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
 
         // 로그아웃 된 유저가 아니어야 함
@@ -221,10 +237,9 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 return false;
             }
 
-            prevRefToken = previousRefreshToken.getRefreshToken( );
-        }
-        else {
-            prevRefToken = previousCache.getRefreshToken( );
+            prevRefToken = previousRefreshToken.getRefreshToken();
+        } else {
+            prevRefToken = previousCache.getRefreshToken();
         }
 
         return jwt.equals(prevRefToken);

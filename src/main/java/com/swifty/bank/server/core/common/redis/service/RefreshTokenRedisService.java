@@ -1,6 +1,6 @@
 package com.swifty.bank.server.core.common.redis.service;
 
-import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
+import com.swifty.bank.server.core.common.redis.value.RefreshTokenCache;
 import java.util.concurrent.TimeUnit;
 
 public interface RefreshTokenRedisService {

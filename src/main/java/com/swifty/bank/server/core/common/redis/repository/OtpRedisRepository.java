@@ -3,7 +3,6 @@ package com.swifty.bank.server.core.common.redis.repository;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Repository;
 public class OtpRedisRepository {
     private final RedisTemplate<String, String> redisTemplate;
 
-    @Nullable
     public String getData(String key) {
         return redisTemplate.opsForValue().get(key);
     }
