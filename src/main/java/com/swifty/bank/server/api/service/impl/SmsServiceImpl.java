@@ -33,8 +33,9 @@ public class SmsServiceImpl implements SmsService {
                 5L,
                 TimeUnit.MINUTES
         );
-
-        return new StealVerificationCodeResponse(otp);
+        return StealVerificationCodeResponse.builder()
+                .otp(otp)
+                .build();
     }
 
     @Override
@@ -43,11 +44,13 @@ public class SmsServiceImpl implements SmsService {
                 sendVerificationCodeRequest.getPhoneNumber());
 
         if (!isSent) {
-            // 인증번호 전송 실패
-            throw new RuntimeException("인증번호 전송 실패");
+            return SendVerificationCodeResponse.builder()
+                    .isSuccess(false)
+                    .build();
         }
-
-        return new SendVerificationCodeResponse("인증번호 전송 성공");
+        return SendVerificationCodeResponse.builder()
+                .isSuccess(true)
+                .build();
     }
 
     @Override
@@ -56,10 +59,14 @@ public class SmsServiceImpl implements SmsService {
         boolean isValidVerificationCode = verifyService.checkVerificationCode(
                 checkVerificationCodeRequest.getPhoneNumber(),
                 checkVerificationCodeRequest.getVerificationCode());
-        if (!isValidVerificationCode) {
-            throw new RuntimeException("인증번호 검증 실패");
-        }
 
-        return new CheckVerificationCodeResponse("인증번호 검증 성공");
+        if (!isValidVerificationCode) {
+            return CheckVerificationCodeResponse.builder()
+                    .isSuccess(false)
+                    .build();
+        }
+        return CheckVerificationCodeResponse.builder()
+                .isSuccess(true)
+                .build();
     }
 }
