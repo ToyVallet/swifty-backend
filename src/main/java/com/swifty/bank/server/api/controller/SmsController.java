@@ -10,6 +10,7 @@ import com.swifty.bank.server.api.controller.dto.sms.response.SendVerificationCo
 import com.swifty.bank.server.api.controller.dto.sms.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.service.SmsService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -54,6 +56,9 @@ public class SmsController {
                     })
     })
     public ResponseEntity<StealVerificationCodeResponse> stealVerificationCode(
+            @Parameter(description = "Temporary token with Authorization header"
+                    , example = "Bearer ey...", required = true)
+            @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid StealVerificationCodeRequest stealVerificationCodeRequest) {
         StealVerificationCodeResponse res = smsService.stealVerificationCode(
                 stealVerificationCodeRequest);
@@ -85,6 +90,9 @@ public class SmsController {
 
     })
     public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(
+            @Parameter(description = "Temporary token with Authorization header"
+                    , example = "Bearer ey...", required = true)
+            @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
         SendVerificationCodeResponse res = smsService.sendVerificationCode(
                 sendVerificationCodeRequest);
@@ -115,6 +123,9 @@ public class SmsController {
                     })
     })
     public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(
+            @Parameter(description = "Temporary token with Authorization header"
+                    , example = "Bearer ey...", required = true)
+            @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         CheckVerificationCodeResponse res = smsService.checkVerificationCode(
                 checkVerificationCodeRequest);
