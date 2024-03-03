@@ -1,10 +1,10 @@
 package com.swifty.bank.server.api.controller;
 
+import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
-import com.swifty.bank.server.api.service.dto.Response;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,6 @@ import java.util.UUID;
 @Slf4j
 public class CustomerController {
     private final CustomerApiService customerApiService;
-    private JwtUtil jwtUtil;
 
     @GetMapping("")
     @Operation(summary = "get customer's whole information in database", description = "no request body needed")
@@ -31,7 +30,9 @@ public class CustomerController {
 
         CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(customerId);
 
-        return Response.SUCCESS.setData(customerInfo);
+        return ResponseEntity
+                .ok()
+                .body(customerInfo);
     }
 
     @PatchMapping("")
@@ -42,7 +43,9 @@ public class CustomerController {
 
         customerApiService.customerInfoUpdate(customerId, customerInfoUpdateCondition);
 
-        return Response.SUCCESS.get();
+        return ResponseEntity
+                .ok()
+                .body(new MessageResponse("회원정보를 수정하였습니다."));
     }
 
     @PostMapping("/password")
@@ -50,13 +53,18 @@ public class CustomerController {
     public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
         UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        boolean isSamePassword = customerApiService.confirmPassword(customerId, password.getPasswd());
+        boolean isSamePassword = customerApiService.confirmPassword(customerId, password.getPassword());
 
         if (isSamePassword) {
-            return Response.SUCCESS.setMessage("비밀번호가 일치합니다.");
+            return ResponseEntity
+                    .ok()
+                    .body(new MessageResponse("비밀번호가 일치합니다."));
+
         }
 
-        return Response.FAIL.setMessage("비밀번호가 일치하지 않습니다.");
+        return ResponseEntity
+                .badRequest()
+                .body(new MessageResponse("비밀번호가 일치하지 않습니다."));
     }
 
     @PatchMapping("/password")
@@ -64,8 +72,10 @@ public class CustomerController {
     public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
         UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        customerApiService.resetPassword(customerId, newPassword.getPasswd());
+        customerApiService.resetPassword(customerId, newPassword.getPassword());
 
-        return Response.SUCCESS.setMessage("비밀번호를 변경하였습니다.");
+        return ResponseEntity
+                .ok()
+                .body(new MessageResponse("비밀번호 변경을 완료하였습니다."));
     }
 }
