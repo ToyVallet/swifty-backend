@@ -9,32 +9,37 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Schema(description = "dto for updating customer's whole information")
+@Schema(description = "회원정보를 수정 할 데이터")
 public class CustomerInfoUpdateConditionRequest {
 
-    @Schema(description = "Plain String for name")
+    @Schema(example = "홍길동",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String name;
 
 
-    @Size(max = 14, min = 3)
-    @Schema(description = "start with +82 and only digits 0-9 without dash", example = "+8201012345678",
-            required = true)
+    @Size(min = 3, max = 14)
+    @Schema(example = "+12051234567",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String phoneNumber;
 
 
-    @Pattern(regexp = "MALE|FEMALE|NONE", message = "[ERROR] gender is neither male nor female")
-    @Schema(description = "value is only available for MALE, FEMALE, NONe", implementation = Gender.class)
+    @Pattern(regexp = "MALE|FEMALE|NONE", message = "성별 형식이 맞지 않습니다.")
+    @Schema(example = "MALE", implementation = Gender.class,
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private Gender gender;
 
 
     @Pattern(regexp = "^\\d+$\n")
     @Size(max = 8, min = 8)
-    @Schema(description = "8 size digits", example = "20000101")
+    @Schema(example = "20000101",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String birthDate;
 
 
-    @Pattern(regexp = "KOREA", message = "[ERROR] Customer whose nationality is not supported")
-    @Schema(description = "'KOREA' only", implementation = Nationality.class)
+    @Pattern(regexp = "KOREA", message = "국가 형식이 맞지 않습니다.")
+    @Schema(description = "현재는 KOREA만 지원합니다. ",
+            implementation = Nationality.class,
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private Nationality nationality;
 
     @Builder
