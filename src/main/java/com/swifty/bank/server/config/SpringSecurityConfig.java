@@ -1,6 +1,5 @@
 package com.swifty.bank.server.config;
 
-import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,10 +12,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @RequiredArgsConstructor
 public class SpringSecurityConfig {
-    // After Spring Security 6.0 You need to register bean of component-based security settings
-    private final CustomerRepository customerRepository;
-
-
     // HttpSecurity
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -37,5 +32,4 @@ public class SpringSecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }
