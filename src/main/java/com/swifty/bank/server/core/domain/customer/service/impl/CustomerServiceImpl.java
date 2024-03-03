@@ -136,5 +136,4 @@ public class CustomerServiceImpl implements CustomerService {
 
         customer.resetPassword(encodePassword);
     }
-
 }
