@@ -13,31 +13,42 @@ import lombok.Getter;
 @Getter
 public class CustomerInfoResponse {
 
-    @NotNull
+    @Schema(example = "홍길동",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank
     private String name;
 
-    @NotNull
-    @Size(max = 14, min = 3)
-    @Schema(description = "start with +82 and only digits 0-9 without dash", example = "+8201012345678",
-            required = true)
+    @NotBlank
+    @Size(min = 3, max = 14)
+    @Schema(example = "+12051234567",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String phoneNumber;
 
     @NotNull
-    @Pattern(regexp = "MALE|FEMALE|NONE", message = "[ERROR] gender is neither male nor female")
+    @Pattern(regexp = "MALE|FEMALE|NONE", message = "성별 형식이 맞지 않습니다.")
+    @Schema(example = "MALE", implementation = Gender.class,
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private Gender gender;
 
-    @NotNull
+    @NotBlank
     @Pattern(regexp = "^\\d+$\n")
     @Size(max = 8, min = 8)
+    @Schema(example = "20000101",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String birthDate;
 
     @NotNull
-    @Pattern(regexp = "KOREA", message = "[ERROR] Customer whose nationality is not supported")
+    @Pattern(regexp = "KOREA", message = "국가 형식이 맞지 않습니다.")
+    @Schema(description = "현재는 KOREA만 지원합니다. ",
+            implementation = Nationality.class,
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private Nationality nationality;
 
     @NotNull
-    @Pattern(regexp = "ACTIVE|SUSPENDED|WITHDRAWL", message = "[ERROR] Invalid Customer Status")
+    @Pattern(regexp = "ACTIVE|SUSPENDED|WITHDRAWL", message = "지원하지 않는 회원상태 입니다.")
+    @Schema(description = "회원상태는 ACTIVE,SUSPENDED,WITHDRAWL 지원",
+            implementation = CustomerStatus.class,
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private CustomerStatus customerStatus;
 
     public CustomerInfoResponse(String name, String phoneNumber, Gender gender, String birthDate,
