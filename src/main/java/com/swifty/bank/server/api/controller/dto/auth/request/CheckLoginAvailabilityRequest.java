@@ -18,6 +18,7 @@ public class CheckLoginAvailabilityRequest {
     private String name;
     @NotNull
     @NotBlank
+    @Size(min = 7, max = 7)
     @Schema(description = "고객 주민등록번호 앞 7자리",
             example = "0012024",
             requiredMode = RequiredMode.REQUIRED)
