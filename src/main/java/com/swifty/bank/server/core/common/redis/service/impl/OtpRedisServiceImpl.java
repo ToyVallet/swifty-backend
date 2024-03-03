@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class OtpRedisServiceImpl implements OtpRedisService {
-    private OtpRedisRepository otpRedisRepository;
+    private final OtpRedisRepository otpRedisRepository;
 
     @Value("${jwt.redis.otp-timeout-minutes}")
     private Long timeout;
