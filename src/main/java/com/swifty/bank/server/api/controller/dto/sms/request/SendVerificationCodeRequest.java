@@ -7,11 +7,10 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-@Schema(description = "Request for sending verification code")
 public class SendVerificationCodeRequest {
     @NotNull
     @Size(min = 3, max = 14)
-    @Schema(description = "start with +1 and only digits 0-9 without dash", example = "+12051234567",
+    @Schema(example = "+12051234567",
             requiredMode = RequiredMode.REQUIRED)
     private String phoneNumber;
 }
