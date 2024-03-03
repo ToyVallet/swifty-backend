@@ -1,6 +1,8 @@
 package com.swifty.bank.server.api.controller;
 
+import com.swifty.bank.server.api.controller.annotation.CustomerAuth;
 import com.swifty.bank.server.api.controller.annotation.PassAuth;
+import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
@@ -81,7 +83,7 @@ public class AuthenticationController {
                 .body(res);
     }
 
-    @PassAuth
+    @TemporaryAuth
     @PostMapping("/sign-up-with-form")
     @Operation(summary = "sign up with form which mean 회원가입 in Korean",
             description = "please follow adequate request form")
@@ -117,6 +119,7 @@ public class AuthenticationController {
                 .body(res);
     }
 
+    @CustomerAuth
     @PostMapping("/log-out")
     @Operation(summary = "log out with valid access token", description = "need valid access token")
     public ResponseEntity<?> logOut(
@@ -135,6 +138,7 @@ public class AuthenticationController {
                 .body(res);
     }
 
+    @CustomerAuth
     @PostMapping("/sign-out")
     @Operation(summary = "sign out with valid access token", description = "need valid access token")
     public ResponseEntity<?> signOut(
