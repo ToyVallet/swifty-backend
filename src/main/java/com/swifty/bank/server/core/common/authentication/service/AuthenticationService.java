@@ -1,6 +1,6 @@
 package com.swifty.bank.server.core.common.authentication.service;
 
-import com.swifty.bank.server.core.common.authentication.RefreshToken;
+import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import java.util.Map;
@@ -14,7 +14,7 @@ public interface AuthenticationService {
 
     boolean isLoggedOut(UUID uuid);
 
-    Optional<RefreshToken> findAuthByCustomerId(UUID uuid);
+    Optional<Auth> findAuthByCustomerId(UUID uuid);
 
     void saveRefreshTokenInDataSources(String token);
 

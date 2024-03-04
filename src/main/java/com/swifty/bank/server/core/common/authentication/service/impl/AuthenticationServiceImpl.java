@@ -1,6 +1,6 @@
 package com.swifty.bank.server.core.common.authentication.service.impl;
 
-import com.swifty.bank.server.core.common.authentication.RefreshToken;
+import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
@@ -52,7 +52,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Claims claims = Jwts.claims();
         Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + refreshTokenExpiration * 1000L);
 
-        claims.setSubject("RefreshToken");
+        claims.setSubject("Auth");
         claims.put("customerId", customer.getId());
         return JwtUtil.generateToken(claims, expiration);
     }
@@ -75,10 +75,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void logout(UUID customerId) {
         if (!isLoggedOut(customerId)) {
             String key = customerId.toString();
-            RefreshToken prevDbRefreshToken = authRepository.findAuthByUuid(customerId)
+            Auth prevDbAuth = authRepository.findAuthByUuid(customerId)
                     .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
 
-            prevDbRefreshToken.updateRefreshToken("LOGOUT");
+            prevDbAuth.updateRefreshToken("LOGOUT");
             refreshTokenRedisService.setData(key, new RefreshTokenCache("LOGOUT"));
             return;
         }
@@ -90,7 +90,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         RefreshTokenCache refreshTokenCache = refreshTokenRedisService.getData(customerId.toString());
 
         if (refreshTokenCache == null) {
-            RefreshToken res = findAuthByCustomerId(customerId)
+            Auth res = findAuthByCustomerId(customerId)
                     .orElseThrow(() -> new NoSuchAuthByUuidException("[ERROR] 해당 유저의 로그인 정보가 없습니다."));
 
             refreshTokenRedisService.setData(customerId.toString(),
@@ -116,7 +116,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public Optional<RefreshToken> findAuthByCustomerId(UUID customerId) {
+    public Optional<Auth> findAuthByCustomerId(UUID customerId) {
         return authRepository.findAuthByUuid(customerId);
     }
 
@@ -125,14 +125,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void saveRefreshTokenInDataSources(String jwt) {
         UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        RefreshTokenCache prevCacheAuth = refreshTokenRedisService.getData(customerId.toString());
-        RefreshToken prevDbRefreshToken = authRepository.findAuthByUuid(customerId)
+        Auth prevDbAuth = authRepository.findAuthByUuid(customerId)
                 .orElse(null);
 
-        if (prevDbRefreshToken != null) {
-            authRepository.save(new RefreshToken(customerId, jwt));
+        if (prevDbAuth == null) {
+            authRepository.save(new Auth(customerId, jwt));
         } else {
-            prevDbRefreshToken.updateRefreshToken(jwt);
+            prevDbAuth.updateRefreshToken(jwt);
         }
 
         refreshTokenRedisService.setData(customerId.toString(), new RefreshTokenCache(jwt));

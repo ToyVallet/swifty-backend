@@ -5,7 +5,7 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.SignRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.LoginWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
@@ -65,32 +65,15 @@ public class AuthenticationController {
                 .body(res);
     }
 
-    @PassAuth
-    @PostMapping("/sign-in-with-form")
-    @Operation(summary = "sign in with form when user exist but doesn't have an access token to log in",
-            description = "operate based on retrieval result of phone number and device id")
-    public ResponseEntity<?> signInWithForm(
-            @RequestBody LoginWithFormRequest body
-    ) {
-        ResponseResult res = authenticationApiService.loginWithForm(body.getDeviceId(), body.getPhoneNumber());
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
-        return ResponseEntity
-                .ok()
-                .body(res);
-    }
-
     @TemporaryAuth
-    @PostMapping("/sign-up-with-form")
+    @PostMapping("/sign-with-form")
     @Operation(summary = "sign up with form which mean 회원가입 in Korean",
             description = "please follow adequate request form")
-    public ResponseEntity<?> signUpWithForm(
-            @RequestBody JoinRequest body
+    public ResponseEntity<?> signWithForm(
+            @RequestHeader("Authorization") String jwt,
+            @RequestBody SignRequest body
     ) {
-        ResponseResult res = authenticationApiService.join(body);
+        ResponseResult res = authenticationApiService.enrollOrSignIn(JwtUtil.extractJwtFromCurrentRequestHeader(), body);
         if (res.getResult().equals(Result.FAIL)) {
             return ResponseEntity
                     .badRequest()

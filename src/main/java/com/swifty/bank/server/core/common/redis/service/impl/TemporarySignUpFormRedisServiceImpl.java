@@ -30,4 +30,9 @@ public class TemporarySignUpFormRedisServiceImpl implements TemporarySignUpFormR
     public void setData(String key, TemporarySignUpForm value, Long timeout, TimeUnit timeUnit) {
         temporarySignUpFormRepository.setData(key, value, timeout, TimeUnit.MINUTES);
     }
+
+    @Override
+    public boolean deleteData(String key) {
+        return temporarySignUpFormRepository.deleteData(key);
+    }
 }

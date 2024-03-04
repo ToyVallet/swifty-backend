@@ -1,12 +1,12 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.SignRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.common.authentication.RefreshToken;
+import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
 import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +37,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
     private final OtpRedisServiceImpl otpRedisService;
     private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
+
+    private final BCryptPasswordEncoder encoder;
 
     @Override
     public CheckLoginAvailabilityResponse checkLoginAvailability(
@@ -65,7 +67,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 TemporarySignUpForm.builder()
                         .name(checkLoginAvailabilityRequest.getName())
                         .residentRegistrationNumber(checkLoginAvailabilityRequest.getResidentRegistrationNumber())
-                        .MobileCarrier(checkLoginAvailabilityRequest.getMobileCarrier())
+                        .mobileCarrier(checkLoginAvailabilityRequest.getMobileCarrier())
                         .phoneNumber(checkLoginAvailabilityRequest.getPhoneNumber())
                         .build()
         );
@@ -75,65 +77,61 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 .build();
     }
 
+    private boolean isSameForm(Customer customer, TemporarySignUpForm form, String password) {
+        if (!customer.getName().equals(form.getName())) return false;
+        if (!customer.getBirthDate().equals(form.getResidentRegistrationNumber())) return false;
+        if (!encoder.matches(password, customer.getPassword())) return false;
+        return true;
+    }
+
     @Override
-    public ResponseResult<?> join(JoinRequest dto) {
-        if (customerService.findByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
+    public ResponseResult<?> enrollOrSignIn(String jwt, SignRequest dto) {
+        TemporarySignUpForm temporarySignUpForm = temporarySignUpFormRedisService.getData(jwt);
+
+        otpRedisService.deleteData(temporarySignUpForm.getPhoneNumber());
+
+        Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(temporarySignUpForm.getPhoneNumber());
+        if (mayBeCustomerByPhoneNumber.isEmpty()) {
+            JoinDto joinDto = JoinDto.builder()
+                    .name(temporarySignUpForm.getName())
+                    .phoneNumber(temporarySignUpForm.getPhoneNumber())
+                    .birthDate(temporarySignUpForm.getResidentRegistrationNumber())
+                    .password(dto.getPassword())
+                    .deviceId(dto.getDeviceId())
+                    .build();
+
+            customerService.join(joinDto);
             return new ResponseResult<>(
-                    Result.FAIL,
-                    "이미 가입된 번호입니다.",
+                    Result.SUCCESS,
+                    "[INFO] 유저 생성이 완료되었습니다.",
                     null
             );
         }
-
-        if (!verifyService.isVerified(dto.getPhoneNumber())) {
-            // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
+        Customer customerByPhoneNumber = mayBeCustomerByPhoneNumber.get();
+        if (!isSameForm(customerByPhoneNumber, temporarySignUpForm, dto.getPassword())) {
             return new ResponseResult<>(
                     Result.FAIL,
-                    "인증이 완료되지 않은 번호입니다.",
+                    "해당 정보가 기존 등록된 정보가 다릅니다",
                     null
             );
         }
 
         Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
-        if (mayBeCustomerByDeviceId.isPresent()) {
-            Customer customer = mayBeCustomerByDeviceId.get();
-            customerService.updateDeviceId(customer.getId(), null);
-        }
-
-        customerService.join(JoinDto.createJoinDto(dto));
-        // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
-        otpRedisService.deleteData(dto.getPhoneNumber());
-
-        return new ResponseResult<>(Result.SUCCESS, "사용자가 성공적으로 등록되었습니다.", null);
-    }
-
-    @Transactional
-    @Override
-    public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
-        Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(phoneNumber);
-        if (mayBeCustomerByPhoneNumber.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "해당 번호로 가입된 사용자가 존재하지 않습니다.",
-                    null
-            );
-        }
-        Customer customerByPhoneNumber = mayBeCustomerByPhoneNumber.get();
-
-        Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(deviceId);
 
         if (mayBeCustomerByDeviceId.isPresent()) {
             Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
-
-            customerService.updateDeviceId(customerByDeviceId.getId(), null);
-            try {
-                if (!authenticationService.isLoggedOut(customerByDeviceId.getId())) {
-                    authenticationService.logout(customerByDeviceId.getId());
-                }
-            } catch (NoSuchAuthByUuidException e) {
-                // 로그인 안 됐을때는 패스
+            if (!isSameForm(customerByDeviceId, temporarySignUpForm, dto.getPassword())) {
+                return new ResponseResult<>(
+                        Result.FAIL,
+                        "해당 정보가 기존 등록된 정보가 다릅니다",
+                        null
+                );
             }
-            customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
+
+            // 디바이스를 바꾸어 로그인 한 경우 || 디바이스에 다른 회원이 로그인 한 경우
+            if (customerByDeviceId.getId().compareTo(customerByPhoneNumber.getId()) != 0) {
+                customerTriedLogInNotSameCredential(customerByDeviceId, customerByPhoneNumber, dto.getDeviceId());
+            }
         }
 
         Map<String, Object> result = authenticationService.generateAndStoreRefreshToken(customerByPhoneNumber);
@@ -150,6 +148,18 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 "로그인 인증에 성공하였습니다.",
                 result
         );
+    }
+
+    private void customerTriedLogInNotSameCredential(Customer customerByDeviceId, Customer customerByPhoneNumber, String deviceId) {
+        customerService.updateDeviceId(customerByDeviceId.getId( ), null);
+        try {
+            if (!authenticationService.isLoggedOut(customerByDeviceId.getId())) {
+                authenticationService.logout(customerByDeviceId.getId());
+            }
+        } catch (NoSuchAuthByUuidException e) {
+            // 로그인 안 됐을때는 패스
+        }
+        customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
     }
 
     @Override
@@ -229,15 +239,15 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         if (previousCache == null) {
             // get refresh token from mysql
-            RefreshToken previousRefreshToken = authenticationService.findAuthByCustomerId(uuid)
+            Auth previousAuth = authenticationService.findAuthByCustomerId(uuid)
                     .orElse(null);
 
             // 마지막으로 저장된 ref. 토큰과 현재 토큰이 맞지 않다면 유효하지 않은 토큰임
-            if (previousRefreshToken == null) {
+            if (previousAuth == null) {
                 return false;
             }
 
-            prevRefToken = previousRefreshToken.getRefreshToken();
+            prevRefToken = previousAuth.getRefreshToken();
         } else {
             prevRefToken = previousCache.getRefreshToken();
         }

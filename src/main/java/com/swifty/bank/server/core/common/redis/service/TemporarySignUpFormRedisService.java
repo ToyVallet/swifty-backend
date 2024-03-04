@@ -9,4 +9,6 @@ public interface TemporarySignUpFormRedisService {
     void setData(String key, TemporarySignUpForm value);
 
     void setData(String key, TemporarySignUpForm value, Long timeout, TimeUnit timeUnit);
+
+    boolean deleteData(String key);
 }
