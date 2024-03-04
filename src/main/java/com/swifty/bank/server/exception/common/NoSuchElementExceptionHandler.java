@@ -1,12 +1,11 @@
-package com.swifty.bank.server.exception.authentication.handler;
+package com.swifty.bank.server.exception.common;
 
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
+import java.util.NoSuchElementException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.util.NoSuchElementException;
 
 @ControllerAdvice
 public class NoSuchElementExceptionHandler {
