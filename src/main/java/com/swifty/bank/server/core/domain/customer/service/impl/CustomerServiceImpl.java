@@ -35,11 +35,14 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
                 .name(joinDto.getName())
+                .gender(joinDto.getGender())
+                .birthDate(joinDto.getBirthDate())
                 .customerStatus(CustomerStatus.ACTIVE)  // 일단 default
                 .nationality(joinDto.getNationality())
                 .phoneNumber(joinDto.getPhoneNumber())
                 .password(encoder.encode(joinDto.getPassword()))
                 .deviceId(joinDto.getDeviceId())
+                .roles(joinDto.getRoles())
                 .build();
 
         customerRepository.save(customer);
