@@ -11,7 +11,7 @@ import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.redis.service.OtpRedisService;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenService;
 import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import com.swifty.bank.server.core.domain.customer.Customer;
@@ -33,7 +33,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final AuthenticationService authenticationService;
 
     private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
-    private final OtpRedisService otpRedisService;
+    private final LogoutAccessTokenService logoutAccessTokenService;
 
     @Override
     public CheckLoginAvailabilityResponse checkLoginAvailability(
@@ -139,16 +139,18 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
-    public ResponseResult<?> logout(String jwt) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
-        authenticationService.logout(customerUuid);
+    public ResponseResult<?> logout(String accessToken) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+        authenticationService.deleteAuth(customerUuid);
+
+        logoutAccessTokenService.setDataIfAbsent(accessToken, "false");
         return new ResponseResult<>(Result.SUCCESS, "[INFO] user " + customerUuid + " logged out", null);
     }
 
     @Override
     public ResponseResult<?> signOut(String jwt) {
         UUID uuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
-        authenticationService.logout(uuid);
+        authenticationService.deleteAuth(uuid);
         customerService.withdrawCustomer(uuid);
 
         return new ResponseResult<>(

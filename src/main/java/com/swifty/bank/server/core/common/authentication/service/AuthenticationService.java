@@ -8,7 +8,7 @@ import java.util.UUID;
 public interface AuthenticationService {
     TokenDto generateTokenDto(UUID customerUuid);
 
-    void logout(UUID customerUuid);
+    void deleteAuth(UUID customerUuid);
 
     Optional<Auth> findAuthByCustomerUuid(UUID customerUuid);
 

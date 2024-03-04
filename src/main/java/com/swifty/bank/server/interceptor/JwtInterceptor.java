@@ -3,7 +3,7 @@ package com.swifty.bank.server.interceptor;
 import com.swifty.bank.server.api.controller.annotation.CustomerAuth;
 import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
-import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,7 +19,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final AuthenticationService authenticationService;
+    private final LogoutAccessTokenService logoutAccessTokenService;
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws IOException {
@@ -55,6 +55,11 @@ public class JwtInterceptor implements HandlerInterceptor {
         JwtUtil.validateToken(accessToken);
         // customerUuid가 존재하는지 추가적으로 검증
         JwtUtil.getClaimByKey(accessToken, "customerUuid");
+        // 로그아웃 요청한 access token인지 검증
+        String isLoggedOut = logoutAccessTokenService.getData(accessToken);
+        if (isLoggedOut != null && isLoggedOut.equals("false")) {
+            throw new IllegalArgumentException("로그아웃된 access token입니다.");
+        }
     }
 
     private <A extends Annotation> boolean hasProperAnnotation(Object handler, Class<A> annotation) {

@@ -62,12 +62,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return new TokenDto(createAccessToken(customerUuid), createRefreshToken(customerUuid));
     }
 
-    /* 로그아웃의 기준
-     * 1. refresh token가 그냥 만료된 경우
-     * 2. DB에 해당 customer에 대한 저장된 refresh token(Auth)이 없는 경우
-     * */
     @Override
-    public void logout(UUID customerUuid) {
+    public void deleteAuth(UUID customerUuid) {
         Optional<Auth> maybeAuth = authRepository.findAuthByUuid(customerUuid);
         maybeAuth.ifPresent(authRepository::delete);
     }

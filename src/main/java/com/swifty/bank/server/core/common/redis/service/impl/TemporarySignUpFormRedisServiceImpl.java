@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class TemporarySignUpFormRedisServiceImpl implements TemporarySignUpFormRedisService {
+    public final String prefix = "[TSF]";
     private final TemporarySignUpFormRepository temporarySignUpFormRepository;
 
     @Value("${jwt.redis.temporary-token-minutes}")
@@ -18,21 +19,21 @@ public class TemporarySignUpFormRedisServiceImpl implements TemporarySignUpFormR
 
     @Override
     public TemporarySignUpForm getData(String key) {
-        return temporarySignUpFormRepository.getData(key);
+        return temporarySignUpFormRepository.getData(prefix + key);
     }
 
     @Override
     public void setData(String key, TemporarySignUpForm value) {
-        temporarySignUpFormRepository.setData(key, value, timeout, TimeUnit.MINUTES);
+        temporarySignUpFormRepository.setData(prefix + key, value, timeout, TimeUnit.MINUTES);
     }
 
     @Override
     public void setData(String key, TemporarySignUpForm value, Long timeout, TimeUnit timeUnit) {
-        temporarySignUpFormRepository.setData(key, value, timeout, TimeUnit.MINUTES);
+        temporarySignUpFormRepository.setData(prefix + key, value, timeout, TimeUnit.MINUTES);
     }
 
     @Override
     public boolean deleteData(String key) {
-        return temporarySignUpFormRepository.deleteData(key);
+        return temporarySignUpFormRepository.deleteData(prefix + key);
     }
 }
