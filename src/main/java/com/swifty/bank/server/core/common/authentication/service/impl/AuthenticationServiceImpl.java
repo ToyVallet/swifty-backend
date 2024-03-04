@@ -4,8 +4,8 @@ import com.swifty.bank.server.core.common.authentication.RefreshToken;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
 import com.swifty.bank.server.core.common.redis.service.RefreshTokenRedisService;
+import com.swifty.bank.server.core.common.redis.value.RefreshTokenCache;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.utils.DateUtil;
 import com.swifty.bank.server.core.utils.JwtUtil;
@@ -34,6 +34,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private int accessTokenExpiration;
     @Value("${jwt.refresh-token-expiration-millis}")
     private int refreshTokenExpiration;
+    @Value("${jwt.temporary-token-expiration-millis}")
+    private int temporaryTokenExpiration;
 
     @Override
     public String createAccessToken(Customer customer) {
@@ -52,6 +54,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         claims.setSubject("RefreshToken");
         claims.put("customerId", customer.getId());
+        return JwtUtil.generateToken(claims, expiration);
+    }
+
+    @Override
+    public String createTemporaryToken() {
+        Claims claims = Jwts.claims();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + temporaryTokenExpiration * 1000L);
+
+        claims.setSubject("TemporaryToken");
         return JwtUtil.generateToken(claims, expiration);
     }
 
@@ -114,14 +125,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void saveRefreshTokenInDataSources(String jwt) {
         UUID customerId = UUID.fromString(JwtUtil.getClaimByKey(jwt, "customerId").toString());
 
-        RefreshTokenCache prevCacheAuth = refreshTokenRedisService.getData(customerId.toString( ));
+        RefreshTokenCache prevCacheAuth = refreshTokenRedisService.getData(customerId.toString());
         RefreshToken prevDbRefreshToken = authRepository.findAuthByUuid(customerId)
                 .orElse(null);
 
         if (prevDbRefreshToken != null) {
             authRepository.save(new RefreshToken(customerId, jwt));
-        }
-        else {
+        } else {
             prevDbRefreshToken.updateRefreshToken(jwt);
         }
 

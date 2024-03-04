@@ -1,6 +1,6 @@
 package com.swifty.bank.server.api.controller;
 
-import com.swifty.bank.server.api.controller.annotation.PassAuth;
+import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.sms.request.CheckVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.sms.request.SendVerificationCodeRequest;
@@ -10,6 +10,7 @@ import com.swifty.bank.server.api.controller.dto.sms.response.SendVerificationCo
 import com.swifty.bank.server.api.controller.dto.sms.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.service.SmsService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SmsController {
     private final SmsService smsService;
 
-    @PassAuth
+    @TemporaryAuth
     @PostMapping(value = "/steal-verification-code")
     @Operation(summary = "인증번호 훔쳐보기", description = "생성된 인증번호를 훔쳐봅니다.")
     @ApiResponses(value = {
@@ -54,6 +56,9 @@ public class SmsController {
                     })
     })
     public ResponseEntity<StealVerificationCodeResponse> stealVerificationCode(
+            @Parameter(description = "Temporary token with Authorization header"
+                    , example = "Bearer ey...", required = true)
+            @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid StealVerificationCodeRequest stealVerificationCodeRequest) {
         StealVerificationCodeResponse res = smsService.stealVerificationCode(
                 stealVerificationCodeRequest);
@@ -63,7 +68,7 @@ public class SmsController {
                 .body(res);
     }
 
-    @PassAuth
+    @TemporaryAuth
     @PostMapping(value = "/send-verification-code")
     @Operation(summary = "인증번호 발송", description = "요청받은 전화번호로 인증번호를 발송합니다.")
     @ApiResponses(value = {
@@ -85,6 +90,9 @@ public class SmsController {
 
     })
     public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(
+            @Parameter(description = "Temporary token with Authorization header"
+                    , example = "Bearer ey...", required = true)
+            @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
         SendVerificationCodeResponse res = smsService.sendVerificationCode(
                 sendVerificationCodeRequest);
@@ -94,7 +102,7 @@ public class SmsController {
                 .body(res);
     }
 
-    @PassAuth
+    @TemporaryAuth
     @PostMapping(value = "/check-verification-code")
     @Operation(summary = "인증번호 검증", description = "인증번호를 검증합니다.")
     @ApiResponses(value = {
@@ -115,6 +123,9 @@ public class SmsController {
                     })
     })
     public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(
+            @Parameter(description = "Temporary token with Authorization header"
+                    , example = "Bearer ey...", required = true)
+            @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         CheckVerificationCodeResponse res = smsService.checkVerificationCode(
                 checkVerificationCodeRequest);

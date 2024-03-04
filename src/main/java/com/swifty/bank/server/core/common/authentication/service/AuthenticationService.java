@@ -22,5 +22,7 @@ public interface AuthenticationService {
 
     String createRefreshToken(Customer customer);
 
+    String createTemporaryToken();
+
     Map<String, Object> generateAndStoreRefreshToken(Customer customerByPhoneNumber);
 }

@@ -1,6 +1,7 @@
 package com.swifty.bank.server.config;
 
-import com.swifty.bank.server.core.common.redis.entity.RefreshTokenCache;
+import com.swifty.bank.server.core.common.redis.value.RefreshTokenCache;
+import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +25,15 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, RefreshTokenCache> redisAuthTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, RefreshTokenCache> refreshTokenRedisTemplate(
+            RedisConnectionFactory connectionFactory) {
         return createRedisTemplate(connectionFactory, RefreshTokenCache.class);
+    }
+
+    @Bean
+    public RedisTemplate<String, TemporarySignUpForm> temporarySignUpFormRedisTemplate(
+            RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory, TemporarySignUpForm.class);
     }
 
     public <T> RedisTemplate<String, T> createRedisTemplate(RedisConnectionFactory redisConnectionFactory,
