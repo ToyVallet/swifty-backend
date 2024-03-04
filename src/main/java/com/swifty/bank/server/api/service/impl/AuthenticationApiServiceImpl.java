@@ -101,7 +101,16 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     .build();
 
             customerService.join(joinDto);
-            Map<String, Object> result = authenticationService.generateAndStoreRefreshToken(customerByPhoneNumber);
+
+            Customer customer = Customer.builder()
+                    .name(temporarySignUpForm.getName())
+                    .phoneNumber(temporarySignUpForm.getPhoneNumber())
+                    .birthDate(temporarySignUpForm.getResidentRegistrationNumber())
+                    .password(dto.getPassword())
+                    .deviceId(dto.getDeviceId())
+                    .build();
+
+            Map<String, Object> result = authenticationService.generateAndStoreRefreshToken(customer);
             if (result == null) {
                 return new ResponseResult<>(
                         Result.FAIL,
