@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 @Schema(description = "Information for enroll or log in user")
-public class SignRequest {
+public class SignWithFormRequest {
     @NotNull
     @NotBlank
     @Size(min = 6, max = 6)

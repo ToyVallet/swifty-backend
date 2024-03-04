@@ -5,12 +5,10 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.utils.JwtUtil;
-import com.swifty.bank.server.exception.authentication.NotLoggedInCustomerException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -55,11 +53,8 @@ public class JwtInterceptor implements HandlerInterceptor {
     private void validateCustomerAuth() {
         String accessToken = JwtUtil.extractJwtFromCurrentRequestHeader();
         JwtUtil.validateToken(accessToken);
-        if (authenticationService.isLoggedOut(
-                UUID.fromString(JwtUtil.getClaimByKey(accessToken, "customerId").toString())
-        )) {
-            throw new NotLoggedInCustomerException("로그아웃 상태의 토큰입니다.");
-        }
+        // customerUuid가 존재하는지 추가적으로 검증
+        JwtUtil.getClaimByKey(accessToken, "customerUuid");
     }
 
     private <A extends Annotation> boolean hasProperAnnotation(Object handler, Class<A> annotation) {

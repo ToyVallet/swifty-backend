@@ -2,27 +2,21 @@ package com.swifty.bank.server.core.common.authentication.service;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
-import com.swifty.bank.server.core.domain.customer.Customer;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface AuthenticationService {
-    TokenDto generateTokenDto(Customer customer);
+    TokenDto generateTokenDto(UUID customerUuid);
 
-    void logout(UUID uuid);
+    void logout(UUID customerUuid);
 
-    boolean isLoggedOut(UUID uuid);
+    Optional<Auth> findAuthByCustomerUuid(UUID customerUuid);
 
-    Optional<Auth> findAuthByCustomerId(UUID uuid);
+    void saveRefreshTokenInDatabase(String token);
 
-    void saveRefreshTokenInDataSources(String token);
+    String createAccessToken(UUID customerUuid);
 
-    String createAccessToken(Customer customer);
-
-    String createRefreshToken(Customer customer);
+    String createRefreshToken(UUID customerUuid);
 
     String createTemporaryToken();
-
-    Map<String, Object> generateAndStoreRefreshToken(Customer customerByPhoneNumber);
 }

@@ -5,10 +5,11 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.SignRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.LoginWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
@@ -67,18 +68,17 @@ public class AuthenticationController {
 
     @TemporaryAuth
     @PostMapping("/sign-with-form")
-    @Operation(summary = "sign up with form which mean 회원가입 in Korean",
-            description = "please follow adequate request form")
-    public ResponseEntity<?> signWithForm(
-            @RequestHeader("Authorization") String jwt,
-            @RequestBody SignRequest body
+    @Operation(summary = "회원가입과 로그인을 동시에 처리",
+            description = "휴대폰 번호로 가입된 회원이 존재하면서 이름, 주민등록번호 정보가 불일치하는 경우만 실패")
+    public ResponseEntity<SignWithFormResponse> signWithForm(
+            @Parameter(description = "Temporary token with Authorization header", example = "Bearer ey...", required = true)
+            @RequestHeader("Authorization") String temporaryToken,
+            @RequestBody SignWithFormRequest body
     ) {
-        ResponseResult res = authenticationApiService.enrollOrSignIn(JwtUtil.extractJwtFromCurrentRequestHeader(), body);
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
+        SignWithFormResponse res = authenticationApiService.signUpAndSignIn(
+                JwtUtil.removePrefix(temporaryToken),
+                body);
+
         return ResponseEntity
                 .ok()
                 .body(res);
@@ -88,15 +88,11 @@ public class AuthenticationController {
     @PostMapping("/reissue")
     @Operation(summary = "reissue access and refresh token when access token got expired",
             description = "need valid refresh token. if refresh token is not valid too, try log in")
-    public ResponseEntity<?> reissueTokens(
+    public ResponseEntity<ReissueResponse> reissueTokens(
             @RequestBody ReissueRequest refToken
     ) {
-        ResponseResult res = authenticationApiService.reissue(refToken.getRefreshToken());
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
+        ReissueResponse res = authenticationApiService.reissue(JwtUtil.removePrefix(refToken.getRefreshToken()));
+
         return ResponseEntity
                 .ok()
                 .body(res);
@@ -106,8 +102,7 @@ public class AuthenticationController {
     @PostMapping("/log-out")
     @Operation(summary = "log out with valid access token", description = "need valid access token")
     public ResponseEntity<?> logOut(
-            @Parameter(description = "Access token with Authorization header"
-                    , example = "Bearer ey...", required = true)
+            @Parameter(description = "Access token with Authorization header", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
         ResponseResult res = authenticationApiService.logout(JwtUtil.extractJwtFromCurrentRequestHeader());
@@ -125,8 +120,7 @@ public class AuthenticationController {
     @PostMapping("/sign-out")
     @Operation(summary = "sign out with valid access token", description = "need valid access token")
     public ResponseEntity<?> signOut(
-            @Parameter(description = "Access token with Authorization header"
-                    , example = "Bearer ey...", required = true)
+            @Parameter(description = "Access token with Authorization header", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
         ResponseResult res = authenticationApiService.signOut(JwtUtil.extractJwtFromCurrentRequestHeader());

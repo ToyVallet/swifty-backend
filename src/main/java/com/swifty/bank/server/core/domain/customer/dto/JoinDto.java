@@ -1,6 +1,5 @@
 package com.swifty.bank.server.core.domain.customer.dto;
 
-import com.swifty.bank.server.api.controller.dto.auth.request.SignRequest;
 import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
