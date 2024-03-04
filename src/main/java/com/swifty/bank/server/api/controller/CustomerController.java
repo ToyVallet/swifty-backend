@@ -1,8 +1,10 @@
 package com.swifty.bank.server.api.controller;
 
 import com.swifty.bank.server.api.controller.annotation.CustomerAuth;
+import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
+import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.UUID;
+
 @RequiredArgsConstructor
 @Controller
 @RequestMapping(value = "/customer")
@@ -27,24 +31,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Slf4j
 public class CustomerController {
     private final CustomerApiService customerApiService;
-    private final AuthenticationService authenticationService;
+    private final JwtUtil jwtUtil;
 
     @CustomerAuth
     @GetMapping("")
     @Operation(summary = "get customer's whole information in database", description = "no request body needed")
     public ResponseEntity<?> customerInfo() {
-        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
+        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(customerId);
 
-        ResponseResult<?> res = customerApiService.getCustomerInfo(jwt);
-
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
         return ResponseEntity
                 .ok()
-                .body(res);
+                .body(customerInfo);
     }
 
     @CustomerAuth
@@ -52,54 +50,45 @@ public class CustomerController {
     @Operation(summary = "change customer's whole information in database", description = "specific DTO required")
     public ResponseEntity<?> customerInfoUpdate(
             @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        ResponseResult<?> res = customerApiService.customerInfoUpdate(jwt,
+        customerApiService.customerInfoUpdate(customerId,
                 customerInfoUpdateCondition);
 
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
         return ResponseEntity
                 .ok()
-                .body(res);
+                .body(new MessageResponse("회원정보를 수정하였습니다."));
     }
 
     @CustomerAuth
     @PostMapping("/password")
     @Operation(summary = "confirm whether input and original password matches", description = "password string needed")
     public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
-        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        ResponseResult res = customerApiService.confirmPassword(jwt, password.getPasswd());
+        boolean isMatchPassword = customerApiService.confirmPassword(customerId, password.getPassword());
 
-        if (res.getResult().equals(Result.FAIL)) {
+        if (isMatchPassword) {
             return ResponseEntity
                     .badRequest()
-                    .body(res);
+                    .body(new MessageResponse("비밀번호가 일치합니다."));
         }
+
         return ResponseEntity
-                .ok()
-                .body(res);
+                .badRequest()
+                .body(new MessageResponse("비밀번호가 불일치합니다."));
     }
 
     @CustomerAuth
     @PatchMapping("/password")
     @Operation(summary = "reset password with input", description = "password string needed in body")
     public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
-        String jwt = JwtUtil.extractJwtFromCurrentRequestHeader();
+        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
 
-        ResponseResult res = customerApiService.resetPassword(jwt, newPassword.getPasswd());
+        customerApiService.resetPassword(customerId, newPassword.getPassword());
 
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
         return ResponseEntity
                 .ok()
-                .body(res);
+                .body(new MessageResponse("비밀번호를 변경하였습니다."));
     }
 }
