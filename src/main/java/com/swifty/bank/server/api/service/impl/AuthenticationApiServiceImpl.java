@@ -101,10 +101,19 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     .build();
 
             customerService.join(joinDto);
+            Map<String, Object> result = authenticationService.generateAndStoreRefreshToken(customerByPhoneNumber);
+            if (result == null) {
+                return new ResponseResult<>(
+                        Result.FAIL,
+                        "refresh token 생성 및 저장에 실패했습니다.",
+                        null
+                );
+            }
+
             return new ResponseResult<>(
                     Result.SUCCESS,
-                    "[INFO] 유저 생성이 완료되었습니다.",
-                    null
+                    "로그인 인증에 성공하였습니다.",
+                    result
             );
         }
         Customer customerByPhoneNumber = mayBeCustomerByPhoneNumber.get();
