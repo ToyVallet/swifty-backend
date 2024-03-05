@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
 import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,6 +18,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Slf4j
 public class JwtUtil {
     private static String secretKey;
+
+    public static String removePrefix(String rawJwt) {
+        return rawJwt.replaceFirst("Bearer ", "");
+    }
 
     public static String generateToken(Claims claims, Date expiration) {
         return Jwts.builder()

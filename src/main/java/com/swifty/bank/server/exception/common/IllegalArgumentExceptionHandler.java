@@ -1,4 +1,4 @@
-package com.swifty.bank.server.exception.authentication.handler;
+package com.swifty.bank.server.exception.common;
 
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;

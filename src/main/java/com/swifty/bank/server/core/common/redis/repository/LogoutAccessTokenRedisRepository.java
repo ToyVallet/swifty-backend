@@ -1,6 +1,5 @@
 package com.swifty.bank.server.core.common.redis.repository;
 
-import com.swifty.bank.server.core.common.redis.value.RefreshTokenCache;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -8,18 +7,22 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class RefreshTokenRedisRepository {
-    private final RedisTemplate<String, RefreshTokenCache> redisTemplate;
+public class LogoutAccessTokenRedisRepository {
+    private final RedisTemplate<String, String> redisTemplate;
 
-    public RefreshTokenCache getData(String key) {
+    public String getData(String key) {
         return redisTemplate.opsForValue().get(key);
     }
 
-    public void setData(String key, RefreshTokenCache value, Long timeout, TimeUnit timeUnit) {
+    public void setData(String key, String value, Long timeout, TimeUnit timeUnit) {
         redisTemplate.opsForValue().set(key, value, timeout, timeUnit);
     }
 
-    public void setDataIfAbsent(String key, RefreshTokenCache value, Long timeout, TimeUnit timeUnit) {
+    public void setDataIfAbsent(String key, String value, Long timeout, TimeUnit timeUnit) {
         redisTemplate.opsForValue().setIfAbsent(key, value, timeout, timeUnit);
+    }
+
+    public boolean deleteData(String key) {
+        return redisTemplate.delete(key);
     }
 }

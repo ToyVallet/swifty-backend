@@ -1,42 +1,35 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
-import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
+import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
+import com.swifty.bank.server.api.controller.dto.auth.response.*;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.common.authentication.RefreshToken;
+import com.swifty.bank.server.core.common.authentication.Auth;
+import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenService;
 import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
-import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
-import com.swifty.bank.server.core.common.redis.service.impl.RefreshTokenRedisServiceImpl;
-import com.swifty.bank.server.core.common.redis.value.RefreshTokenCache;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.core.utils.JwtUtil;
-import com.swifty.bank.server.exception.authentication.NoSuchAuthByUuidException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final AuthenticationService authenticationService;
-    private final VerifyService verifyService;
 
     private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
-    private final OtpRedisServiceImpl otpRedisService;
-    private final RefreshTokenRedisServiceImpl refreshTokenRedisService;
+    private final LogoutAccessTokenService logoutAccessTokenService;
 
     @Override
     public CheckLoginAvailabilityResponse checkLoginAvailability(
@@ -65,7 +58,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 TemporarySignUpForm.builder()
                         .name(checkLoginAvailabilityRequest.getName())
                         .residentRegistrationNumber(checkLoginAvailabilityRequest.getResidentRegistrationNumber())
-                        .MobileCarrier(checkLoginAvailabilityRequest.getMobileCarrier())
+                        .mobileCarrier(checkLoginAvailabilityRequest.getMobileCarrier())
                         .phoneNumber(checkLoginAvailabilityRequest.getPhoneNumber())
                         .build()
         );
@@ -76,172 +69,102 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
-    public ResponseResult<?> join(JoinRequest dto) {
-        if (customerService.findByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "이미 가입된 번호입니다.",
-                    null
-            );
-        }
+    public SignWithFormResponse signUpAndSignIn(String temporaryToken, SignWithFormRequest signWithFormRequest) {
+        TemporarySignUpForm temporarySignUpForm = temporarySignUpFormRedisService.getData(temporaryToken);
 
-        if (!verifyService.isVerified(dto.getPhoneNumber())) {
-            // 만료 되어서 사라졌거나 인증이 된 상태가 아닌 경우
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "인증이 완료되지 않은 번호입니다.",
-                    null
-            );
-        }
+        Optional<Customer> mayBeCustomerByPhoneNumber
+                = customerService.findByPhoneNumber(temporarySignUpForm.getPhoneNumber());
 
-        Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
-        if (mayBeCustomerByDeviceId.isPresent()) {
-            Customer customer = mayBeCustomerByDeviceId.get();
-            customerService.updateDeviceId(customer.getId(), null);
-        }
+        if (mayBeCustomerByPhoneNumber.isPresent()) {
+            Customer customer = mayBeCustomerByPhoneNumber.get();
 
-        customerService.join(JoinDto.createJoinDto(dto));
-        // 회원가입 절차가 완료된 경우, 전화번호 인증 여부 redis에서 삭제
-        otpRedisService.deleteData(dto.getPhoneNumber());
+            // 기존 회원이면서 form과 정보가 일치하는 경우
+            if (customer.getName().equals(temporarySignUpForm.getName())) {
+                TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
+                authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
+                temporarySignUpFormRedisService.deleteData(temporaryToken);
 
-        return new ResponseResult<>(Result.SUCCESS, "사용자가 성공적으로 등록되었습니다.", null);
-    }
-
-    @Transactional
-    @Override
-    public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
-        Optional<Customer> mayBeCustomerByPhoneNumber = customerService.findByPhoneNumber(phoneNumber);
-        if (mayBeCustomerByPhoneNumber.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "해당 번호로 가입된 사용자가 존재하지 않습니다.",
-                    null
-            );
-        }
-        Customer customerByPhoneNumber = mayBeCustomerByPhoneNumber.get();
-
-        Optional<Customer> mayBeCustomerByDeviceId = customerService.findByDeviceId(deviceId);
-
-        if (mayBeCustomerByDeviceId.isPresent()) {
-            Customer customerByDeviceId = mayBeCustomerByDeviceId.get();
-
-            customerService.updateDeviceId(customerByDeviceId.getId(), null);
-            try {
-                if (!authenticationService.isLoggedOut(customerByDeviceId.getId())) {
-                    authenticationService.logout(customerByDeviceId.getId());
-                }
-            } catch (NoSuchAuthByUuidException e) {
-                // 로그인 안 됐을때는 패스
+                return SignWithFormResponse.builder()
+                        .isSuccess(true)
+                        .tokens(List.of(tokenDto.getAccessToken(), tokenDto.getRefreshToken()))
+                        .build();
             }
-            customerService.updateDeviceId(customerByPhoneNumber.getId(), deviceId);
         }
 
-        Map<String, Object> result = authenticationService.generateAndStoreRefreshToken(customerByPhoneNumber);
-        if (result == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "refresh token 생성 및 저장에 실패했습니다.",
-                    null
-            );
+        // 신규 회원인 경우
+        if (mayBeCustomerByPhoneNumber.isEmpty()) {
+            JoinDto joinDto = JoinDto.changeToJoinDto(temporarySignUpForm, signWithFormRequest);
+
+            Customer customer = customerService.join(joinDto);
+            TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
+            authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
+            temporarySignUpFormRedisService.deleteData(temporaryToken);
+
+            return SignWithFormResponse.builder()
+                    .isSuccess(true)
+                    .tokens(List.of(tokenDto.getAccessToken(), tokenDto.getRefreshToken()))
+                    .build();
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "로그인 인증에 성공하였습니다.",
-                result
-        );
+        return SignWithFormResponse.builder()
+                .isSuccess(false)
+                .tokens(null)
+                .build();
     }
 
     @Override
-    public ResponseResult<?> reissue(String jwt) {
-        Map<String, Object> result = new HashMap<>();
-        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
-
-        // 로그아웃 된 유저가 아니어야 함
-        if (authenticationService.isLoggedOut(customerId)) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "로그아웃된 유저입니다.",
-                    null
-            );
+    public ReissueResponse reissue(String refreshToken) {
+        if (!isValidatedRefreshToken(refreshToken)) {
+            return ReissueResponse.builder()
+                    .isSuccess(false)
+                    .tokens(null)
+                    .build();
         }
-        // 이전 DB에 저장된 Ref. 토큰과 같은 값인지 비교
-        if (!isValidatedRefreshToken(jwt)) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "현재 유효하지 않은 refresh token입니다.",
-                    null
-            );
-        }
-
-        Optional<Customer> mayBeCustomer = customerService.findByUuid(customerId);
-        if (mayBeCustomer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "유효하지 않은 uuid입니다.",
-                    null
-            );
-        }
-
-        Customer customer = mayBeCustomer.get();
-        result = authenticationService.generateAndStoreRefreshToken(customer);
-        if (result == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "refresh token 생성 및 저장에 실패했습니다.",
-                    null
-            );
-        }
-
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "refresh token 재발급이 성공하였습니다.",
-                result
-        );
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class);
+        TokenDto tokenDto = authenticationService.generateTokenDto(customerUuid);
+        return ReissueResponse.builder()
+                .isSuccess(true)
+                .tokens(List.of(tokenDto.getAccessToken(), tokenDto.getRefreshToken()))
+                .build();
     }
 
     @Override
-    public ResponseResult<?> logout(String jwt) {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
-        authenticationService.logout(customerId);
-        return new ResponseResult<>(Result.SUCCESS, "[INFO] user " + customerId + " logged out", null);
+    public LogoutResponse logout(String accessToken) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+        authenticationService.deleteAuth(customerUuid);
+
+        logoutAccessTokenService.setDataIfAbsent(accessToken, "false");
+        return LogoutResponse.builder()
+                .isSuccessful(true)
+                .build();
     }
 
     @Override
-    public ResponseResult<?> signOut(String jwt) {
-        UUID uuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
-        authenticationService.logout(uuid);
+    public SignOutResponse signOut(String jwt) {
+        UUID uuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+        authenticationService.deleteAuth(uuid);
         customerService.withdrawCustomer(uuid);
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] " + uuid + " successfully withdraw",
-                null
-        );
+        return SignOutResponse.builder()
+                .wasSignedOut(true)
+                .build();
     }
 
-    private boolean isValidatedRefreshToken(String jwt) {
-        UUID uuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+    /*
+     * 검증 1. jwt 자체 유효성 검증(만료기간, 시그니처)
+     * 검증 2. refreshToken 안에 customerUuid 값이 포함되어 있는가?
+     * 검증 3. DB에 저장되어 있는 refresh token과 값이 일치하는가?
+     */
+    private boolean isValidatedRefreshToken(String refreshToken) {
+        JwtUtil.validateToken(refreshToken);
 
-        // get refresh token from redis
-        RefreshTokenCache previousCache = refreshTokenRedisService.getData(uuid.toString());
-        String prevRefToken = null;
-
-        if (previousCache == null) {
-            // get refresh token from mysql
-            RefreshToken previousRefreshToken = authenticationService.findAuthByCustomerId(uuid)
-                    .orElse(null);
-
-            // 마지막으로 저장된 ref. 토큰과 현재 토큰이 맞지 않다면 유효하지 않은 토큰임
-            if (previousRefreshToken == null) {
-                return false;
-            }
-
-            prevRefToken = previousRefreshToken.getRefreshToken();
-        } else {
-            prevRefToken = previousCache.getRefreshToken();
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class);
+        Optional<Auth> maybeAuth = authenticationService.findAuthByCustomerUuid(customerUuid);
+        if (maybeAuth.isEmpty()) {
+            return false;
         }
 
-        return jwt.equals(prevRefToken);
+        Auth auth = maybeAuth.get();
+        return refreshToken.equals(auth.getRefreshToken());
     }
 }
