@@ -44,6 +44,12 @@ public class JwtUtil {
         }
     }
 
+    public static String getSubject(String token) {
+        validateToken(token);
+        Claims claims = getAllClaims(token);
+        return claims.getSubject();
+    }
+
     public static Object getClaimByKey(String token, String key) {
         validateToken(token);
 

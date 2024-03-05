@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -48,13 +49,25 @@ public class JwtInterceptor implements HandlerInterceptor {
     private void validateTemporaryAuth(Object handler, HttpServletRequest req) {
         String temporaryToken = JwtUtil.extractJwtFromCurrentRequestHeader();
         JwtUtil.validateToken(temporaryToken);
+        // temporary token인지 검증
+        String sub = JwtUtil.getSubject(temporaryToken);
+        if (!sub.equals("TemporaryToken")) {
+            throw new IllegalArgumentException("temporary token이 아닙니다.");
+        }
     }
 
     private void validateCustomerAuth() {
         String accessToken = JwtUtil.extractJwtFromCurrentRequestHeader();
         JwtUtil.validateToken(accessToken);
-        // customerUuid가 존재하는지 추가적으로 검증
-        JwtUtil.getClaimByKey(accessToken, "customerUuid");
+        // Access Token인지 검증
+        String sub = JwtUtil.getSubject(accessToken);
+        if (sub.equals("AccessToken")) {
+            throw new IllegalArgumentException("access token이 아닙니다.");
+        }
+
+        // customerUuid가 claim에 존재하는지 검증
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+
         // 로그아웃 요청한 access token인지 검증
         String isLoggedOut = logoutAccessTokenService.getData(accessToken);
         if (isLoggedOut != null && isLoggedOut.equals("false")) {
