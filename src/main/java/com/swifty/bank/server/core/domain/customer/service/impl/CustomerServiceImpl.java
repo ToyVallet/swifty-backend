@@ -35,12 +35,14 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
                 .name(joinDto.getName())
+                .gender(joinDto.getGender())
+                .birthDate(joinDto.getBirthDate())
                 .customerStatus(CustomerStatus.ACTIVE)  // 일단 default
                 .nationality(joinDto.getNationality())
                 .phoneNumber(joinDto.getPhoneNumber())
-                .birthDate(joinDto.getBirthDate())
                 .password(encoder.encode(joinDto.getPassword()))
                 .deviceId(joinDto.getDeviceId())
+                .roles(joinDto.getRoles())
                 .build();
 
         customerRepository.save(customer);
@@ -48,9 +50,9 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Optional<Customer> findByUuid(UUID customerUuid) {
+    public Optional<Customer> findByUuid(UUID customerId) {
 
-        return customerRepository.findOneByUUID(customerUuid);
+        return customerRepository.findOneByUUID(customerId);
     }
 
     @Override
@@ -68,10 +70,10 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public Customer updateCustomerInfo(UUID customerUuid,
+    public Customer updateCustomerInfo(UUID customerId,
                                        CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest) {
 
-        Customer customer = customerRepository.findOneByUUID(customerUuid)
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다"));
 
         if (Objects.nonNull(customerInfoUpdateConditionRequest.getName())) {
@@ -95,8 +97,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public Customer updatePhoneNumber(UUID customerUuid, String phoneNumber) {
-        Customer customer = customerRepository.findOneByUUID(customerUuid)
+    public Customer updatePhoneNumber(UUID customerId, String phoneNumber) {
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("[ERROR] No customer " +
                         "found by the phone" +
                         " number and nationality"));
@@ -107,8 +109,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public Customer updateDeviceId(UUID customerUuid, String deviceId) {
-        Customer customer = customerRepository.findOneByUUID(customerUuid)
+    public Customer updateDeviceId(UUID customerId, String deviceId) {
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("[ERROR] : No customer found by the device id"));
 
         customer.updateDeviceId(deviceId);
@@ -117,22 +119,24 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public void withdrawCustomer(UUID customerUuid) {
-        Customer customer = customerRepository.findOneByUUID(customerUuid)
+    public void withdrawCustomer(UUID customerId) {
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
 
         customer.delete();
     }
 
     @Override
-    public Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID customerUuid) {
-        return customerRepository.findCustomerInfoResponseByUUID(customerUuid);
+    public Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID customerId) {
+        return customerRepository.findCustomerInfoResponseByUUID(customerId);
     }
 
+    @Transactional
     @Override
-    public void updatePassword(UUID customerUuid, String newPassword) {
+    public void updatePassword(UUID customerId, String newPassword) {
         String encodePassword = encoder.encode(newPassword);
-        Customer customer = customerRepository.findOneByUUID(customerUuid)
+
+        Customer customer = customerRepository.findOneByUUID(customerId)
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
 
         customer.resetPassword(encodePassword);
