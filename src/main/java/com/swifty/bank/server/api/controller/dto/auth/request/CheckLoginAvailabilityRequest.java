@@ -28,7 +28,7 @@ public class CheckLoginAvailabilityRequest {
     @Schema(description = "통신사",
             example = "KT",
             requiredMode = RequiredMode.REQUIRED)
-    private String MobileCarrier;
+    private String mobileCarrier;
 
     @NotNull
     @Size(min = 3, max = 14)
