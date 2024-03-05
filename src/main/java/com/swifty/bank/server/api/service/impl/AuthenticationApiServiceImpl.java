@@ -93,13 +93,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         // 신규 회원인 경우
         if (mayBeCustomerByPhoneNumber.isEmpty()) {
-            JoinDto joinDto = JoinDto.builder()
-                    .name(temporarySignUpForm.getName())
-                    .phoneNumber(temporarySignUpForm.getPhoneNumber())
-                    .birthDate(temporarySignUpForm.getResidentRegistrationNumber())
-                    .password(signWithFormRequest.getPassword())
-                    .deviceId(signWithFormRequest.getDeviceId())
-                    .build();
+            JoinDto joinDto = JoinDto.changeToJoinDto(temporarySignUpForm, signWithFormRequest);
 
             Customer customer = customerService.join(joinDto);
             TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
