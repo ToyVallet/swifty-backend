@@ -4,8 +4,6 @@ import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabi
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.*;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
@@ -148,12 +146,12 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
-    public SignoutResponse signOut(String jwt) {
+    public SignOutResponse signOut(String jwt) {
         UUID uuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
         authenticationService.deleteAuth(uuid);
         customerService.withdrawCustomer(uuid);
 
-        return SignoutResponse.builder()
+        return SignOutResponse.builder()
                 .wasSignedOut(true)
                 .build();
     }

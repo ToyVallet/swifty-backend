@@ -9,8 +9,6 @@ import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.*;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,7 +54,7 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<CheckLoginAvailabilityResponse> checkLoginAvailability(
-            @RequestBody CheckLoginAvailabilityRequest body
+            @Valid @RequestBody CheckLoginAvailabilityRequest body
     ) {
         CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(body);
 
@@ -68,10 +67,27 @@ public class AuthenticationController {
     @PostMapping("/sign-with-form")
     @Operation(summary = "회원가입과 로그인을 동시에 처리",
             description = "휴대폰 번호로 가입된 회원이 존재하면서 이름, 주민등록번호 정보가 불일치하는 경우만 실패")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = SignWithFormResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
     public ResponseEntity<SignWithFormResponse> signWithForm(
             @Parameter(description = "Temporary token with Authorization header", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String temporaryToken,
-            @RequestBody SignWithFormRequest body
+            @Valid @RequestBody SignWithFormRequest body
     ) {
         SignWithFormResponse res = authenticationApiService.signUpAndSignIn(
                 JwtUtil.removePrefix(temporaryToken),
@@ -84,8 +100,25 @@ public class AuthenticationController {
 
     @PassAuth
     @PostMapping("/reissue")
-    @Operation(summary = "reissue access and refresh token when access token got expired",
-            description = "need valid refresh token. if refresh token is not valid too, try log in")
+    @Operation(summary = "액세스 토큰 만료시 리프레시 토큰을 이용한 토큰들 재발급",
+            description = "유효한 리프레시 토큰 필요, 만약 리프레시 토큰도 만료시 재로그인 필요함")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = ReissueResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "헤더의 리프레시 토큰이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
     public ResponseEntity<ReissueResponse> reissueTokens(
             @RequestBody ReissueRequest refToken
     ) {
@@ -98,8 +131,25 @@ public class AuthenticationController {
 
     @CustomerAuth
     @PostMapping("/log-out")
-    @Operation(summary = "log out with valid access token", description = "need valid access token")
-    public ResponseEntity<?> logOut(
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = LogoutResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "헤더의 토큰이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
+    @Operation(summary = "유효한 유저가 로그인 하게 함", description = "이를 시도하는 유저는 로그인 되어 있는 상태여야 하며 액세스 토큰 역시 유효해야 함")
+    public ResponseEntity<LogoutResponse> logOut(
             @Parameter(description = "Access token with Authorization header", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
@@ -112,12 +162,29 @@ public class AuthenticationController {
 
     @CustomerAuth
     @PostMapping("/sign-out")
-    @Operation(summary = "sign out with valid access token", description = "need valid access token")
-    public ResponseEntity<?> signOut(
+    @Operation(summary = "유효한 유저의 회원 탈퇴 기능", description = "유효한 액세스 토큰이 필요하며 유저는 로그인 되어 있어야 함")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = SignOutResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
+    public ResponseEntity<SignOutResponse> signOut(
             @Parameter(description = "Access token with Authorization header", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
-        SignoutResponse res = authenticationApiService.signOut(JwtUtil.extractJwtFromCurrentRequestHeader());
+        SignOutResponse res = authenticationApiService.signOut(JwtUtil.extractJwtFromCurrentRequestHeader());
 
         return ResponseEntity
                 .ok()
