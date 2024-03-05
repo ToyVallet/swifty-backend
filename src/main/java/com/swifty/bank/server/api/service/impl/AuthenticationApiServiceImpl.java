@@ -2,9 +2,7 @@ package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
-import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.*;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
@@ -139,25 +137,25 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
-    public ResponseResult<?> logout(String accessToken) {
+    public LogoutResponse logout(String accessToken) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
         authenticationService.deleteAuth(customerUuid);
 
         logoutAccessTokenService.setDataIfAbsent(accessToken, "false");
-        return new ResponseResult<>(Result.SUCCESS, "[INFO] user " + customerUuid + " logged out", null);
+        return LogoutResponse.builder()
+                .isSuccessful(true)
+                .build();
     }
 
     @Override
-    public ResponseResult<?> signOut(String jwt) {
+    public SignoutResponse signOut(String jwt) {
         UUID uuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
         authenticationService.deleteAuth(uuid);
         customerService.withdrawCustomer(uuid);
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] " + uuid + " successfully withdraw",
-                null
-        );
+        return SignoutResponse.builder()
+                .wasSignedOut(true)
+                .build();
     }
 
     /*

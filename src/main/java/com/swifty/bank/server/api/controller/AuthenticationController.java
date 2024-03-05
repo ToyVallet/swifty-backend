@@ -7,9 +7,7 @@ import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
-import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.*;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
@@ -105,12 +103,8 @@ public class AuthenticationController {
             @Parameter(description = "Access token with Authorization header", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
-        ResponseResult res = authenticationApiService.logout(JwtUtil.extractJwtFromCurrentRequestHeader());
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
+        LogoutResponse res = authenticationApiService.logout(JwtUtil.extractJwtFromCurrentRequestHeader());
+
         return ResponseEntity
                 .ok()
                 .body(res);
@@ -123,12 +117,8 @@ public class AuthenticationController {
             @Parameter(description = "Access token with Authorization header", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
-        ResponseResult res = authenticationApiService.signOut(JwtUtil.extractJwtFromCurrentRequestHeader());
-        if (res.getResult().equals(Result.FAIL)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(res);
-        }
+        SignoutResponse res = authenticationApiService.signOut(JwtUtil.extractJwtFromCurrentRequestHeader());
+
         return ResponseEntity
                 .ok()
                 .body(res);
