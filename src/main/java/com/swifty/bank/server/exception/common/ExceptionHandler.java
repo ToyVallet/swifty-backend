@@ -11,7 +11,8 @@ public class ExceptionHandler {
     public ResponseEntity<?> handleException(Exception e) {
         ResponseResult res = new ResponseResult(
                 Result.FAIL,
-                "[ERROR] 알 수 없는 예외가 발생했습니다. 백엔드 단에 문의해 주세요",
+                e.getMessage(),
+//                "[ERROR] 알 수 없는 예외가 발생했습니다. 백엔드 단에 문의해 주세요",
                 null
         );
         return ResponseEntity

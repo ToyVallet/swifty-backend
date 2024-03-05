@@ -21,12 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthRepository authRepository;
 
-    @Value("${jwt.access-token-expiration-millis}")
-    private int accessTokenExpiration;
-    @Value("${jwt.refresh-token-expiration-millis}")
-    private int refreshTokenExpiration;
-    @Value("${jwt.temporary-token-expiration-millis}")
-    private int temporaryTokenExpiration;
+    @Value("${jwt.access-token-expiration-seconds}")
+    private Long accessTokenExpiration;
+    @Value("${jwt.refresh-token-expiration-seconds}")
+    private Long refreshTokenExpiration;
+    @Value("${jwt.temporary-token-expiration-seconds}")
+    private Long temporaryTokenExpiration;
 
     @Override
     public String createAccessToken(UUID customerUuid) {
