@@ -16,7 +16,7 @@ import java.util.UUID;
 @Getter
 @Entity
 @Table(name = "tb_ref_token")
-public class RefreshToken extends BaseEntity {
+public class Auth extends BaseEntity {
     @Id
     @Column(columnDefinition = "BINARY(16)")
     private UUID customerUuid;

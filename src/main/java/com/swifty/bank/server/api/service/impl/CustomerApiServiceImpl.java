@@ -7,11 +7,9 @@ import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import java.util.NoSuchElementException;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.swifty.bank.server.core.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,7 +24,7 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
     @Override
     public ResponseResult<?> getCustomerInfo(String jwt) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<CustomerInfoResponse> mayBeCustomerInfo = customerService.findCustomerInfoDtoByUuid(customerUuid);
         if (mayBeCustomerInfo.isEmpty()) {
@@ -49,7 +47,7 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     @Override
     public ResponseResult<?> customerInfoUpdate(String jwt,
                                                 CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
         customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
 
         return ResponseResult.builder()
@@ -60,7 +58,7 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
     @Override
     public ResponseResult<?> confirmPassword(String jwt, String password) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
         Optional<Customer> mayBeCustomer = customerService.findByUuid(customerUuid);
         if (mayBeCustomer.isEmpty()) {
             return ResponseResult.builder()
@@ -82,12 +80,12 @@ public class CustomerApiServiceImpl implements CustomerApiService {
                 .result(Result.FAIL)
                 .message("비밀번호가 일치하지 않습니다.")
                 .build();
-        }
+    }
 
     @Transactional
     @Override
     public ResponseResult<?> resetPassword(String jwt, String newPassword) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
         customerService.updatePassword(customerUuid, newPassword);
 
         return ResponseResult.builder()
@@ -99,7 +97,7 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     @Override
     @Transactional
     public ResponseResult<?> customerWithdrawal(String jwt) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
         customerService.withdrawCustomer(customerUuid);
 
         return ResponseResult.builder()

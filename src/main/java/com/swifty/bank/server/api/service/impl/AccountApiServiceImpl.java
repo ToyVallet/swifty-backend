@@ -1,19 +1,36 @@
 package com.swifty.bank.server.api.service.impl;
 
-import com.swifty.bank.server.api.controller.dto.account.request.*;
+import com.swifty.bank.server.api.controller.dto.account.request.AccountRegisterRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.RetrieveBalanceWithCurrencyRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountNicknameRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.ReviseUnitedAccountPasswordRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCurrencyRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.domain.account.dto.*;
-import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
+import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
+import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
+import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
+import com.swifty.bank.server.core.domain.account.dto.ListUnitedAccountWithCustomerDto;
+import com.swifty.bank.server.core.domain.account.dto.RetrieveBalanceOfUnitedAccountByCurrencyDto;
+import com.swifty.bank.server.core.domain.account.dto.UpdateDefaultCurrencyDto;
+import com.swifty.bank.server.core.domain.account.dto.UpdateSubAccountStatusDto;
+import com.swifty.bank.server.core.domain.account.dto.UpdateUnitedAccountStatusDto;
+import com.swifty.bank.server.core.domain.account.dto.WithdrawUnitedAccountDto;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.utils.JwtUtil;
+import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +40,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> register(String token, AccountRegisterRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
@@ -53,7 +70,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> updateNickname(String token, ReviseAccountNicknameRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
@@ -65,7 +82,7 @@ public class AccountApiServiceImpl implements AccountApiService {
         }
 
         AccountNicknameUpdateDto dto = new AccountNicknameUpdateDto(
-                customer.get( ),
+                customer.get(),
                 req.getUnitedAccountUuid(),
                 req.getNickname()
         );
@@ -89,7 +106,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> updatePassword(String token, ReviseUnitedAccountPasswordRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
@@ -122,7 +139,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
@@ -156,7 +173,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> withdraw(String token, WithdrawUnitedAccountRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -189,7 +206,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -224,7 +241,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -260,7 +277,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -295,7 +312,7 @@ public class AccountApiServiceImpl implements AccountApiService {
 
     @Override
     public ResponseResult<?> listUnitedAccountWithCustomer(String jwt) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {

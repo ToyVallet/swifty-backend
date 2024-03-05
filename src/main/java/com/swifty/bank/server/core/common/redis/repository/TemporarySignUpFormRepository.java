@@ -22,4 +22,8 @@ public class TemporarySignUpFormRepository {
     public void setDataIfAbsent(String key, TemporarySignUpForm value, Long timeout, TimeUnit timeUnit) {
         redisTemplate.opsForValue().setIfAbsent(key, value, timeout, timeUnit);
     }
+
+    public boolean deleteData(String key) {
+        return redisTemplate.delete(key);
+    }
 }

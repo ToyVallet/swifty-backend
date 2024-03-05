@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class OtpRedisServiceImpl implements OtpRedisService {
+    public final String prefix = "[OTP]";
     private final OtpRedisRepository otpRedisRepository;
 
     @Value("${jwt.redis.otp-timeout-minutes}")
@@ -17,31 +18,31 @@ public class OtpRedisServiceImpl implements OtpRedisService {
 
     @Override
     public String getData(String key) {
-        return otpRedisRepository.getData(key);
+        return otpRedisRepository.getData(prefix + key);
     }
 
     @Override
     public void setData(String key, String value) {
-        otpRedisRepository.setData(key, value, timeout, TimeUnit.MINUTES);
+        otpRedisRepository.setData(prefix + key, value, timeout, TimeUnit.MINUTES);
     }
 
     @Override
     public void setData(String key, String value, Long timeout, TimeUnit timeUnit) {
-        otpRedisRepository.setData(key, value, timeout, timeUnit);
+        otpRedisRepository.setData(prefix + key, value, timeout, timeUnit);
     }
 
     @Override
     public void setDataIfAbsent(String key, String value) {
-        otpRedisRepository.setDataIfAbsent(key, value, timeout, TimeUnit.MINUTES);
+        otpRedisRepository.setDataIfAbsent(prefix + key, value, timeout, TimeUnit.MINUTES);
     }
 
     @Override
     public void setDataIfAbsent(String key, String value, Long timeout, TimeUnit timeUnit) {
-        otpRedisRepository.setDataIfAbsent(key, value, timeout, timeUnit);
+        otpRedisRepository.setDataIfAbsent(prefix + key, value, timeout, timeUnit);
     }
 
     @Override
     public boolean deleteData(String key) {
-        return otpRedisRepository.deleteData(key);
+        return otpRedisRepository.deleteData(prefix + key);
     }
 }

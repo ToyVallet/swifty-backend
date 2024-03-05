@@ -1,21 +1,18 @@
 package com.swifty.bank.server.api.service;
 
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.JoinRequest;
-import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
+import com.swifty.bank.server.api.controller.dto.auth.response.*;
 
 public interface AuthenticationApiService {
     CheckLoginAvailabilityResponse checkLoginAvailability(
             CheckLoginAvailabilityRequest checkLoginAvailabilityRequest);
 
-    ResponseResult<?> join(JoinRequest dto);
+    SignWithFormResponse signUpAndSignIn(String temporaryToken, SignWithFormRequest dto);
 
-    ResponseResult<?> loginWithForm(String deviceId, String phoneNumber);
+    ReissueResponse reissue(String body);
 
-    ResponseResult<?> reissue(String body);
+    LogoutResponse logout(String token);
 
-    ResponseResult<?> logout(String token);
-
-    ResponseResult<?> signOut(String token);
+    SignOutResponse signOut(String token);
 }

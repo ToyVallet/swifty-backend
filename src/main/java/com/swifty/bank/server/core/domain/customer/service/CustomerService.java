@@ -15,22 +15,22 @@ public interface CustomerService {
     // Something to exchange with Frontend as user identification
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
-    Optional<Customer> findByUuid(UUID customerId);
+    Optional<Customer> findByUuid(UUID customerUuid);
 
     Optional<Customer> findByPhoneNumber(String phoneNumber);
 
     Optional<Customer> findByDeviceId(String deviceId);
 
-    Customer updatePhoneNumber(UUID customerId, String newPhoneNumber);
+    Customer updatePhoneNumber(UUID customerUuid, String newPhoneNumber);
 
-    Customer updateDeviceId(UUID customerId, String newDeviceId);
+    Customer updateDeviceId(UUID customerUuid, String newDeviceId);
 
-    Customer updateCustomerInfo(UUID customerId,
+    Customer updateCustomerInfo(UUID customerUuid,
                                 CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
 
-    Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID customerId);
+    Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID customerUuid);
 
-    void updatePassword(UUID customerId, String newPassword);
+    void updatePassword(UUID customerUuid, String newPassword);
 
-    void withdrawCustomer(UUID customerId);
+    void withdrawCustomer(UUID customerUuid);
 }
