@@ -12,26 +12,27 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@SpringBootTest
 @Transactional
+@Testcontainers
 @Disabled
 @ContextConfiguration(initializers = ConfigureContainer.IntegrationTestInitializer.class)
 public class ConfigureContainer {
     @Container
-    private static MySQLContainer mySQLContainer = new MySQLContainer("mysql:8.0.33")
+    private static final MySQLContainer mySQLContainer = new MySQLContainer("mysql:8.0.33")
             .withPassword("test")
             .withUsername("test")
             .withDatabaseName("bank_db");
 
     @Container
-    private static RedisContainer redisContainer = new RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag("6.2.6"));
+    private static final RedisContainer redisContainer = new RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag("6.2.6"));
 
     @BeforeAll
-    public static void setupContainer( ) {
+    public static void setupContainers( ) {
         mySQLContainer.start();
         redisContainer.start();
     }
