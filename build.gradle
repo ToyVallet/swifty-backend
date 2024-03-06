@@ -19,7 +19,7 @@ configurations {
 
 tasks.register('copyPrivate', Copy) {
     copy {
-        from './submodule-config'
+        from './submodule-config/config'
         include "application.yaml"
         into 'src/main/resources/config'
     }
