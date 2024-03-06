@@ -23,6 +23,11 @@ tasks.register('copyPrivate', Copy) {
         include "application.yaml"
         into 'src/main/resources/config'
     }
+    copy {
+        from './submodule-config'
+        include "application.yaml"
+        into 'src/test/resources/config'
+    }
 }
 
 repositories {
