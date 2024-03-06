@@ -2,13 +2,13 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 group = 'com.swifty'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    sourceCompatibility = '17'
 }
 
 configurations {
@@ -64,14 +64,18 @@ dependencies {
     //SMS
     implementation 'com.twilio.sdk:twilio:9.16.0'
 
-    //Test Container
-    testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
-    testImplementation 'org.testcontainers:mysql'
-
-
-
+    // TestContainer 기본 의존성
+    testImplementation "org.testcontainers:testcontainers:1.19.0"
+    // MySQL 의존성
+    testImplementation 'org.testcontainers:mysql:1.16.0'
+    // Redis 의존성
+    testImplementation "com.redis.testcontainers:testcontainers-redis-junit:1.6.4"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(17)
 }
