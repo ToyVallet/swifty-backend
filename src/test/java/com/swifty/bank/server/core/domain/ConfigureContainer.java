@@ -27,7 +27,6 @@ import java.util.Map;
 @ActiveProfiles("test")
 public class ConfigureContainer {
 
-
     @Container
     private static final MySQLContainer mySQLContainer = new MySQLContainer("mysql:8.0.33")
             .withPassword("test")
@@ -94,19 +93,19 @@ public class ConfigureContainer {
         private static String refreshTokenExpirationSecond;
         @Value("${jwt.redis.temporary-token-minutes}")
         private static String temporaryTokenMinutes;
-        @Value("${jwt.otp-timeout-minutes}")
+        @Value("${jwt.redis.otp-timeout-minutes}")
         private static String otpTimeoutMinutes;
     }
 
     @Getter
     private static class TwilioConstants {
-        @Value("TWILIO_ACCOUNT_SID")
+        @Value("${TWILIO_ACCOUNT_SID}")
         private static String accountSid;
-        @Value("TWILIO_AUTH_TOKEN")
+        @Value("${TWILIO_AUTH_TOKEN}")
         private static String authToken;
-        @Value("TWILIO_OUTGOING_SMS_NUMBER")
+        @Value("${TWILIO_OUTGOING_SMS_NUMBER}")
         private static String smsNumber;
-        @Value("TWILIO_VERIFY_SID")
+        @Value("${TWILIO_VERIFY_SID}")
         private static String verifySid;
     }
 }
