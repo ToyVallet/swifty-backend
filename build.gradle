@@ -32,7 +32,7 @@ tasks.register('copyPrivate', Copy) {
 
 test {
     useJUnitPlatform()
-    systemProperties['spring.config.location'] = "classpath:/config/application.yaml"
+    systemProperties['spring.config.location'] = "classpath:/config/"
     environment 'SPRING_PROFILES_ACTIVE', 'test'
 }
 
