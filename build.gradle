@@ -30,9 +30,10 @@ tasks.register('copyPrivate', Copy) {
     }
 }
 
+test.dependsOn 'copyPrivate'
 test {
     useJUnitPlatform()
-    systemProperties['spring.config.location'] = "./src/test/resources/config/application.yaml"
+    systemProperties['spring.config.location'] = "src/test/resources/config/"
     environment 'SPRING_PROFILES_ACTIVE', 'test'
 }
 
