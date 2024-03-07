@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class TemporarySignUpFormRepository {
+public class TemporarySignUpFormRedisRepository {
     private final RedisTemplate<String, TemporarySignUpForm> redisTemplate;
 
     public TemporarySignUpForm getData(String key) {
