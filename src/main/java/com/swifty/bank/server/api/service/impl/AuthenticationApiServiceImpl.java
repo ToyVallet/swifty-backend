@@ -242,7 +242,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         List<Integer> secureKeypadOrderInverse
                 = secureKeypadOrderInverseRedisService.getData(temporaryToken)
                 .getKeypadOrderInverse();
-        // TODO: 비밀번호 자리를 의미하는 상수 어디에 둘 것인가
+        // TODO: 비밀번호 길이를 의미하는 상수 어디에 둘 것인가
         int passwordLength = 6;
         if (pushedOrder.size() != passwordLength) {
             throw new IllegalArgumentException("비밀번호 길이가 올바르지 않습니다.");
