@@ -66,7 +66,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         JwtUtil.validateToken(accessToken);
         // Access Token인지 검증
         String sub = JwtUtil.getSubject(accessToken);
-        if (sub.equals("AccessToken")) {
+        if (!sub.equals("AccessToken")) {
             throw new IllegalArgumentException("access token이 아닙니다.");
         }
 
