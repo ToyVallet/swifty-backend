@@ -3,7 +3,7 @@ package com.swifty.bank.server.interceptor;
 import com.swifty.bank.server.api.controller.annotation.CustomerAuth;
 import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
-import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenService;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,7 +20,7 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final LogoutAccessTokenService logoutAccessTokenService;
+    private final LogoutAccessTokenRedisService logoutAccessTokenRedisService;
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
@@ -74,7 +74,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         // 로그아웃 요청한 access token인지 검증
-        String isLoggedOut = logoutAccessTokenService.getData(accessToken);
+        String isLoggedOut = logoutAccessTokenRedisService.getData(accessToken);
         if (isLoggedOut != null && isLoggedOut.equals("false")) {
             throw new IllegalArgumentException("로그아웃된 access token입니다.");
         }
