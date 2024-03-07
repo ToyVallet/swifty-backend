@@ -7,6 +7,7 @@ import lombok.Getter;
 @Builder
 @Getter
 public class CreateSecureKeypadResponse {
-    @Schema(description = "순서가 섞인 키패드 이미지 리스트")
+    @Schema(description = "순서가 섞인 키패드 이미지 리스트",
+            example = "['<svg ... > </svg>\r\n', ... , '<svg ... > </svg>\r\n']")
     private String[] keypad;
 }
