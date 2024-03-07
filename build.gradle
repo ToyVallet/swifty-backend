@@ -19,11 +19,24 @@ configurations {
 
 tasks.register('copyPrivate', Copy) {
     copy {
-        from './submodule-config'
+        from './submodule-config/config'
         include "application.yaml"
         into 'src/main/resources/config'
     }
+    copy {
+        from './submodule-config/test'
+        include "application.yaml"
+        into 'src/test/resources/config'
+    }
 }
+
+test.dependsOn 'copyPrivate'
+test {
+    useJUnitPlatform()
+    systemProperties['spring.config.location'] = "src/test/resources/config/"
+    environment 'SPRING_PROFILES_ACTIVE', 'test'
+}
+
 
 repositories {
     mavenCentral()
