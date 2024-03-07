@@ -7,7 +7,6 @@ import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenService
 import com.swifty.bank.server.core.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 @Component
 @RequiredArgsConstructor
@@ -23,8 +23,13 @@ public class JwtInterceptor implements HandlerInterceptor {
     private final LogoutAccessTokenService logoutAccessTokenService;
 
     @Override
-    public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws IOException {
-        // 화이트리스트로 preHandle 관리
+    public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
+        // 리소스 접근을 위한 요청은 JwtInterceptor에서 처리하지 않습니다.
+        if (handler instanceof ResourceHttpRequestHandler) {
+            return true;
+        }
+
+        // 화이트 리스트로 preHandle 관리
         // 프리패스 권한
         if (hasProperAnnotation(handler, PassAuth.class)) {
             return true;
@@ -76,12 +81,10 @@ public class JwtInterceptor implements HandlerInterceptor {
     }
 
     private <A extends Annotation> boolean hasProperAnnotation(Object handler, Class<A> annotation) {
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
-        if (handlerMethod.getMethodAnnotation(annotation) != null
-                || handlerMethod.getBeanType().getAnnotation(annotation) != null) {
-            return true;
+        if (handler instanceof HandlerMethod handlerMethod) {
+            return handlerMethod.getMethodAnnotation(annotation) != null
+                    || handlerMethod.getBeanType().getAnnotation(annotation) != null;
         }
-
         return false;
     }
 }
