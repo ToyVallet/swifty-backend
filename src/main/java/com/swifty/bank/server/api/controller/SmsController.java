@@ -56,7 +56,7 @@ public class SmsController {
                     })
     })
     public ResponseEntity<StealVerificationCodeResponse> stealVerificationCode(
-            @Parameter(description = "Temporary token with Authorization header", example = "Bearer ey...", required = true)
+            @Parameter(description = "Authorization에 TemporaryToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid StealVerificationCodeRequest stealVerificationCodeRequest) {
         StealVerificationCodeResponse res = smsService.stealVerificationCode(
@@ -89,7 +89,7 @@ public class SmsController {
 
     })
     public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(
-            @Parameter(description = "Temporary token with Authorization header", example = "Bearer ey...", required = true)
+            @Parameter(description = "Authorization에 TemporaryToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
         SendVerificationCodeResponse res = smsService.sendVerificationCode(
@@ -121,7 +121,7 @@ public class SmsController {
                     })
     })
     public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(
-            @Parameter(description = "Temporary token with Authorization header", example = "Bearer ey...", required = true)
+            @Parameter(description = "Authorization에 TemporaryToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         CheckVerificationCodeResponse res = smsService.checkVerificationCode(

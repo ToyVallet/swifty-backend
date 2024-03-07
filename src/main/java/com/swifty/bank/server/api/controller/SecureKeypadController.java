@@ -25,9 +25,9 @@ public class SecureKeypadController {
 
     @TemporaryAuth
     @GetMapping(value = "/create-keypad")
-    @Operation(summary = "셔플된 키패드 이미지 제공")
+    @Operation(summary = "순서가 섞인 키패드 이미지 리스트 제공")
     public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
-            @Parameter(description = "Authorization 헤더에 temporary token을 포함시켜주세요", example = "Bearer ey...", required = true)
+            @Parameter(description = "Authorization에 temporary token을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String temporaryToken
     ) {
         CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(JwtUtil.removePrefix(temporaryToken));
