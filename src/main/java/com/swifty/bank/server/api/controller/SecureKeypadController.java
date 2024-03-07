@@ -3,6 +3,7 @@ package com.swifty.bank.server.api.controller;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.api.controller.dto.keypad.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.service.SecureKeypadService;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,11 +26,11 @@ public class SecureKeypadController {
     @TemporaryAuth
     @GetMapping(value = "/create-keypad")
     @Operation(summary = "셔플된 키패드 이미지 제공")
-    public ResponseEntity<CreateSecureKeypadResponse> createSecureKeyPad(
+    public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
             @Parameter(description = "Authorization 헤더에 temporary token을 포함시켜주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String temporaryToken
     ) {
-        CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(temporaryToken);
+        CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(JwtUtil.removePrefix(temporaryToken));
 
         return ResponseEntity
                 .ok()
