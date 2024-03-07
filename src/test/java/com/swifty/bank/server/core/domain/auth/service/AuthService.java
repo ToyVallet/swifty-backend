@@ -28,7 +28,6 @@ import java.util.UUID;
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @RequiredArgsConstructor
-
 public class AuthService extends ConfigureContainer {
 
     @Autowired

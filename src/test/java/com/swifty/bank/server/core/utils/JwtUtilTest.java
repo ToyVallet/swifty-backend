@@ -1,9 +1,11 @@
 package com.swifty.bank.server.core.utils;
 
+import com.swifty.bank.server.core.domain.ConfigureContainer;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,16 +14,15 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static io.jsonwebtoken.Jwts.*;
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class JwtUtilTest {
-    private Claims claims;
+    private static Claims claims;
 
-    public JwtUtilTest(JwtUtil jwtUtil) {
-        this.claims = claims();
+    @BeforeAll
+    public static void JwtUtilInit() {
+        claims = Jwts.claims();
     }
 
     @Test
@@ -47,15 +48,28 @@ public class JwtUtilTest {
     @Test
     void getSubjectTest( ) {
         claims.setSubject("Subject");
-        String jwt = JwtUtil.generateToken(claims, new Date());
+        String jwt = JwtUtil.generateToken(claims,
+                new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
+        ); // 하루 후 Jwt 토큰
         assertThat(JwtUtil.getSubject(jwt)).isEqualTo("Subject");
     }
 
     @Test
     void validateTokenTest( ) {
-        String jwt = JwtUtil.generateToken(claims, new Date());
+        String jwt = JwtUtil.generateToken(claims,
+                new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
+        ); // 하루 후 Jwt 토큰
 
-        assertThatThrownBy(() -> JwtUtil.validateToken(jwt))
+        JwtUtil.validateToken(jwt);
+    }
+
+    @Test
+    void isExpiredToken( ) {
+        String expiredJwt = JwtUtil.generateToken(claims,
+                new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1))
+        ); // 하루 후 Jwt 토큰
+
+        assertThatThrownBy(() -> JwtUtil.validateToken(expiredJwt))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -64,14 +78,15 @@ public class JwtUtilTest {
         String expiredJwt = JwtUtil.generateToken(claims,
                 new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1))
         ); // 하루 전 Jwt 토큰
-        assertThat(JwtUtil.isExpiredToken(expiredJwt));
+        assertThatThrownBy(() -> JwtUtil.isExpiredToken(expiredJwt))
+                .isInstanceOf(ExpiredJwtException.class);
     }
 
     @Test
     void isExpiredFalse( ) {
         String notExpiredJwt = JwtUtil.generateToken(claims,
                 new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
-        ); // 하루 전 Jwt 토큰
+        ); // 하루 후 Jwt 토큰
 
         assertThat(!JwtUtil.isExpiredToken(notExpiredJwt));
     }
@@ -81,7 +96,9 @@ public class JwtUtilTest {
         UUID customerUuid = UUID.randomUUID();
         final String key = "customerUuid";
         claims.put(key, customerUuid);
-        String jwt = JwtUtil.generateToken(claims, new Date());
+        String jwt = JwtUtil.generateToken(claims,
+                new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
+        ); // 하루 후 Jwt 토큰
 
         assertThat(JwtUtil.getValueByKeyWithObject(jwt, key, UUID.class))
                 .isEqualTo(customerUuid);
