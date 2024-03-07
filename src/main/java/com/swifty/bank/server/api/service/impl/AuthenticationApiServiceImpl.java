@@ -192,13 +192,18 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     /*
      * 검증 1. jwt 자체 유효성 검증(만료기간, 시그니처)
-     * 검증 2. claim 안에 customerUuid 값이 포함되어 있는가?
+     * 검증 2. claim 안에 customerUuid 값이 포함되어 있는가? subject가 "RefreshToken"인가?
      * 검증 3. DB에 저장되어 있는 refresh token과 값이 일치하는가?
      */
     private boolean isValidateRefreshToken(String refreshToken) {
         JwtUtil.validateToken(refreshToken);
 
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class);
+        String sub = JwtUtil.getSubject(refreshToken);
+        if (!sub.equals("RefreshToken")) {
+            return false;
+        }
+
         Optional<Auth> maybeAuth = authenticationService.findAuthByCustomerUuid(customerUuid);
         if (maybeAuth.isEmpty()) {
             return false;
