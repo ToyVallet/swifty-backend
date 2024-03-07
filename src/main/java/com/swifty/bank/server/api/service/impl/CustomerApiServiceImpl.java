@@ -33,16 +33,16 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
     @Transactional
     @Override
-    public void customerInfoUpdate(UUID customerId,
+    public void customerInfoUpdate(UUID customerUuid,
                                                 CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
 
-        customerService.updateCustomerInfo(customerId, customerInfoUpdateCondition);
+        customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
 
     }
 
     @Override
-    public boolean confirmPassword(UUID customerId, String password) {
-        Customer customer = customerService.findByUuid(customerId)
+    public boolean confirmPassword(UUID customerUuid, String password) {
+        Customer customer = customerService.findByUuid(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException());
 
         if (encoder.matches(password, customer.getPassword())) {
@@ -54,14 +54,14 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
     @Transactional
     @Override
-    public void resetPassword(UUID customerId, String newPassword) {
-        customerService.updatePassword(customerId, newPassword);
+    public void resetPassword(UUID customerUuid, String newPassword) {
+        customerService.updatePassword(customerUuid, newPassword);
     }
 
     @Transactional
     @Override
-    public void customerWithdrawal(UUID customerId) {
-        customerService.withdrawCustomer(customerId);
+    public void customerWithdrawal(UUID customerUuid) {
+        customerService.withdrawCustomer(customerUuid);
     }
 
 }

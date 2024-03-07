@@ -7,14 +7,14 @@ import com.swifty.bank.server.core.domain.customer.Customer;
 import java.util.UUID;
 
 public interface CustomerApiService {
-    CustomerInfoResponse getCustomerInfo(UUID customerId);
+    CustomerInfoResponse getCustomerInfo(UUID customerUuid);
 
-    void customerInfoUpdate(UUID customerId,
+    void customerInfoUpdate(UUID customerUuid,
                                 CustomerInfoUpdateConditionRequest customerInfoUpdateCondition);
 
-    boolean confirmPassword(UUID customerId, String password);
+    boolean confirmPassword(UUID customerUuid, String password);
 
-    void resetPassword(UUID customerId, String newPassword);
+    void resetPassword(UUID customerUuid, String newPassword);
 
-    void customerWithdrawal(UUID customerId);
+    void customerWithdrawal(UUID customerUuid);
 }

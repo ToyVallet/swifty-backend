@@ -53,8 +53,8 @@ public class CustomerController {
                     })
     })
     public ResponseEntity<?> customerInfo() {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
-        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(customerId);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerUuid", UUID.class);
+        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(customerUuid);
 
         return ResponseEntity
                 .ok()
@@ -78,9 +78,9 @@ public class CustomerController {
     })
     public ResponseEntity<?> customerInfoUpdate(
             @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerUuid", UUID.class);
 
-        customerApiService.customerInfoUpdate(customerId,
+        customerApiService.customerInfoUpdate(customerUuid,
                 customerInfoUpdateCondition);
 
         return ResponseEntity
@@ -104,9 +104,9 @@ public class CustomerController {
                     })
     })
     public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerUuid", UUID.class);
 
-        boolean isMatchPassword = customerApiService.confirmPassword(customerId, password.getPassword());
+        boolean isMatchPassword = customerApiService.confirmPassword(customerUuid, password.getPassword());
 
         if (isMatchPassword) {
             return ResponseEntity
@@ -135,9 +135,9 @@ public class CustomerController {
                     })
     })
     public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerId", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerUuid", UUID.class);
 
-        customerApiService.resetPassword(customerId, newPassword.getPassword());
+        customerApiService.resetPassword(customerUuid, newPassword.getPassword());
 
         return ResponseEntity
                 .ok()
