@@ -6,18 +6,21 @@ import com.swifty.bank.server.core.common.redis.service.SecureKeypadOrderInverse
 import com.swifty.bank.server.core.common.redis.value.SecureKeypadOrderInverse;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SecureKeypadServiceImpl implements SecureKeypadService {
     private final SecureKeypadOrderInverseRedisService secureKeypadOrderInverseRedisService;
     private final List<String> keypadPaths = List.of(
@@ -41,7 +44,9 @@ public class SecureKeypadServiceImpl implements SecureKeypadService {
                 {
                     try {
                         ClassPathResource resource = new ClassPathResource(keypadPath);
-                        String content = Files.readString(resource.getFile().toPath());
+                        InputStream inputStream = resource.getInputStream();
+                        byte[] contentBytes = inputStream.readAllBytes();
+                        String content = new String(contentBytes, StandardCharsets.UTF_8);
                         keypadFiles.add(content);
                     } catch (IOException e) {
                         throw new RuntimeException("키패드 이미지를 읽어오는데 실패했습니다.");
