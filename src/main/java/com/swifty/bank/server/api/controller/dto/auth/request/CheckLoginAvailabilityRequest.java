@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class CheckLoginAvailabilityRequest {
     @Schema(description = "고객 이름",
             example = "김성명",
             requiredMode = RequiredMode.REQUIRED)
+    @Pattern(regexp = "^[a-zA-Z\\uAC00-\\uD7AF]+$\n")   // no symbol or digit, only Korean and English
     private String name;
     @NotNull
     @NotBlank
