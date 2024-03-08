@@ -24,6 +24,7 @@ public class CheckLoginAvailabilityRequest {
     @Schema(description = "고객 주민등록번호 앞 7자리",
             example = "0012024",
             requiredMode = RequiredMode.REQUIRED)
+    @Pattern(regexp = "^\\d*[1234]$\n")   // 숫자만...
     private String residentRegistrationNumber;
     @NotNull
     @NotBlank
@@ -37,5 +38,6 @@ public class CheckLoginAvailabilityRequest {
     @Schema(description = "국제번호 형식으로 입력해주세요",
             example = "+821012345678",
             requiredMode = RequiredMode.REQUIRED)
+    @Pattern(regexp = "^\\+82\\d+$\n")  // start with +82 and only digits
     private String phoneNumber;
 }

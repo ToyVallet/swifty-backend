@@ -255,8 +255,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     private Gender extractGender(String residentRegistrationNumber) {
-        // TODO: 주민등록번호 양식이 맞는지 검증 필요
-
         if (residentRegistrationNumber.endsWith("4") ||
                 residentRegistrationNumber.endsWith("2")) {
             return Gender.FEMALE;
@@ -265,7 +263,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     private String extractBirthDate(String residentRegistrationNumber) {
-        // TODO: 주민등록번호 양식이 맞는지 검증 필요
 
         return residentRegistrationNumber.substring(0, 6);
     }
