@@ -6,7 +6,6 @@ import com.swifty.bank.server.core.domain.account.UnitedAccount;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
-import com.swifty.bank.server.exception.common.NonExistOrOverOneResultException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

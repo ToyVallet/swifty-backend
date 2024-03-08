@@ -1,8 +1,10 @@
 package com.swifty.bank.server.core.common.authentication.service.impl;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
+import com.swifty.bank.server.core.common.authentication.LogoutAccessToken;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
+import com.swifty.bank.server.core.common.authentication.repository.LogoutAccessTokenRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.utils.DateUtil;
 import com.swifty.bank.server.core.utils.JwtUtil;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthRepository authRepository;
+    private final LogoutAccessTokenRepository logoutAccessTokenRepository;
 
     @Value("${jwt.access-token-expiration-seconds}")
     private Long accessTokenExpiration;
@@ -71,6 +74,35 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public Optional<Auth> findAuthByCustomerUuid(UUID customerUuid) {
         return authRepository.findAuthByUuid(customerUuid);
+    }
+
+    @Override
+    public Optional<LogoutAccessToken> saveLogoutAccessToken(String accessToken) {
+        Optional<LogoutAccessToken> maybeLogoutAccessToken = logoutAccessTokenRepository.findSingleLogoutAccessTokenWithAccessToken(accessToken);
+        if (maybeLogoutAccessToken.isEmpty()) {
+            return Optional.of(logoutAccessTokenRepository.save(maybeLogoutAccessToken.get()));
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<LogoutAccessToken> findLogoutAccessToken(String accessToken) {
+        return logoutAccessTokenRepository.findSingleLogoutAccessTokenWithAccessToken(accessToken);
+    }
+
+    @Override
+    public void deleteLogoutAccessToken(String accessToken) {
+        Optional<LogoutAccessToken> maybeLogoutAccessToken = logoutAccessTokenRepository.findSingleLogoutAccessTokenWithAccessToken(accessToken);
+        maybeLogoutAccessToken.ifPresent(logoutAccessTokenRepository::delete);
+    }
+
+    @Override
+    public void updateLogoutAccessToken(String accessToken) {
+        Optional<LogoutAccessToken> maybeLogoutAccessToken = logoutAccessTokenRepository.findSingleLogoutAccessTokenWithAccessToken(accessToken);
+
+        maybeLogoutAccessToken.ifPresent(logoutAccessToken -> {
+            logoutAccessToken.updateIsLoggedIn("false");
+        });
     }
 
     @Override

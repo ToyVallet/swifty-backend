@@ -5,7 +5,6 @@ import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.BaseEntity;
 import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.exception.common.NonExistOrOverOneResultException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
