@@ -6,6 +6,9 @@ import com.swifty.bank.server.core.domain.customer.repository.CustomerJPQLReposi
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
 import java.util.UUID;
+
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -17,64 +20,72 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
 
     @Override
     public Optional<Customer> findOneByUUID(UUID uuid) {
-
-        return em.createQuery(
-                        "SELECT C FROM Customer C WHERE C.id = :uuid AND C.isDeleted = :isDeleted", Customer.class
-                )
-                .setParameter("uuid", uuid)
-                .setParameter("isDeleted", isDeleted)
-                .getResultList()
-                .stream()
-                .findAny();
+        try {
+            return Optional.of(em.createQuery(
+                            "SELECT C FROM Customer C WHERE C.id = :uuid AND C.isDeleted = :isDeleted", Customer.class
+                    )
+                    .setParameter("uuid", uuid)
+                    .setParameter("isDeleted", isDeleted)
+                    .getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public Optional<Customer> findOneByDeviceId(String deviceId) {
-        return em.createQuery(
-                        "SELECT C FROM Customer C WHERE C.deviceId = :deviceId AND C.isDeleted = :isDeleted",
-                        Customer.class
-                )
-                .setParameter("deviceId", deviceId)
-                .setParameter("isDeleted", isDeleted)
-                .getResultList()
-                .stream()
-                .findAny();
+        try {
+            return Optional.of(em.createQuery(
+                            "SELECT C FROM Customer C WHERE C.deviceId = :deviceId AND C.isDeleted = :isDeleted",
+                            Customer.class
+                    )
+                    .setParameter("deviceId", deviceId)
+                    .setParameter("isDeleted", isDeleted)
+                    .getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public Optional<Customer> findOneByPhoneNumber(String phoneNumber) {
-        return em.createQuery(
-                        "SELECT C FROM Customer C WHERE  C.phoneNumber = :phoneNumber AND C.isDeleted = :isDeleted",
-                        Customer.class
-                )
-                .setParameter("phoneNumber", phoneNumber)
-                .setParameter("isDeleted", isDeleted)
-                .getResultList()
-                .stream()
-                .findAny();
+        try {
+            return Optional.of(em.createQuery(
+                            "SELECT C FROM Customer C WHERE  C.phoneNumber = :phoneNumber AND C.isDeleted = :isDeleted",
+                            Customer.class
+                    )
+                    .setParameter("phoneNumber", phoneNumber)
+                    .setParameter("isDeleted", isDeleted)
+                    .getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+
     }
 
     @Override
     public Optional<CustomerInfoResponse> findCustomerInfoResponseByUUID(UUID uuid) {
-        return em.createQuery(
-                        "SELECT new com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse(" +
-                                "C.name" +
-                                ",C.phoneNumber" +
-                                ",C.gender" +
-                                ",C.birthDate" +
-                                ",C.nationality" +
-                                ",C.customerStatus" +
-                                ") " +
-                                "FROM Customer C " +
-                                "WHERE  C.id = :uuid " +
-                                "AND C.isDeleted = :isDeleted",
-                        CustomerInfoResponse.class
-                )
-                .setParameter("uuid", uuid)
-                .setParameter("isDeleted", isDeleted)
-                .getResultList()
-                .stream()
-                .findAny();
+        try {
+            return Optional.of(em.createQuery(
+                            "SELECT new com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse(" +
+                                    "C.name" +
+                                    ",C.phoneNumber" +
+                                    ",C.gender" +
+                                    ",C.birthDate" +
+                                    ",C.nationality" +
+                                    ",C.customerStatus" +
+                                    ") " +
+                                    "FROM Customer C " +
+                                    "WHERE  C.id = :uuid " +
+                                    "AND C.isDeleted = :isDeleted",
+                            CustomerInfoResponse.class
+                    )
+                    .setParameter("uuid", uuid)
+                    .setParameter("isDeleted", isDeleted)
+                    .getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     @Override

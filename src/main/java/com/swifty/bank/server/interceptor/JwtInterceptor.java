@@ -80,11 +80,6 @@ public class JwtInterceptor implements HandlerInterceptor {
         if (isLoggedOut != null && isLoggedOut.equals("false")) {
             throw new IllegalArgumentException("로그아웃된 access token입니다.");
         }
-        authenticationService.findLogoutAccessToken(accessToken).ifPresent(logoutAccessToken -> {
-            if (logoutAccessToken.getIsLoggedIn().equals("false")) {
-                throw new IllegalArgumentException("로그아웃된 access token입니다.");
-            }
-        });
     }
 
     private <A extends Annotation> boolean hasProperAnnotation(Object handler, Class<A> annotation) {

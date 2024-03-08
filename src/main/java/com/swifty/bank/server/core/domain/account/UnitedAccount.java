@@ -85,11 +85,14 @@ public class UnitedAccount extends BaseEntity {
                 })
                 .toList();
 
-        if (subAccounts.size( ) == 1) {
+        if (subAccounts.size() == 1) {
             return subAccounts.get(0);
         }
+        if (subAccounts.size() == 0) {
+            throw new NoResultException("조회 결과가 없습니다");
+        }
 
-        throw new NonExistOrOverOneResultException();
+        throw new NonUniqueResultException("고유한 값이 아닙니다");
     }
 
     public void updateDefaultCurrency(Currency currency) {

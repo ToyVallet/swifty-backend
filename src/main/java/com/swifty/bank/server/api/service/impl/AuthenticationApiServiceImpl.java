@@ -9,9 +9,7 @@ import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.Auth;
-import com.swifty.bank.server.core.common.authentication.LogoutAccessToken;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
-import com.swifty.bank.server.core.common.authentication.repository.LogoutAccessTokenRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import com.swifty.bank.server.core.common.redis.service.SecureKeypadOrderInverseRedisService;
@@ -175,9 +173,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
         authenticationService.deleteAuth(customerUuid);
 
-        if (authenticationService.saveLogoutAccessToken(accessToken).isEmpty()) {
-            authenticationService.updateLogoutAccessToken(accessToken);
-        }
         logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
         return LogoutResponse.builder()
                 .isSuccessful(true)

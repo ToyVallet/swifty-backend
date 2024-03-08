@@ -13,14 +13,6 @@ public interface AuthenticationService {
 
     Optional<Auth> findAuthByCustomerUuid(UUID customerUuid);
 
-    Optional<LogoutAccessToken> saveLogoutAccessToken(String accessToken);
-
-    Optional<LogoutAccessToken> findLogoutAccessToken(String accessToken);
-
-    void deleteLogoutAccessToken(String accessToken);
-
-    void updateLogoutAccessToken(String accessToken);
-
     void saveRefreshTokenInDatabase(String token);
 
     String createAccessToken(UUID customerUuid);
