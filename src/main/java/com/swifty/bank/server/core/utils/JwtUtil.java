@@ -4,23 +4,21 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Service
 @Slf4j
 public class JwtUtil {
     private static String secretKey;
 
-    public static String removePrefix(String rawJwt) {
-        return rawJwt.replaceFirst("Bearer ", "");
+    public static String removeType(String jwt) {
+        // "Bearer ey..." 꼴인 경우 "Bearer " 제거
+        return jwt.replaceFirst("Bearer ", "");
     }
 
     public static String generateToken(Claims claims, Date expiration) {
@@ -33,27 +31,16 @@ public class JwtUtil {
                 .compact();
     }
 
-    public static String extractJwtFromCurrentRequestHeader() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        try {
-            String token = request.getHeader("Authorization").split("Bearer ")[1];
-            validateToken(token);
-            return token;
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("올바른 jwt가 존재하지 않습니다.");
-        }
-    }
-
-    public static String getSubject(String token) {
-        validateToken(token);
-        Claims claims = getAllClaims(token);
+    public static String getSubject(String jwt) {
+        validateToken(jwt);
+        Claims claims = getAllClaims(jwt);
         return claims.getSubject();
     }
 
-    public static Object getClaimByKey(String token, String key) {
-        validateToken(token);
+    public static Object getClaimByKey(String jwt, String key) {
+        validateToken(jwt);
 
-        Claims claims = getAllClaims(token);
+        Claims claims = getAllClaims(jwt);
         // validate key
         if (!claims.containsKey(key)) {
             throw new IllegalArgumentException("[ERROR] 토큰에 '" + key + "'로 설정된 key가 없습니다");
@@ -61,11 +48,11 @@ public class JwtUtil {
         return claims.get(key);
     }
 
-    private static Claims getAllClaims(String token) {
+    private static Claims getAllClaims(String jwt) {
         return Jwts.parserBuilder()
                 .setSigningKey(secretKey.getBytes())
                 .build()
-                .parseClaimsJws(token)
+                .parseClaimsJws(jwt)
                 .getBody();
     }
 
@@ -75,25 +62,25 @@ public class JwtUtil {
      * 2. JWS signature was discovered, but could not be verified
      * 3. expired token
      */
-    public static void validateToken(String token) {
+    public static void validateToken(String jwt) {
         JwtParser jwtParser = Jwts.parserBuilder()
                 .setSigningKey(getSecretKey())
                 .build();
         try {
-            jwtParser.parse(token);
+            jwtParser.parse(jwt);
         } catch (Exception e) {
             throw new IllegalArgumentException("올바른 jwt가 아닙니다.");
         }
     }
 
 
-    public static boolean isExpiredToken(String accessToken) {
+    public static boolean isExpiredToken(String jwt) {
         Key secretKey = getSecretKey();
 
         return Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
-                .parseClaimsJws(accessToken)
+                .parseClaimsJws(jwt)
                 .getBody()
                 .getExpiration()
                 .before(new Date());

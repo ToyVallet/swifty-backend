@@ -1,6 +1,6 @@
 package com.swifty.bank.server.config;
 
-import com.swifty.bank.server.core.common.redis.value.RefreshTokenCache;
+import com.swifty.bank.server.core.common.redis.value.SecureKeypadOrderInverse;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,15 +25,15 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, RefreshTokenCache> refreshTokenRedisTemplate(
-            RedisConnectionFactory connectionFactory) {
-        return createRedisTemplate(connectionFactory, RefreshTokenCache.class);
-    }
-
-    @Bean
     public RedisTemplate<String, TemporarySignUpForm> temporarySignUpFormRedisTemplate(
             RedisConnectionFactory connectionFactory) {
         return createRedisTemplate(connectionFactory, TemporarySignUpForm.class);
+    }
+
+    @Bean
+    public RedisTemplate<String, SecureKeypadOrderInverse> secureKeypadIndexesRedisTemplate(
+            RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory, SecureKeypadOrderInverse.class);
     }
 
     public <T> RedisTemplate<String, T> createRedisTemplate(RedisConnectionFactory redisConnectionFactory,

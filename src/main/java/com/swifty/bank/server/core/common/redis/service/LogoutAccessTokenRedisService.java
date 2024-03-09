@@ -2,7 +2,7 @@ package com.swifty.bank.server.core.common.redis.service;
 
 import java.util.concurrent.TimeUnit;
 
-public interface LogoutAccessTokenService {
+public interface LogoutAccessTokenRedisService {
 
     String getData(String key);
 
