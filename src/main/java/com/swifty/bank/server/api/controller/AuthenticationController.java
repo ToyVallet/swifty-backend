@@ -93,7 +93,7 @@ public class AuthenticationController {
             @Valid @RequestBody SignWithFormRequest body
     ) {
         SignWithFormResponse res = authenticationApiService.signUpAndSignIn(
-                JwtUtil.removePrefix(temporaryToken),
+                JwtUtil.removeType(temporaryToken),
                 body);
 
         return ResponseEntity
@@ -126,7 +126,7 @@ public class AuthenticationController {
             @Parameter(description = "Authorization에 RefreshToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String refreshToken
     ) {
-        ReissueResponse res = authenticationApiService.reissue(JwtUtil.removePrefix(refreshToken));
+        ReissueResponse res = authenticationApiService.reissue(JwtUtil.removeType(refreshToken));
 
         return ResponseEntity
                 .ok()
@@ -155,9 +155,9 @@ public class AuthenticationController {
     @Operation(summary = "유효한 유저가 로그인 하게 함", description = "이를 시도하는 유저는 로그인 되어 있는 상태여야 하며 액세스 토큰 역시 유효해야 함")
     public ResponseEntity<LogoutResponse> logOut(
             @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String token
+            @RequestHeader("Authorization") String accessToken
     ) {
-        LogoutResponse res = authenticationApiService.logout(JwtUtil.extractJwtFromCurrentRequestHeader());
+        LogoutResponse res = authenticationApiService.logout(JwtUtil.removeType(accessToken));
 
         return ResponseEntity
                 .ok()
@@ -186,9 +186,9 @@ public class AuthenticationController {
     })
     public ResponseEntity<SignOutResponse> signOut(
             @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String token
+            @RequestHeader("Authorization") String accessToken
     ) {
-        SignOutResponse res = authenticationApiService.signOut(JwtUtil.extractJwtFromCurrentRequestHeader());
+        SignOutResponse res = authenticationApiService.signOut(JwtUtil.removeType(accessToken));
 
         return ResponseEntity
                 .ok()

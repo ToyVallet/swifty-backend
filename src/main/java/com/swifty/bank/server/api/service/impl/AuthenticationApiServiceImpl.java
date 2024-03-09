@@ -213,7 +213,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         return refreshToken.equals(auth.getRefreshToken());
     }
 
-    public boolean isValidatePassword(String password, TemporarySignUpForm temporarySignUpForm) {
+    private boolean isValidatePassword(String password, TemporarySignUpForm temporarySignUpForm) {
         // 같은 문자가 3자리 이상 반복되는가?
         for (int i = 0; i < password.length() - 2; i++) {
             if (password.charAt(i) == password.charAt(i + 1)
