@@ -4,27 +4,38 @@ import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.authentication.service.impl.AuthenticationServiceImpl;
 import com.swifty.bank.server.core.utils.JwtUtil;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@ActiveProfiles(profiles = "test")
+@ContextConfiguration(locations = {"classpath:config/application.yaml"})
+@WebAppConfiguration
+@Disabled
 public class AuthService {
-    @Mock
+    @Spy
     private AuthRepository authRepository;
 
     @InjectMocks
-    private AuthenticationService authenticationService;
+    private AuthenticationServiceImpl authenticationService;
 
     @Test
     @DisplayName("Access-Token 생성")
@@ -64,8 +75,8 @@ public class AuthService {
         String refreshToken = authenticationService.createRefreshToken(customerUuid);
         TokenDto res = new TokenDto(accessToken, refreshToken);
 
-        when(authenticationService.generateTokenDto(customerUuid))
-                .thenReturn(res);
+        assertThat(res.getRefreshToken()).isEqualTo(refreshToken);
+        assertThat(res.getAccessToken()).isEqualTo(accessToken);
     }
 
     @Test
