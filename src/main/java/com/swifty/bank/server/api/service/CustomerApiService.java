@@ -1,20 +1,20 @@
 package com.swifty.bank.server.api.service;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
+import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.Customer;
 
 import java.util.UUID;
 
 public interface CustomerApiService {
-    CustomerInfoResponse getCustomerInfo(UUID customerId);
+    CustomerInfoResponse getCustomerInfo(String accessToken);
 
-    void customerInfoUpdate(UUID customerId,
-                                CustomerInfoUpdateConditionRequest customerInfoUpdateCondition);
+    void customerInfoUpdate(String accessToken, CustomerInfoUpdateConditionRequest customerInfoUpdateCondition);
 
-    boolean confirmPassword(UUID customerId, String password);
+    boolean confirmPassword(String accessToken, PasswordRequest passwordRequest);
 
-    void resetPassword(UUID customerId, String newPassword);
+    void resetPassword(String accessToken, PasswordRequest passwordRequest);
 
-    void customerWithdrawal(UUID customerId);
+    void customerWithdrawal(String accessToken);
 }
