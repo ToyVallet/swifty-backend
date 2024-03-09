@@ -52,7 +52,7 @@ public class SecureKeypadController {
             @Parameter(description = "Authorization에 temporary token을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String temporaryToken
     ) {
-        CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(JwtUtil.removePrefix(temporaryToken));
+        CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(JwtUtil.removeType(temporaryToken));
 
         return ResponseEntity
                 .ok()
