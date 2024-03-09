@@ -4,18 +4,21 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-@Schema(description = "Request for verifying customer existence")
+@Schema(description = "회원가입/로그인 가능 여부 확인 폼")
 public class CheckLoginAvailabilityRequest {
     @NotNull
     @NotBlank
+    @Size(min = 1, max = 30)
     @Schema(description = "고객 이름",
             example = "김성명",
             requiredMode = RequiredMode.REQUIRED)
     private String name;
+
     @NotNull
     @NotBlank
     @Size(min = 7, max = 7)
@@ -23,6 +26,7 @@ public class CheckLoginAvailabilityRequest {
             example = "0012024",
             requiredMode = RequiredMode.REQUIRED)
     private String residentRegistrationNumber;
+
     @NotNull
     @NotBlank
     @Schema(description = "통신사",
@@ -31,8 +35,10 @@ public class CheckLoginAvailabilityRequest {
     private String mobileCarrier;
 
     @NotNull
-    @Size(min = 3, max = 14)
-    @Schema(description = "국제번호 형식으로 입력해주세요",
+    @NotBlank
+    @Size(min = 3, max = 18)
+    @Pattern(regexp = "^\\+[0-9]{1,17}")
+    @Schema(description = "국제번호 형식으로 입력해주세요.",
             example = "+821012345678",
             requiredMode = RequiredMode.REQUIRED)
     private String phoneNumber;

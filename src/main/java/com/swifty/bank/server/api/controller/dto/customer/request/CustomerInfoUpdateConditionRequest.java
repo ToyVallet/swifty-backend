@@ -3,6 +3,9 @@ package com.swifty.bank.server.api.controller.dto.customer.request;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
@@ -16,10 +19,13 @@ public class CustomerInfoUpdateConditionRequest {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String name;
 
-
-    @Size(min = 3, max = 14)
-    @Schema(example = "+12051234567",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    @NotNull
+    @NotBlank
+    @Size(min = 3, max = 18)
+    @Pattern(regexp = "^\\+[0-9]{1,17}")
+    @Schema(description = "국제번호 형식으로 입력해주세요.",
+            example = "+821012345678",
+            requiredMode = RequiredMode.REQUIRED)
     private String phoneNumber;
 
 
