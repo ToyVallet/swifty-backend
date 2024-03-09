@@ -107,6 +107,18 @@ class CustomerApiServiceTest {
     }
 
     @Test
+    @DisplayName("비밀번호 일치여부 - 실패케이스 - 불일치")
+    void confirmPassword_불일치() {
+        PasswordRequest passwordRequest = new PasswordRequest("123123");
+
+        Set<ConstraintViolation<PasswordRequest>> violations  = validator.validate(passwordRequest);
+        boolean  isMatchPassword= customerApiService.confirmPassword(accessToken, passwordRequest);
+
+        assertThat(violations.size()).isEqualTo(0);
+        assertThat(isMatchPassword).isFalse();
+    }
+
+    @Test
     @DisplayName("비밀번호 일치여부 - 실패케이스 - 비밀번호는 6자리")
     void confirmPassword_6자리_실패() {
         PasswordRequest passwordRequest = new PasswordRequest(password+1);
@@ -118,17 +130,6 @@ class CustomerApiServiceTest {
         assertThat(isMatchPassword).isFalse();
     }
 
-    @Test
-    @DisplayName("비밀번호 일치여부 - 실패케이스 - 비밀번호는 6자리")
-    void confirmPassword_불일치() {
-        PasswordRequest passwordRequest = new PasswordRequest("123123");
-
-        Set<ConstraintViolation<PasswordRequest>> violations  = validator.validate(passwordRequest);
-        boolean  isMatchPassword= customerApiService.confirmPassword(accessToken, passwordRequest);
-
-        assertThat(violations.size()).isEqualTo(0);
-        assertThat(isMatchPassword).isFalse();
-    }
 
     @Test
     @DisplayName("비밀번호 변경 - 성공케이스")
@@ -141,22 +142,12 @@ class CustomerApiServiceTest {
         assertDoesNotThrow(() -> customerApiService.resetPassword(accessToken,newPasswordRequest));
     }
 
-    @Test
-    @DisplayName("비밀번호는 6자리로 변경가능 - 실패케이스")
-    void resetPassword_6자리() {
-
-        PasswordRequest newPasswordRequest = new PasswordRequest("789456");
-        Set<ConstraintViolation<PasswordRequest>> violations  = validator.validate(newPasswordRequest);
-
-        assertThat(violations.size()).isEqualTo(0);
-        assertDoesNotThrow(() -> customerApiService.resetPassword(accessToken,newPasswordRequest));
-    }
 
     @Test
-    @DisplayName("비밀번호 변경 - 실패케이스")
+    @DisplayName("비밀번호 변경 - 실패케이스 - 6자리로만 변경가능")
     void resetPassword_실패() {
-        PasswordRequest newPasswordRequest = new PasswordRequest("789412312356");
 
+        PasswordRequest newPasswordRequest = new PasswordRequest("12345678");
         Set<ConstraintViolation<PasswordRequest>> violations  = validator.validate(newPasswordRequest);
 
         assertThat(violations.size()).isEqualTo(1);
