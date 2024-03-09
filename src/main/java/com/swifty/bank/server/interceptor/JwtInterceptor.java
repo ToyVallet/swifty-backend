@@ -54,7 +54,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     private void validateTemporaryAuth(Object handler, HttpServletRequest req) {
         String temporaryToken = JwtUtil.extractJwtFromCurrentRequestHeader();
         JwtUtil.validateToken(temporaryToken);
-        // temporary token인지 검증
+        // TemporaryToken인지 검증
         String sub = JwtUtil.getSubject(temporaryToken);
         if (!sub.equals("TemporaryToken")) {
             throw new IllegalArgumentException("temporary token이 아닙니다.");
@@ -64,7 +64,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     private void validateCustomerAuth() {
         String accessToken = JwtUtil.extractJwtFromCurrentRequestHeader();
         JwtUtil.validateToken(accessToken);
-        // Access Token인지 검증
+        // AccessToken인지 검증
         String sub = JwtUtil.getSubject(accessToken);
         if (!sub.equals("AccessToken")) {
             throw new IllegalArgumentException("access token이 아닙니다.");
@@ -73,7 +73,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         // customerUuid가 claim에 존재하는지 검증
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
-        // 로그아웃 요청한 access token인지 검증
+        // 로그아웃 요청한 AccessToken인지 검증
         String isLoggedOut = logoutAccessTokenRedisService.getData(accessToken);
         if (isLoggedOut != null && isLoggedOut.equals("false")) {
             throw new IllegalArgumentException("로그아웃된 access token입니다.");
