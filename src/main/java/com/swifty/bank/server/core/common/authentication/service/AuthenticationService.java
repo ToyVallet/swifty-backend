@@ -12,7 +12,7 @@ public interface AuthenticationService {
 
     Optional<Auth> findAuthByCustomerUuid(UUID customerUuid);
 
-    void saveRefreshTokenInDatabase(String token);
+    Auth saveRefreshTokenInDatabase(String token);
 
     String createAccessToken(UUID customerUuid);
 
