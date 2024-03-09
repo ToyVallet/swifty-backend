@@ -39,7 +39,7 @@ public class AccountApiController {
     }
 
     @CustomerAuth
-    @PatchMapping(value = "/update_nickname")
+    @PatchMapping(value = "/update-nickname")
     public ResponseEntity<?> updateNickname(
             @RequestHeader("Authorization") String jwt,
             @RequestBody ReviseAccountNicknameRequest req
@@ -52,7 +52,7 @@ public class AccountApiController {
     }
 
     @CustomerAuth
-    @PatchMapping(value = "/update_password")
+    @PatchMapping(value = "/update-password")
     public ResponseEntity<?> updatePassword(
             @RequestHeader("Authorization")
             String jwt,
@@ -67,7 +67,7 @@ public class AccountApiController {
     }
 
     @CustomerAuth
-    @GetMapping("/retrieve_balance")
+    @GetMapping("/retrieve-balance")
     public ResponseEntity<?> retrieveBalanceWithCurrency(
             @RequestHeader("authorization")
             String jwt,
@@ -97,7 +97,7 @@ public class AccountApiController {
     }
 
     @CustomerAuth
-    @PostMapping("/update_status")
+    @PostMapping("/update-status")
     public ResponseEntity<?> updateUnitedAccount(
             @RequestHeader("Authorization")
             String jwt,
@@ -112,7 +112,7 @@ public class AccountApiController {
     }
 
     @CustomerAuth
-    @PostMapping("/update_currency_status")
+    @PostMapping("/update-currency-status")
     public ResponseEntity<?> updateSubAccountStatus(
             @RequestHeader("Authorization")
             String jwt,
@@ -127,7 +127,7 @@ public class AccountApiController {
     }
 
     @CustomerAuth
-    @PostMapping(value = "/update_default_currency")
+    @PostMapping(value = "/update-default-currency")
     public ResponseEntity<?> updateSubAccountStatus(
             @RequestHeader("Authorization")
             String jwt,
