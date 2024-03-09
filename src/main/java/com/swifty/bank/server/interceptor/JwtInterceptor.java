@@ -12,6 +12,8 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
@@ -37,13 +39,13 @@ public class JwtInterceptor implements HandlerInterceptor {
 
         // 임시 회원가입 권한
         if (hasProperAnnotation(handler, TemporaryAuth.class)) {
-            validateTemporaryAuth(handler, req);
+            validateTemporaryAuth(extractJwtFromCurrentRequestHeader());
             return true;
         }
 
         // 로그인된 일반 고객 권한
         if (hasProperAnnotation(handler, CustomerAuth.class)) {
-            validateCustomerAuth();
+            validateCustomerAuth(extractJwtFromCurrentRequestHeader());
             return true;
         }
 
@@ -51,20 +53,18 @@ public class JwtInterceptor implements HandlerInterceptor {
         return false;
     }
 
-    private void validateTemporaryAuth(Object handler, HttpServletRequest req) {
-        String temporaryToken = JwtUtil.extractJwtFromCurrentRequestHeader();
+    private void validateTemporaryAuth(String temporaryToken) {
         JwtUtil.validateToken(temporaryToken);
-        // temporary token인지 검증
+        // TemporaryToken인지 검증
         String sub = JwtUtil.getSubject(temporaryToken);
         if (!sub.equals("TemporaryToken")) {
             throw new IllegalArgumentException("temporary token이 아닙니다.");
         }
     }
 
-    private void validateCustomerAuth() {
-        String accessToken = JwtUtil.extractJwtFromCurrentRequestHeader();
+    private void validateCustomerAuth(String accessToken) {
         JwtUtil.validateToken(accessToken);
-        // Access Token인지 검증
+        // AccessToken인지 검증
         String sub = JwtUtil.getSubject(accessToken);
         if (!sub.equals("AccessToken")) {
             throw new IllegalArgumentException("access token이 아닙니다.");
@@ -73,7 +73,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         // customerUuid가 claim에 존재하는지 검증
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
-        // 로그아웃 요청한 access token인지 검증
+        // 로그아웃 요청한 AccessToken인지 검증
         String isLoggedOut = logoutAccessTokenRedisService.getData(accessToken);
         if (isLoggedOut != null && isLoggedOut.equals("false")) {
             throw new IllegalArgumentException("로그아웃된 access token입니다.");
@@ -86,5 +86,16 @@ public class JwtInterceptor implements HandlerInterceptor {
                     || handlerMethod.getBeanType().getAnnotation(annotation) != null;
         }
         return false;
+    }
+
+    private String extractJwtFromCurrentRequestHeader() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        try {
+            String token = JwtUtil.removeType(request.getHeader("Authorization"));
+            JwtUtil.validateToken(token);
+            return token;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Authorization 헤더에 올바른 jwt가 존재하지 않습니다.");
+        }
     }
 }

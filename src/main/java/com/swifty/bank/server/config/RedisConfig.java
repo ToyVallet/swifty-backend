@@ -1,6 +1,5 @@
 package com.swifty.bank.server.config;
 
-import com.swifty.bank.server.core.common.redis.value.RefreshTokenCache;
 import com.swifty.bank.server.core.common.redis.value.SecureKeypadOrderInverse;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,12 +22,6 @@ public class RedisConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         return new LettuceConnectionFactory(redisHost, redisPort);
-    }
-
-    @Bean
-    public RedisTemplate<String, RefreshTokenCache> refreshTokenRedisTemplate(
-            RedisConnectionFactory connectionFactory) {
-        return createRedisTemplate(connectionFactory, RefreshTokenCache.class);
     }
 
     @Bean

@@ -8,7 +8,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-@Schema(description = "Information for enroll or log in user")
+@Schema(description = "최종 회원가입/로그인 폼")
 public class SignWithFormRequest {
     @NotNull
     @Size(min = 6, max = 6)
@@ -17,6 +17,8 @@ public class SignWithFormRequest {
 
     @NotNull
     @NotBlank
-    @Schema(description = "device id")
+    @Size(min = 1, max = 40)
+    @Schema(description = "디바이스 아이디",
+            example = "12345678-1234-5678-1234-567812345678")
     private String deviceId;
 }
