@@ -22,12 +22,6 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import java.util.Optional;
 import java.util.UUID;
 
-<<<<<<< HEAD
-@SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@RequiredArgsConstructor
-public class AuthService extends ConfigureContainer {
-=======
 import static org.assertj.core.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +32,6 @@ import static org.assertj.core.api.Assertions.*;
 public class AuthService {
     @Spy
     private AuthRepository authRepository;
->>>>>>> 456b31ed45719cfbd1e1910979037c4a2a488047
 
     @InjectMocks
     private AuthenticationServiceImpl authenticationService;

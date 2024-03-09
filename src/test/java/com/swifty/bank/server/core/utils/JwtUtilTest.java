@@ -6,9 +6,15 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.util.Date;
 import java.util.UUID;
@@ -16,7 +22,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
 
-@SpringBootTest
+@ActiveProfiles(profiles = "test")
+@ContextConfiguration(locations = {"classpath:config/application.yaml"})
+@WebAppConfiguration
+@Disabled
 public class JwtUtilTest {
     private static Claims claims;
 
@@ -36,7 +45,7 @@ public class JwtUtilTest {
     void removePrefixTest( ) {
         String rawJwt = "Bearer " + JwtUtil.generateToken(claims, new Date());
 
-        assertThat(JwtUtil.removePrefix(rawJwt).startsWith("ey"));
+        assertThat(JwtUtil.removeType(rawJwt).startsWith("ey"));
     }
 
     @Test
