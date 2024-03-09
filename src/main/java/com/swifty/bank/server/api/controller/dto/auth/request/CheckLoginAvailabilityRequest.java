@@ -22,13 +22,15 @@ public class CheckLoginAvailabilityRequest {
     @NotNull
     @NotBlank
     @Size(min = 7, max = 7)
-    @Schema(description = "고객 주민등록번호 앞 7자리",
+    @Pattern(regexp = "[0-9]{2}([0][1-9]|[1][0-2])([0][1-9]|[1-2][0-9]|[3][0-1])[1-4]")
+    @Schema(description = "고객 주민등록번호 앞 7자리 (YYMMDDS)",
             example = "0012024",
             requiredMode = RequiredMode.REQUIRED)
     private String residentRegistrationNumber;
 
     @NotNull
     @NotBlank
+    @Size(min = 1, max = 10)
     @Schema(description = "통신사",
             example = "KT",
             requiredMode = RequiredMode.REQUIRED)

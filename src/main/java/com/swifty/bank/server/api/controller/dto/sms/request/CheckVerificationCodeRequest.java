@@ -20,6 +20,7 @@ public class CheckVerificationCodeRequest {
     private String phoneNumber;
 
     @NotNull
+    @Size(min = 6, max = 6)
     @Schema(example = "123456",
             requiredMode = RequiredMode.REQUIRED)
     private String verificationCode;
