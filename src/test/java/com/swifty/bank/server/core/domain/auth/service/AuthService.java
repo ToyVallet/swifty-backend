@@ -25,7 +25,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest
 @ActiveProfiles(profiles = "test")
 @ContextConfiguration(locations = {"classpath:config/application.yaml"})
 @WebAppConfiguration
