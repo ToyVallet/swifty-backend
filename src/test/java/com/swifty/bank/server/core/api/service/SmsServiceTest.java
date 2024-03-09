@@ -1,42 +1,33 @@
-package com.swifty.bank.server.core.domain.sms.service;
+package com.swifty.bank.server.core.api.service;
 
 import com.swifty.bank.server.api.controller.dto.sms.request.CheckVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.sms.request.StealVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.sms.response.CheckVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.sms.response.StealVerificationCodeResponse;
-import com.swifty.bank.server.api.service.impl.SmsServiceImpl;
+import com.swifty.bank.server.api.service.SmsService;
 import com.swifty.bank.server.core.common.redis.service.OtpRedisService;
-import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
-import com.swifty.bank.server.core.domain.sms.service.impl.VerifyServiceImpl;
-import org.junit.jupiter.api.Disabled;
+import com.swifty.bank.server.core.api.ConfigureContainer;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@Disabled
-@ContextConfiguration(locations = {"classpath:config/application.yaml"})
-@ExtendWith(MockitoExtension.class)
-@WebAppConfiguration
-public class SmsServiceTest {
-    @Mock
-    private VerifyServiceImpl verifyService;
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@RequiredArgsConstructor
+@SpringBootTest
+public class SmsServiceTest extends ConfigureContainer {
+    @Autowired
+    private OtpRedisService otpRedisService;
+    @Autowired
+    private SmsService smsService;
 
-    @Spy
-    private OtpRedisServiceImpl otpRedisService;
-
-    @InjectMocks
-    private SmsServiceImpl smsService;
 
     @Test
-    public void stealVerificationCodeTest( ) {
+    public void stealVerificationCodeTest() {
         String phoneNumber = "+821012345678";
         StealVerificationCodeRequest stealVerificationCodeRequest = new StealVerificationCodeRequest(phoneNumber);
 
@@ -45,22 +36,17 @@ public class SmsServiceTest {
     }
 
     @Test
-    public void checkNotValidVerificationCodeTest( ) {
+    public void checkNotValidVerificationCodeTest() {
         String phoneNumber = "+821012345678";
         String verificationCode = "000000";
 
         CheckVerificationCodeRequest req = new CheckVerificationCodeRequest(phoneNumber, verificationCode);
 
-        when(smsService.checkVerificationCode(req))
-                .thenReturn(CheckVerificationCodeResponse.builder()
-                        .isSuccess(false)
-                        .build());
-
         assertThat(!smsService.checkVerificationCode(req).getIsSuccess());
     }
 
     @Test
-    public void checkValidVerificationCodeTest( ) {
+    public void checkValidVerificationCodeTest() {
         String phoneNumber = "+821012345678";
         String verificationCode = "000000";
 
@@ -69,10 +55,6 @@ public class SmsServiceTest {
 
         smsService.stealVerificationCode(reqForSteal);
 
-        when(smsService.checkVerificationCode(req))
-                .thenReturn(CheckVerificationCodeResponse.builder()
-                        .isSuccess(true)
-                        .build());
         assertThat(smsService.checkVerificationCode(req).getIsSuccess());
     }
 }
