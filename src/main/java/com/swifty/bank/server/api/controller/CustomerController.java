@@ -21,11 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -52,9 +48,9 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> customerInfo() {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerUuid", UUID.class);
-        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(customerUuid);
+    public ResponseEntity<?> customerInfo(@RequestHeader("Authorization") String accessToken) {
+
+        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(accessToken);
 
         return ResponseEntity
                 .ok()
@@ -76,12 +72,8 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> customerInfoUpdate(
-            @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerUuid", UUID.class);
-
-        customerApiService.customerInfoUpdate(customerUuid,
-                customerInfoUpdateCondition);
+    public ResponseEntity<?> customerInfoUpdate(@RequestHeader("Authorization") String accessToken, @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
+        customerApiService.customerInfoUpdate(accessToken, customerInfoUpdateCondition);
 
         return ResponseEntity
                 .ok()
@@ -103,10 +95,8 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> passwordConfirm(@RequestBody PasswordRequest password) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerUuid", UUID.class);
-
-        boolean isMatchPassword = customerApiService.confirmPassword(customerUuid, password.getPassword());
+    public ResponseEntity<?> passwordConfirm(@RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest password) {
+        boolean isMatchPassword = customerApiService.confirmPassword(accessToken,password);
 
         if (isMatchPassword) {
             return ResponseEntity
@@ -134,10 +124,8 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> passwordReset(@RequestBody PasswordRequest newPassword) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(JwtUtil.extractJwtFromCurrentRequestHeader(), "customerUuid", UUID.class);
-
-        customerApiService.resetPassword(customerUuid, newPassword.getPassword());
+    public ResponseEntity<?> passwordReset(@RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest passwordRequest) {
+        customerApiService.resetPassword(accessToken,passwordRequest);
 
         return ResponseEntity
                 .ok()

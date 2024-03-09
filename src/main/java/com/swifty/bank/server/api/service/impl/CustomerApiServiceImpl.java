@@ -1,10 +1,12 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
+import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,10 +23,10 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     private final BCryptPasswordEncoder encoder;
 
     @Override
-    public CustomerInfoResponse getCustomerInfo(UUID customerId) {
+    public CustomerInfoResponse getCustomerInfo(String  accessToken) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
-
-        CustomerInfoResponse customerInfoResponse = customerService.findCustomerInfoDtoByUuid(customerId)
+        CustomerInfoResponse customerInfoResponse = customerService.findCustomerInfoDtoByUuid(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException());
 
 
@@ -33,15 +35,19 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
     @Transactional
     @Override
-    public void customerInfoUpdate(UUID customerUuid,
+    public void customerInfoUpdate(String  accessToken,
                                                 CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         customerService.updateCustomerInfo(customerUuid, customerInfoUpdateCondition);
 
     }
 
     @Override
-    public boolean confirmPassword(UUID customerUuid, String password) {
+    public boolean confirmPassword(String  accessToken, PasswordRequest passwordRequest) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+        String password = passwordRequest.getPassword();
+
         Customer customer = customerService.findByUuid(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException());
 
@@ -54,13 +60,16 @@ public class CustomerApiServiceImpl implements CustomerApiService {
 
     @Transactional
     @Override
-    public void resetPassword(UUID customerUuid, String newPassword) {
+    public void resetPassword(String  accessToken, PasswordRequest passwordRequest) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+        String newPassword = passwordRequest.getPassword();
         customerService.updatePassword(customerUuid, newPassword);
     }
 
     @Transactional
     @Override
-    public void customerWithdrawal(UUID customerUuid) {
+    public void customerWithdrawal(String accessToken) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
         customerService.withdrawCustomer(customerUuid);
     }
 
