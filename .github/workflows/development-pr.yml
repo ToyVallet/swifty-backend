@@ -43,6 +43,8 @@ jobs:
       # Unit test 진행
       - name: Test with Gradle
         run: ./gradlew --info test
+        env:
+          SPRING_PROFILES_ACTIVE: test
 
       # Unit test에 대한 리포트 작성
       - name: Publish Test Results

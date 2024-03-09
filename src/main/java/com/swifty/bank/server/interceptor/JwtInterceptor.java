@@ -3,11 +3,10 @@ package com.swifty.bank.server.interceptor;
 import com.swifty.bank.server.api.controller.annotation.CustomerAuth;
 import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
-import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenService;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -15,16 +14,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtInterceptor implements HandlerInterceptor {
-    private final LogoutAccessTokenService logoutAccessTokenService;
+    private final LogoutAccessTokenRedisService logoutAccessTokenRedisService;
 
     @Override
-    public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws IOException {
-        // 화이트리스트로 preHandle 관리
+    public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
+        // 리소스 접근을 위한 요청은 JwtInterceptor에서 처리하지 않습니다.
+        if (handler instanceof ResourceHttpRequestHandler) {
+            return true;
+        }
+
+        // 화이트 리스트로 preHandle 관리
         // 프리패스 권한
         if (hasProperAnnotation(handler, PassAuth.class)) {
             return true;
@@ -61,7 +66,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         JwtUtil.validateToken(accessToken);
         // Access Token인지 검증
         String sub = JwtUtil.getSubject(accessToken);
-        if (sub.equals("AccessToken")) {
+        if (!sub.equals("AccessToken")) {
             throw new IllegalArgumentException("access token이 아닙니다.");
         }
 
@@ -69,19 +74,17 @@ public class JwtInterceptor implements HandlerInterceptor {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         // 로그아웃 요청한 access token인지 검증
-        String isLoggedOut = logoutAccessTokenService.getData(accessToken);
+        String isLoggedOut = logoutAccessTokenRedisService.getData(accessToken);
         if (isLoggedOut != null && isLoggedOut.equals("false")) {
             throw new IllegalArgumentException("로그아웃된 access token입니다.");
         }
     }
 
     private <A extends Annotation> boolean hasProperAnnotation(Object handler, Class<A> annotation) {
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
-        if (handlerMethod.getMethodAnnotation(annotation) != null
-                || handlerMethod.getBeanType().getAnnotation(annotation) != null) {
-            return true;
+        if (handler instanceof HandlerMethod handlerMethod) {
+            return handlerMethod.getMethodAnnotation(annotation) != null
+                    || handlerMethod.getBeanType().getAnnotation(annotation) != null;
         }
-
         return false;
     }
 }

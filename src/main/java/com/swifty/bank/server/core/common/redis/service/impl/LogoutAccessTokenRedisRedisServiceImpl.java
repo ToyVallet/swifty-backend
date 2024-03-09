@@ -1,14 +1,14 @@
 package com.swifty.bank.server.core.common.redis.service.impl;
 
 import com.swifty.bank.server.core.common.redis.repository.LogoutAccessTokenRedisRepository;
-import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenService;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class LogoutAccessTokenServiceImpl implements LogoutAccessTokenService {
+public class LogoutAccessTokenRedisRedisServiceImpl implements LogoutAccessTokenRedisService {
     public final String prefix = "[LAT]";
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
 

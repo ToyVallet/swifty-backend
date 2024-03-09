@@ -7,7 +7,11 @@ import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
-import com.swifty.bank.server.api.controller.dto.auth.response.*;
+import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,14 +24,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
-@RestController
+@Controller
 @RequestMapping(value = "/auth")
 @Tag(name = "Authentication API")
 public class AuthenticationController {
@@ -65,8 +69,8 @@ public class AuthenticationController {
 
     @TemporaryAuth
     @PostMapping("/sign-with-form")
-    @Operation(summary = "회원가입과 로그인을 동시에 처리",
-            description = "휴대폰 번호로 가입된 회원이 존재하면서 이름, 주민등록번호 정보가 불일치하는 경우만 실패")
+    @Operation(summary = "신규 회원인 경우 회원가입과 로그인 순서대로 처리, 기존 회원의 경우 로그인 처리",
+            description = "휴대폰 번호로 가입된 회원이 존재하면서 이름, 주민등록번호 정보가 불일치하는 경우 로그인 실패")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
                     content = {
@@ -85,7 +89,7 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<SignWithFormResponse> signWithForm(
-            @Parameter(description = "Temporary token with Authorization header", example = "Bearer ey...", required = true)
+            @Parameter(description = "Authorization에 TemporaryToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String temporaryToken,
             @Valid @RequestBody SignWithFormRequest body
     ) {
@@ -150,7 +154,7 @@ public class AuthenticationController {
     })
     @Operation(summary = "유효한 유저가 로그인 하게 함", description = "이를 시도하는 유저는 로그인 되어 있는 상태여야 하며 액세스 토큰 역시 유효해야 함")
     public ResponseEntity<LogoutResponse> logOut(
-            @Parameter(description = "Access token with Authorization header", example = "Bearer ey...", required = true)
+            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
         LogoutResponse res = authenticationApiService.logout(JwtUtil.extractJwtFromCurrentRequestHeader());
@@ -181,7 +185,7 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<SignOutResponse> signOut(
-            @Parameter(description = "Access token with Authorization header", example = "Bearer ey...", required = true)
+            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
             @RequestHeader("Authorization") String token
     ) {
         SignOutResponse res = authenticationApiService.signOut(JwtUtil.extractJwtFromCurrentRequestHeader());
