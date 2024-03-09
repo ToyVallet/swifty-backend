@@ -5,26 +5,25 @@ import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
+import com.swifty.bank.server.api.controller.dto.sms.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
+import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.service.dto.Result;
+import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Controller
@@ -49,12 +48,9 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> customerInfo(
-            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String accessToken
-    ) {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.removeType(accessToken), "customerId", UUID.class);
-        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(customerId);
+    public ResponseEntity<?> customerInfo(@RequestHeader("Authorization") String accessToken) {
+
+        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(accessToken);
 
         return ResponseEntity
                 .ok()
@@ -76,15 +72,8 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> customerInfoUpdate(
-            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String accessToken,
-            @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition
-    ) {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.removeType(accessToken), "customerId", UUID.class);
-
-        customerApiService.customerInfoUpdate(customerId,
-                customerInfoUpdateCondition);
+    public ResponseEntity<?> customerInfoUpdate(@RequestHeader("Authorization") String accessToken, @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
+        customerApiService.customerInfoUpdate(accessToken, customerInfoUpdateCondition);
 
         return ResponseEntity
                 .ok()
@@ -106,15 +95,8 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> passwordConfirm(
-            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String accessToken,
-            @RequestBody PasswordRequest password
-    ) {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.removeType(accessToken), "customerId",
-                UUID.class);
-
-        boolean isMatchPassword = customerApiService.confirmPassword(customerId, password.getPassword());
+    public ResponseEntity<?> passwordConfirm(@RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest password) {
+        boolean isMatchPassword = customerApiService.confirmPassword(accessToken,password);
 
         if (isMatchPassword) {
             return ResponseEntity
@@ -142,14 +124,8 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> passwordReset(
-            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String accessToken,
-            @RequestBody PasswordRequest newPassword) {
-        UUID customerId = JwtUtil.getValueByKeyWithObject(JwtUtil.removeType(accessToken), "customerId",
-                UUID.class);
-
-        customerApiService.resetPassword(customerId, newPassword.getPassword());
+    public ResponseEntity<?> passwordReset(@RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest passwordRequest) {
+        customerApiService.resetPassword(accessToken,passwordRequest);
 
         return ResponseEntity
                 .ok()
