@@ -40,12 +40,6 @@ public class JwtUtilTest {
     }
 
     @Test
-    void extractJwtFromCurrentRequestHeader( ) {
-        assertThat(true);
-        // 어떻게 처리할지 논의 필요
-    }
-
-    @Test
     void getSubjectTest( ) {
         claims.setSubject("Subject");
         String jwt = JwtUtil.generateToken(claims,
