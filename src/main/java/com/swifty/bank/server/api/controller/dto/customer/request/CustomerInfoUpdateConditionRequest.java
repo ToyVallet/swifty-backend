@@ -14,9 +14,12 @@ import lombok.Getter;
 @Getter
 @Schema(description = "회원정보를 수정 할 데이터")
 public class CustomerInfoUpdateConditionRequest {
-
-    @Schema(example = "홍길동",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    @NotNull
+    @NotBlank
+    @Size(min = 1, max = 30)
+    @Schema(description = "고객 이름",
+            example = "김성명",
+            requiredMode = RequiredMode.REQUIRED)
     private String name;
 
     @NotNull
