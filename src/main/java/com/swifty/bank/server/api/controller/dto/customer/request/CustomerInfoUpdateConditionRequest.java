@@ -9,9 +9,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @Schema(description = "회원정보를 수정 할 데이터")
 public class CustomerInfoUpdateConditionRequest {
     @NotNull
