@@ -4,6 +4,7 @@ import com.swifty.bank.server.core.common.redis.repository.LogoutAccessTokenRedi
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,7 +13,8 @@ public class LogoutAccessTokenRedisRedisServiceImpl implements LogoutAccessToken
     public final String prefix = "[LAT]";
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
 
-    private final Long timeout = 5L;
+    @Value("${jwt.access-token-expiration-seconds}")
+    private Long timeout;
 
     @Override
     public String getData(String key) {
@@ -21,7 +23,7 @@ public class LogoutAccessTokenRedisRedisServiceImpl implements LogoutAccessToken
 
     @Override
     public void setData(String key, String value) {
-        logoutAccessTokenRedisRepository.setData(prefix + key, value, timeout, TimeUnit.MINUTES);
+        logoutAccessTokenRedisRepository.setData(prefix + key, value, timeout, TimeUnit.SECONDS);
     }
 
     @Override
