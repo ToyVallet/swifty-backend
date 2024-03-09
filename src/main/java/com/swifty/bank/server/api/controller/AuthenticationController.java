@@ -5,7 +5,6 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
-import com.swifty.bank.server.api.controller.dto.auth.request.ReissueRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
@@ -124,9 +123,10 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<ReissueResponse> reissueTokens(
-            @RequestBody ReissueRequest refToken
+            @Parameter(description = "Authorization에 RefreshToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
+            @RequestHeader("Authorization") String refreshToken
     ) {
-        ReissueResponse res = authenticationApiService.reissue(JwtUtil.removePrefix(refToken.getRefreshToken()));
+        ReissueResponse res = authenticationApiService.reissue(JwtUtil.removePrefix(refreshToken));
 
         return ResponseEntity
                 .ok()
