@@ -75,7 +75,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional(readOnly = false)
-    public void saveRefreshTokenInDatabase(String refreshToken) {
+    public Auth saveRefreshTokenInDatabase(String refreshToken) {
         UUID customerUuid = UUID.fromString(JwtUtil.getClaimByKey(refreshToken, "customerUuid").toString());
 
         Optional<Auth> maybeAuth = authRepository.findAuthByUuid(customerUuid);
@@ -83,8 +83,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (maybeAuth.isPresent()) {
             Auth auth = maybeAuth.get();
             auth.updateRefreshToken(refreshToken);
-            return;
+            return auth;
         }
-        authRepository.save(new Auth(customerUuid, refreshToken));
+        return authRepository.save(new Auth(customerUuid, refreshToken));
     }
 }

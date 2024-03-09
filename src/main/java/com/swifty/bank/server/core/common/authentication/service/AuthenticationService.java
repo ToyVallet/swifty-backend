@@ -2,6 +2,8 @@ package com.swifty.bank.server.core.common.authentication.service;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
+import org.springframework.stereotype.Service;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,7 +14,7 @@ public interface AuthenticationService {
 
     Optional<Auth> findAuthByCustomerUuid(UUID customerUuid);
 
-    void saveRefreshTokenInDatabase(String token);
+    Auth saveRefreshTokenInDatabase(String token);
 
     String createAccessToken(UUID customerUuid);
 
