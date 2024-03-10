@@ -1,8 +1,8 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
-import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoDto;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,7 +28,7 @@ public interface CustomerService {
     Customer updateCustomerInfo(UUID customerUuid,
                                 CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
 
-    Optional<CustomerInfoResponse> findCustomerInfoDtoByUuid(UUID customerUuid);
+    Optional<CustomerInfoDto> findCustomerInfoDtoByUuid(UUID customerUuid);
 
     void updatePassword(UUID customerUuid, String newPassword);
 

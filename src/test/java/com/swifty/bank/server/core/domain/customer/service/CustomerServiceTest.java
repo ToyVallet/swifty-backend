@@ -1,5 +1,11 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.when;
+
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.common.authentication.constant.UserRole;
@@ -10,6 +16,8 @@ import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.impl.CustomerServiceImpl;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,13 +26,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerServiceTest {
@@ -42,7 +43,8 @@ class CustomerServiceTest {
     @Test
     @DisplayName("회원가입")
     void join() {
-        JoinDto joinDto = new JoinDto(null,"asdasd", Nationality.KOREA,"01000001111","23213","sadasd", Gender.MALE,"19950601", UserRole.CUSTOMER);
+        JoinDto joinDto = new JoinDto(null, "asdasd", Nationality.KOREA, "01000001111", "23213", "sadasd", Gender.MALE,
+                "19950601", UserRole.CUSTOMER);
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
                 .name(joinDto.getName())
@@ -68,7 +70,7 @@ class CustomerServiceTest {
         assertThat(joinCustomer.getBirthDate()).isEqualTo(joinDto.getBirthDate());
         assertThat(joinCustomer.getNationality()).isEqualTo(joinDto.getNationality());
         assertThat(joinCustomer.getCustomerStatus()).isEqualTo(CustomerStatus.ACTIVE);
-        assertThat(encoder.matches(joinDto.getPassword(),joinCustomer.getPassword())).isTrue();
+        assertThat(encoder.matches(joinDto.getPassword(), joinCustomer.getPassword())).isTrue();
         assertThat(joinCustomer.getRoles()).isEqualTo(joinDto.getRoles());
     }
 
@@ -86,7 +88,7 @@ class CustomerServiceTest {
                 .deviceId("디바이스아이디")
                 .roles(UserRole.CUSTOMER)
                 .build();
-        when(customerRepository.findOneByUUID(any(UUID.class)))
+        when(customerRepository.findOneByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customer));
 
         Customer findCustomer = customerService.findByUuid(customer.getId()).get();
@@ -155,11 +157,10 @@ class CustomerServiceTest {
                 .build();
         String updatePhoneNumber = "01011112222";
 
-        when(customerRepository.findOneByUUID(any(UUID.class)))
+        when(customerRepository.findOneByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customer));
 
-
-        Customer updateCustomer = customerService.updatePhoneNumber(customer.getId(),updatePhoneNumber);
+        Customer updateCustomer = customerService.updatePhoneNumber(customer.getId(), updatePhoneNumber);
 
         assertThat(updateCustomer.getPhoneNumber()).isEqualTo(updatePhoneNumber);
     }
@@ -180,11 +181,10 @@ class CustomerServiceTest {
                 .build();
         String updateDeviceId = "아이폰";
 
-        when(customerRepository.findOneByUUID(any(UUID.class)))
+        when(customerRepository.findOneByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customer));
 
-
-        Customer updateCustomer = customerService.updateDeviceId(customer.getId(),updateDeviceId);
+        Customer updateCustomer = customerService.updateDeviceId(customer.getId(), updateDeviceId);
 
         assertThat(updateCustomer.getDeviceId()).isEqualTo(updateDeviceId);
     }
@@ -208,23 +208,24 @@ class CustomerServiceTest {
                 .name("이름변경")
                 .build();
 
-        when(customerRepository.findOneByUUID(any(UUID.class)))
+        when(customerRepository.findOneByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customer));
 
-
-        Customer updateCustomerInfo = customerService.updateCustomerInfo(customer.getId(),updateConditionRequest);
+        Customer updateCustomerInfo = customerService.updateCustomerInfo(customer.getId(), updateConditionRequest);
 
         assertThat(updateCustomerInfo.getName()).isEqualTo(updateConditionRequest.getName());
     }
 
     @Test
     void findCustomerInfoDtoByUuid() {
-        CustomerInfoResponse customerInfoResponse = new CustomerInfoResponse("이름","01000001111",Gender.MALE,"19990909",Nationality.KOREA,CustomerStatus.ACTIVE);
+        CustomerInfoResponse customerInfoResponse = new CustomerInfoResponse("이름", "01000001111", Gender.MALE,
+                "19990909", Nationality.KOREA, CustomerStatus.ACTIVE);
 
-        when(customerRepository.findCustomerInfoResponseByUUID(any(UUID.class)))
+        when(customerRepository.findCustomerInfoResponseByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customerInfoResponse));
 
-        CustomerInfoResponse findCustomerInfoResponse = customerService.findCustomerInfoDtoByUuid(UUID.randomUUID()).get();
+        CustomerInfoResponse findCustomerInfoResponse = customerService.findCustomerInfoDtoByUuid(UUID.randomUUID())
+                .get();
 
         assertThat(findCustomerInfoResponse.getName()).isEqualTo(customerInfoResponse.getName());
     }
@@ -246,10 +247,10 @@ class CustomerServiceTest {
 
         String updatePassword = "비밀번호 변경";
 
-        when(customerRepository.findOneByUUID(any(UUID.class)))
+        when(customerRepository.findOneByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customer));
 
-        assertDoesNotThrow(() ->  customerService.updatePassword(customer.getId(),updatePassword));
+        assertDoesNotThrow(() -> customerService.updatePassword(customer.getId(), updatePassword));
     }
 
     @Test
@@ -269,9 +270,9 @@ class CustomerServiceTest {
 
         String updatePassword = "비밀번호 변경";
 
-        when(customerRepository.findOneByUUID(any(UUID.class)))
+        when(customerRepository.findOneByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customer));
 
-        assertDoesNotThrow(() ->  customerService.withdrawCustomer(customer.getId()));
+        assertDoesNotThrow(() -> customerService.withdrawCustomer(customer.getId()));
     }
 }

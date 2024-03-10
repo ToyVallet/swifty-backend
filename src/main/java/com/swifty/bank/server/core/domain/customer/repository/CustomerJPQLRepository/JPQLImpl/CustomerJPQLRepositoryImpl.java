@@ -1,7 +1,7 @@
 package com.swifty.bank.server.core.domain.customer.repository.CustomerJPQLRepository.JPQLImpl;
 
-import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoDto;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerJPQLRepository.CustomerJPQLRepository;
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
@@ -16,7 +16,7 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     private final boolean isDeleted = false;
 
     @Override
-    public Optional<Customer> findOneByUUID(UUID uuid) {
+    public Optional<Customer> findOneByUuid(UUID uuid) {
 
         return em.createQuery(
                         "SELECT C FROM Customer C WHERE C.id = :uuid AND C.isDeleted = :isDeleted", Customer.class
@@ -55,9 +55,9 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     }
 
     @Override
-    public Optional<CustomerInfoResponse> findCustomerInfoResponseByUUID(UUID uuid) {
+    public Optional<CustomerInfoDto> findCustomerInfoResponseByUuid(UUID uuid) {
         return em.createQuery(
-                        "SELECT new com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse(" +
+                        "SELECT new com.swifty.bank.server.core.domain.customer.dto.CustomerInfoDto(" +
                                 "C.name" +
                                 ",C.phoneNumber" +
                                 ",C.gender" +
@@ -68,7 +68,7 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
                                 "FROM Customer C " +
                                 "WHERE  C.id = :uuid " +
                                 "AND C.isDeleted = :isDeleted",
-                        CustomerInfoResponse.class
+                        CustomerInfoDto.class
                 )
                 .setParameter("uuid", uuid)
                 .setParameter("isDeleted", isDeleted)
@@ -81,5 +81,4 @@ public class CustomerJPQLRepositoryImpl implements CustomerJPQLRepository {
     public void deleteCustomer(Customer customer) {
         em.remove(customer);
     }
-
 }

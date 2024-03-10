@@ -27,6 +27,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,14 +46,17 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         String phoneNumber = checkLoginAvailabilityRequest.getPhoneNumber();
 
         Optional<Customer> maybeCustomer = customerService.findByPhoneNumber(phoneNumber);
+        TemporarySignUpForm temporarySignUpForm = TemporarySignUpForm.builder()
+                .name(checkLoginAvailabilityRequest.getName())
+                .residentRegistrationNumber(checkLoginAvailabilityRequest.getResidentRegistrationNumber())
+                .mobileCarrier(checkLoginAvailabilityRequest.getMobileCarrier())
+                .phoneNumber(checkLoginAvailabilityRequest.getPhoneNumber())
+                .build();
+
         // 기존에 가입된 번호인 경우, db 내용과 요청 폼이 일치하는지 확인
-        // 현재 프론트에서 입력받는 데이터(성명, 주민등록번호, 통신사, 휴대폰 번호)와 백엔드에서 저장하는 고객의 데이터(이름, 국적, 성별, 생일 등등)가 상이하므로 일단 일부(이름, 휴대폰 번호)만 비교하도록 처리했음
         if (maybeCustomer.isPresent()) {
             Customer customer = maybeCustomer.get();
-
-            // 이름과 휴대폰 번호가 같지 않으면 회원가입/로그인 진행 불가
-            if (!(checkLoginAvailabilityRequest.getName().equals(customer.getName())
-                    && checkLoginAvailabilityRequest.getPhoneNumber().equals(customer.getPhoneNumber()))) {
+            if (!isEqualCustomer(customer, temporarySignUpForm)) {
                 return CheckLoginAvailabilityResponse.builder()
                         .isAvailable(false)
                         .temporaryToken("")
@@ -63,12 +67,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         String temporaryToken = authenticationService.createTemporaryToken();
         temporarySignUpFormRedisService.setData(
                 temporaryToken,
-                TemporarySignUpForm.builder()
-                        .name(checkLoginAvailabilityRequest.getName())
-                        .residentRegistrationNumber(checkLoginAvailabilityRequest.getResidentRegistrationNumber())
-                        .mobileCarrier(checkLoginAvailabilityRequest.getMobileCarrier())
-                        .phoneNumber(checkLoginAvailabilityRequest.getPhoneNumber())
-                        .build()
+                temporarySignUpForm
         );
         return CheckLoginAvailabilityResponse.builder()
                 .isAvailable(true)
@@ -77,6 +76,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
+    @Transactional
     public SignWithFormResponse signUpAndSignIn(String temporaryToken, SignWithFormRequest signWithFormRequest) {
         TemporarySignUpForm temporarySignUpForm = temporarySignUpFormRedisService.getData(temporaryToken);
 
@@ -98,12 +98,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         if (mayBeCustomerByPhoneNumber.isPresent()) {
             Customer customer = mayBeCustomerByPhoneNumber.get();
 
-            // 기존 회원이면서 이름, 성별, 주민등록번호가 일치하는가?
-            if (customer.getName().equals(temporarySignUpForm.getName())
-                    && customer.getGender().equals(extractGender(temporarySignUpForm.getResidentRegistrationNumber()))
-                    && customer.getBirthDate()
-                    .equals(extractBirthDate(temporarySignUpForm.getResidentRegistrationNumber()))
-            ) {
+            // 기존 회원이면서 이름, 성별, 생년월일이 일치하는가?
+            if (isEqualCustomer(customer, temporarySignUpForm)) {
                 TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
                 authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
                 temporarySignUpFormRedisService.deleteData(temporaryToken);
@@ -162,6 +158,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class);
         TokenDto tokenDto = authenticationService.generateTokenDto(customerUuid);
+        authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
         return ReissueResponse.builder()
                 .isSuccess(true)
                 .tokens(List.of(tokenDto.getAccessToken(), tokenDto.getRefreshToken()))
@@ -180,11 +177,11 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
-    public SignOutResponse signOut(String jwt) {
-        UUID uuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+    public SignOutResponse signOut(String accessToken) {
+        UUID uuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
         authenticationService.deleteAuth(uuid);
         customerService.withdrawCustomer(uuid);
-
+        logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
         return SignOutResponse.builder()
                 .wasSignedOut(true)
                 .build();
@@ -213,11 +210,18 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         return refreshToken.equals(auth.getRefreshToken());
     }
 
+    private boolean isEqualCustomer(Customer customer, TemporarySignUpForm temporarySignUpForm) {
+        return customer.getName().equals(temporarySignUpForm.getName())
+                && customer.getGender().equals(extractGender(temporarySignUpForm.getResidentRegistrationNumber()))
+                && customer.getBirthDate()
+                .equals(extractBirthDate(temporarySignUpForm.getResidentRegistrationNumber()));
+    }
+
     private boolean isValidatePassword(String password, TemporarySignUpForm temporarySignUpForm) {
         // 같은 문자가 3자리 이상 반복되는가?
-        for (int i = 0; i < password.length() - 2; i++) {
-            if (password.charAt(i) == password.charAt(i + 1)
-                    && password.charAt(i + 1) == password.charAt(i + 2)) {
+        for (int index = 0; index < password.length() - 2; index++) {
+            if (password.charAt(index) == password.charAt(index + 1)
+                    && password.charAt(index + 1) == password.charAt(index + 2)) {
                 return false;
             }
         }
