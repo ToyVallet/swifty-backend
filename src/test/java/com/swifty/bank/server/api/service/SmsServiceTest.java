@@ -1,12 +1,10 @@
-package com.swifty.bank.server.core.api.service;
+package com.swifty.bank.server.api.service;
 
+import com.swifty.bank.server.api.ConfigureContainer;
 import com.swifty.bank.server.api.controller.dto.sms.request.CheckVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.sms.request.StealVerificationCodeRequest;
-import com.swifty.bank.server.api.controller.dto.sms.response.CheckVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.sms.response.StealVerificationCodeResponse;
-import com.swifty.bank.server.api.service.SmsService;
 import com.swifty.bank.server.core.common.redis.service.OtpRedisService;
-import com.swifty.bank.server.core.api.ConfigureContainer;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @RequiredArgsConstructor

@@ -1,4 +1,4 @@
-package com.swifty.bank.server.core.api;
+package com.swifty.bank.server.api;
 
 import com.redis.testcontainers.RedisContainer;
 import jakarta.validation.constraints.NotNull;
