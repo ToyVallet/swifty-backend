@@ -7,12 +7,12 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
-import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoDto;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
 import com.swifty.bank.server.core.domain.customer.service.impl.CustomerServiceImpl;
@@ -218,16 +218,16 @@ class CustomerServiceTest {
 
     @Test
     void findCustomerInfoDtoByUuid() {
-        CustomerInfoResponse customerInfoResponse = new CustomerInfoResponse("이름", "01000001111", Gender.MALE,
+        CustomerInfoDto customerInfoResponse = new CustomerInfoDto("이름", "01000001111", Gender.MALE,
                 "19990909", Nationality.KOREA, CustomerStatus.ACTIVE);
 
         when(customerRepository.findCustomerInfoResponseByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customerInfoResponse));
 
-        CustomerInfoResponse findCustomerInfoResponse = customerService.findCustomerInfoDtoByUuid(UUID.randomUUID())
+        CustomerInfoDto findCustomerInfoDto = customerService.findCustomerInfoDtoByUuid(UUID.randomUUID())
                 .get();
 
-        assertThat(findCustomerInfoResponse.getName()).isEqualTo(customerInfoResponse.getName());
+        assertThat(findCustomerInfoDto.getName()).isEqualTo(customerInfoResponse.getName());
     }
 
     @Test
