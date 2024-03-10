@@ -5,13 +5,10 @@ import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
-import com.swifty.bank.server.api.controller.dto.sms.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.service.dto.Result;
-import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,8 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Controller
@@ -48,7 +43,8 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> customerInfo(@RequestHeader("Authorization") String accessToken) {
+    public ResponseEntity<CustomerInfoResponse> customerInfo(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken) {
+        accessToken = JwtUtil.removeType(accessToken);
 
         CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(accessToken);
 
@@ -72,7 +68,9 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> customerInfoUpdate(@RequestHeader("Authorization") String accessToken, @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
+    public ResponseEntity<MessageResponse> customerInfoUpdate(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
+        accessToken = JwtUtil.removeType(accessToken);
+
         customerApiService.customerInfoUpdate(accessToken, customerInfoUpdateCondition);
 
         return ResponseEntity
@@ -95,7 +93,9 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> passwordConfirm(@RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest password) {
+    public ResponseEntity<MessageResponse> passwordConfirm(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest password) {
+        accessToken = JwtUtil.removeType(accessToken);
+
         boolean isMatchPassword = customerApiService.confirmPassword(accessToken,password);
 
         if (isMatchPassword) {
@@ -124,7 +124,9 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> passwordReset(@RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest passwordRequest) {
+    public ResponseEntity<MessageResponse> passwordReset(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest passwordRequest) {
+        accessToken = JwtUtil.removeType(accessToken);
+
         customerApiService.resetPassword(accessToken,passwordRequest);
 
         return ResponseEntity
