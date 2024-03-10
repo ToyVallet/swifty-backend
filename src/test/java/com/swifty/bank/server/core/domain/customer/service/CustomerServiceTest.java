@@ -75,6 +75,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원UUID로 회원조회 ")
     void findByUuid() {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -98,6 +99,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원연락처로 회원조회 ")
     void findByPhoneNumber() {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -120,6 +122,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원기기정보로 회원조회 ")
     void findByDeviceId() {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -142,6 +145,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원 연락처 변경")
     void updatePhoneNumber() {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -166,6 +170,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원 기기정보 변경")
     void updateDeviceId() {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -190,6 +195,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원정보 변경")
     void updateCustomerInfo() {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -217,6 +223,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원UUID로 회원정보 조회")
     void findCustomerInfoDtoByUuid() {
         CustomerInfoDto customerInfoResponse = new CustomerInfoDto("이름", "01000001111", Gender.MALE,
                 "19990909", Nationality.KOREA, CustomerStatus.ACTIVE);
@@ -231,6 +238,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원 비밀번호 변경")
     void updatePassword() {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -254,6 +262,7 @@ class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("회원 탈퇴")
     void withdrawCustomer() {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -267,8 +276,6 @@ class CustomerServiceTest {
                 .deviceId("갤럭시")
                 .roles(UserRole.CUSTOMER)
                 .build();
-
-        String updatePassword = "비밀번호 변경";
 
         when(customerRepository.findOneByUuid(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(customer));
