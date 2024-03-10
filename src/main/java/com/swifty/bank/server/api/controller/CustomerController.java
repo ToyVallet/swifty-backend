@@ -43,7 +43,7 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> customerInfo(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken) {
+    public ResponseEntity<CustomerInfoResponse> customerInfo(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken) {
         accessToken = JwtUtil.removeType(accessToken);
 
         CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(accessToken);
@@ -68,7 +68,7 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> customerInfoUpdate(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
+    public ResponseEntity<MessageResponse> customerInfoUpdate(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
         accessToken = JwtUtil.removeType(accessToken);
 
         customerApiService.customerInfoUpdate(accessToken, customerInfoUpdateCondition);
@@ -93,7 +93,7 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> passwordConfirm(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest password) {
+    public ResponseEntity<MessageResponse> passwordConfirm(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest password) {
         accessToken = JwtUtil.removeType(accessToken);
 
         boolean isMatchPassword = customerApiService.confirmPassword(accessToken,password);
@@ -124,7 +124,7 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> passwordReset(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest passwordRequest) {
+    public ResponseEntity<MessageResponse> passwordReset(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody PasswordRequest passwordRequest) {
         accessToken = JwtUtil.removeType(accessToken);
 
         customerApiService.resetPassword(accessToken,passwordRequest);
