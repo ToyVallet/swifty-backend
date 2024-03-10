@@ -1,10 +1,9 @@
 package com.swifty.bank.server.core.domain.sms.service;
 
-import com.swifty.bank.server.core.domain.sms.constant.CheckVerificationStatus;
-import com.swifty.bank.server.core.domain.sms.constant.SendVerificationStatus;
-
 public interface VerifyService {
-    SendVerificationStatus sendVerificationCode(String phoneNumber);
+    Boolean sendVerificationCode(String phoneNumber);
 
-    CheckVerificationStatus checkVerificationCode(String phoneNumber, String verificationCode);
+    Boolean checkVerificationCode(String phoneNumber, String verificationCode);
+
+    boolean isVerified(String phoneNumber);
 }

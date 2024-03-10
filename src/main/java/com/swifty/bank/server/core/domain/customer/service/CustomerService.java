@@ -1,37 +1,36 @@
 package com.swifty.bank.server.core.domain.customer.service;
 
+import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoResponse;
-import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoUpdateConditionRequest;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
-
+import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoDto;
+import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface CustomerService {
-    Customer join(JoinRequest joinRequest);
+    Customer join(JoinDto joinDto);
 
     // 순수 UUID로의 조회를 1원칙으로 삼는다
     // Principle 1. Retrieve with User's own UUID (PK)
     // Something to exchange with Frontend as user identification
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
-    Customer findByUuid(UUID uuid);
+    Optional<Customer> findByUuid(UUID customerUuid);
 
-    Customer findByPhoneNumber(String phoneNumber);
+    Optional<Customer> findByPhoneNumber(String phoneNumber);
 
-    Customer findByDeviceId(String deviceId);
+    Optional<Customer> findByDeviceId(String deviceId);
 
-    Customer updatePhoneNumber(UUID uuid, String newPhoneNumber);
+    Customer updatePhoneNumber(UUID customerUuid, String newPhoneNumber);
 
-    Customer updateDeviceId(UUID uuid, String newDeviceId);
+    Customer updateDeviceId(UUID customerUuid, String newDeviceId);
 
-    Customer updateCustomerInfo(UUID customerUuid, CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
+    Customer updateCustomerInfo(UUID customerUuid,
+                                CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest);
 
-    CustomerInfoResponse findCustomerInfoDtoByUuid(UUID uuid);
+    Optional<CustomerInfoDto> findCustomerInfoDtoByUuid(UUID customerUuid);
 
-    void updatePassword(UUID uuid, String newPassword);
+    void updatePassword(UUID customerUuid, String newPassword);
 
-    boolean isSamePassword(Customer customer, String password);
-
-    Customer withdrawCustomer(UUID uuid);
+    void withdrawCustomer(UUID customerUuid);
 }

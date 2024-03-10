@@ -1,39 +1,43 @@
 package com.swifty.bank.server.core.domain.customer;
 
+import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.domain.BaseEntity;
+import com.swifty.bank.server.core.domain.account.UnitedAccount;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
-import jakarta.persistence.*;
+import com.swifty.bank.server.exception.common.NonExistOrOverOneResultException;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.List;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import java.util.UUID;
 
 @Getter
 @Entity
 @Table(name = "tb_customer")
-@NoArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
 @EntityListeners(AuditingEntityListener.class)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Customer extends BaseEntity {
-
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "BINARY(16)")
     @Id
@@ -58,21 +62,10 @@ public class Customer extends BaseEntity {
 
     private String password;
 
-    private GrantedAuthority roles;
+    private UserRole roles;
 
-    @Builder
-    public Customer(UUID id, String deviceId, String name, String phoneNumber, Gender gender, String birthDate, Nationality nationality, CustomerStatus customerStatus, String password, GrantedAuthority roles) {
-        this.id = id;
-        this.deviceId = deviceId;
-        this.name = name;
-        this.phoneNumber = phoneNumber;
-        this.gender = gender;
-        this.birthDate = birthDate;
-        this.nationality = nationality;
-        this.customerStatus = customerStatus;
-        this.password = password;
-        this.roles = roles;
-    }
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<UnitedAccount> unitedAccounts;
 
     public void updatePhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
@@ -98,4 +91,23 @@ public class Customer extends BaseEntity {
         this.password = newPassword;
     }
 
+    public void addUnitedAccount(UnitedAccount ua) {
+        this.unitedAccounts.add(ua);
+    }
+
+    public UnitedAccount findUnitedAccountByUnitedAccountId(UUID unitedAccountId) {
+        List<UnitedAccount> unitedAccounts = this.unitedAccounts.stream()
+                .filter(unitedAccount -> unitedAccountId.compareTo(unitedAccount.getUnitedAccountUuid()) == 0).toList();
+
+        if (unitedAccounts.size() == 1) {
+            return unitedAccounts.get(0);
+        }
+
+        throw new NonExistOrOverOneResultException();
+    }
+
+    public void removeUnitedAccountByUnitedAccountId(UUID unitedAccountId) {
+        UnitedAccount unitedAccount = findUnitedAccountByUnitedAccountId(unitedAccountId);
+        unitedAccount.delete();
+    }
 }

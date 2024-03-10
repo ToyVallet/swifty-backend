@@ -1,300 +1,272 @@
 package com.swifty.bank.server.api.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
+import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
-import com.swifty.bank.server.core.common.authentication.exception.AuthenticationException;
-import com.swifty.bank.server.core.common.authentication.exception.StoredAuthValueNotExistException;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.common.constant.Result;
-import com.swifty.bank.server.core.common.response.ResponseResult;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
+import com.swifty.bank.server.core.common.redis.service.SecureKeypadOrderInverseRedisService;
+import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
+import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.dto.JoinRequest;
+import com.swifty.bank.server.core.domain.customer.constant.Gender;
+import com.swifty.bank.server.core.domain.customer.constant.Nationality;
+import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.utils.HashUtil;
-import com.swifty.bank.server.utils.JwtUtil;
-import com.swifty.bank.server.utils.RedisUtil;
-import java.util.HashMap;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
-    private final JwtUtil jwtUtil;
     private final AuthenticationService authenticationService;
-    private final RedisUtil redisUtil;
+
+    private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
+    private final LogoutAccessTokenRedisService logoutAccessTokenRedisService;
+    private final SecureKeypadOrderInverseRedisService secureKeypadOrderInverseRedisService;
 
     @Override
-    public ResponseResult<?> join(JoinRequest dto) {
-        if (customerService.findByPhoneNumber(dto.getPhoneNumber()) != null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Customer retrieval is not valid",
-                    null
-            );
-        }
+    public CheckLoginAvailabilityResponse checkLoginAvailability(
+            CheckLoginAvailabilityRequest checkLoginAvailabilityRequest) {
+        String phoneNumber = checkLoginAvailabilityRequest.getPhoneNumber();
 
-        String phoneVerified = redisUtil.getRedisStringValue(
-                HashUtil.createStringHash(
-                        List.of(dto.getDeviceId(),
-                                dto.getPhoneNumber()))
-        );
-        if (phoneVerified == null || !phoneVerified.equals("true")) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] not verified phone number",
-                    null
-            );
-        }
+        Optional<Customer> maybeCustomer = customerService.findByPhoneNumber(phoneNumber);
+        TemporarySignUpForm temporarySignUpForm = TemporarySignUpForm.builder()
+                .name(checkLoginAvailabilityRequest.getName())
+                .residentRegistrationNumber(checkLoginAvailabilityRequest.getResidentRegistrationNumber())
+                .mobileCarrier(checkLoginAvailabilityRequest.getMobileCarrier())
+                .phoneNumber(checkLoginAvailabilityRequest.getPhoneNumber())
+                .build();
 
-        Customer customer = customerService.join(dto);
-
-        Customer customerByDeviceId = customerService.findByDeviceId(dto.getDeviceId());
-        if (customerByDeviceId != null) {
-            customerService.updateDeviceId(
-                    customerByDeviceId.getId(),
-                    null
-            );
-        }
-        return this.storeRefreshToken(customer);
-    }
-
-    @Override
-    public ResponseResult<?> loginWithJwt(String body, String token) {
-        ObjectMapper mapper = new ObjectMapper();
-        String deviceId;
-        try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            deviceId = map.get("deviceId");
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        }
-
-        if (deviceId == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Device ID not exist",
-                    null
-            );
-        }
-
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
-
-        Customer customer = customerService.findByDeviceId(deviceId);
-        if (customer == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] there is no device logged in with device " + deviceId,
-                    null
-            );
-        }
-
-        if (uuid.toString().equals(customer.getId().toString())
-                && customer.getDeviceId().equals(deviceId)) {
-            return this.storeRefreshToken(customer);
-        }
-
-        return new ResponseResult(Result.FAIL,
-                "[ERROR] Latest user of device is not match with token. It might be hijacked",
-                null
-        );
-    }
-
-    @Override
-    public ResponseResult<?> loginWithForm(String deviceId, String phoneNumber) {
-        Customer customerByDeviceID = customerService.findByDeviceId(deviceId);
-        Customer customerByPhoneNumber = customerService.findByPhoneNumber(phoneNumber);
-
-        if (customerByPhoneNumber == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] No registered user with phone number, cannot login",
-                    null
-            );
-        }
-
-        if (customerByDeviceID == null) {
-            customerByPhoneNumber = customerService.updateDeviceId(
-                    customerByPhoneNumber.getId(),
-                    deviceId
-            );
-        } else {
-            if (!customerByDeviceID.getId().equals(customerByPhoneNumber.getId())) {
-                customerService.updateDeviceId(
-                        customerByPhoneNumber.getId(),
-                        deviceId
-                );
-                customerService.updateDeviceId(
-                        customerByDeviceID.getId(),
-                        null
-                );
+        // 기존에 가입된 번호인 경우, db 내용과 요청 폼이 일치하는지 확인
+        if (maybeCustomer.isPresent()) {
+            Customer customer = maybeCustomer.get();
+            if (!isEqualCustomer(customer, temporarySignUpForm)) {
+                return CheckLoginAvailabilityResponse.builder()
+                        .isAvailable(false)
+                        .temporaryToken("")
+                        .build();
             }
         }
 
-        return this.storeRefreshToken(customerByPhoneNumber);
-    }
-
-    @Override
-    public ResponseResult<?> reissue(String body) {
-        ObjectMapper mapper = new ObjectMapper();
-        UUID uuid;
-        String refreshToken;
-        try {
-            Map<String, String> map = mapper.readValue(body, Map.class);
-            refreshToken = map.get("RefreshToken");
-
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", refreshToken).toString());
-        } catch (JsonProcessingException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Json format is not valid",
-                    null
-            );
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
-
-        if (isLoggedOut(uuid.toString())) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Logged out user tried reissue",
-                    null
-            );
-        }
-        if (redisUtil.getRedisStringValue(refreshToken) != null) {
-            logout(refreshToken);
-
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] Already used fresh token",
-                    null
-            );
-        }
-
-        Customer customer = customerService.findByUuid(uuid);
-        if (customer == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] No Such Customer with the uuid",
-                    null
-            );
-        }
-        return this.storeRefreshToken(customer);
-    }
-
-    @Override
-    public ResponseResult<?> logout(String token) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
-        }
-
-        if (!isLoggedOut(uuid.toString())) {
-            String key = uuid.toString();
-            Auth prevAuth = redisUtil.getRedisAuthValue(key);
-            Auth newAuth = new Auth("", true);
-
-            redisUtil.setRedisStringValue(prevAuth.getRefreshToken(), key);
-            redisUtil.saveAuthRedis(key, newAuth);
-
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "[INFO] " + uuid.toString() + "logged out successfully",
-                    null
-            );
-        }
-        return new ResponseResult<>(
-                Result.FAIL,
-                "[ERROR] " + uuid.toString() + "'s token information does not exist",
-                null
+        String temporaryToken = authenticationService.createTemporaryToken();
+        temporarySignUpFormRedisService.setData(
+                temporaryToken,
+                temporarySignUpForm
         );
+        return CheckLoginAvailabilityResponse.builder()
+                .isAvailable(true)
+                .temporaryToken(temporaryToken)
+                .build();
     }
 
     @Override
-    public ResponseResult<?> signOut(String token) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
+    @Transactional
+    public SignWithFormResponse signUpAndSignIn(String temporaryToken, SignWithFormRequest signWithFormRequest) {
+        TemporarySignUpForm temporarySignUpForm = temporarySignUpFormRedisService.getData(temporaryToken);
+
+        // 비밀번호 복호화
+        String password = decryptPassword(temporaryToken, signWithFormRequest.getPushedOrder());
+
+        // 비밀번호 규칙 검증
+        if (!isValidatePassword(password, temporarySignUpForm)) {
+            return SignWithFormResponse.builder()
+                    .isSuccess(false)
+                    .isAvailablePassword(false)
+                    .tokens(null)
+                    .build();
         }
 
-        logout(token);
-        Customer customer = customerService.withdrawCustomer(uuid);
-        if (customer == null) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] there is no the customer containing that information",
-                    null
-            );
+        Optional<Customer> mayBeCustomerByPhoneNumber
+                = customerService.findByPhoneNumber(temporarySignUpForm.getPhoneNumber());
+
+        if (mayBeCustomerByPhoneNumber.isPresent()) {
+            Customer customer = mayBeCustomerByPhoneNumber.get();
+
+            // 기존 회원이면서 이름, 성별, 생년월일이 일치하는가?
+            if (isEqualCustomer(customer, temporarySignUpForm)) {
+                TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
+                authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
+                temporarySignUpFormRedisService.deleteData(temporaryToken);
+
+                // 기존 Customer의 비밀번호와 deviceId 업데이트
+                customerService.updateDeviceId(customer.getId(), signWithFormRequest.getDeviceId());
+                customerService.updatePassword(customer.getId(), password);
+
+                return SignWithFormResponse.builder()
+                        .isSuccess(true)
+                        .isAvailablePassword(true)
+                        .tokens(List.of(tokenDto.getAccessToken(), tokenDto.getRefreshToken()))
+                        .build();
+            }
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] " + uuid + " successfully withdraw",
-                null
-        );
+        // 신규 회원인 경우
+        if (mayBeCustomerByPhoneNumber.isEmpty()) {
+            JoinDto joinDto = JoinDto.builder()
+                    .name(temporarySignUpForm.getName())
+                    .nationality(Nationality.KOREA)
+                    .phoneNumber(temporarySignUpForm.getPhoneNumber())
+                    .password(password)
+                    .deviceId(signWithFormRequest.getDeviceId())
+                    .gender(extractGender(temporarySignUpForm.getResidentRegistrationNumber()))
+                    .birthDate(extractBirthDate(temporarySignUpForm.getResidentRegistrationNumber()))
+                    .build();
+
+            // DB에 회원 추가
+            Customer customer = customerService.join(joinDto);
+            TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
+            authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
+            temporarySignUpFormRedisService.deleteData(temporaryToken);
+
+            return SignWithFormResponse.builder()
+                    .isSuccess(true)
+                    .isAvailablePassword(true)
+                    .tokens(List.of(tokenDto.getAccessToken(), tokenDto.getRefreshToken()))
+                    .build();
+        }
+
+        return SignWithFormResponse.builder()
+                .isSuccess(false)
+                .isAvailablePassword(true)
+                .tokens(null)
+                .build();
     }
 
-    private ResponseResult<?> storeRefreshToken(Customer customer) {
-        Map<String, Object> result = new HashMap<>();
-
-        try {
-            TokenDto tokens = authenticationService.generateTokenDtoWithCustomer(customer);
-            result.put("token", tokens);
-            return new ResponseResult<>(
-                    Result.SUCCESS,
-                    "[INFO] Authentication succeed with user id: " + customer.getId(),
-                    result
-            );
-        } catch (AuthenticationException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
-            );
+    @Override
+    public ReissueResponse reissue(String refreshToken) {
+        if (!isValidateRefreshToken(refreshToken)) {
+            return ReissueResponse.builder()
+                    .isSuccess(false)
+                    .tokens(null)
+                    .build();
         }
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class);
+        TokenDto tokenDto = authenticationService.generateTokenDto(customerUuid);
+        authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
+        return ReissueResponse.builder()
+                .isSuccess(true)
+                .tokens(List.of(tokenDto.getAccessToken(), tokenDto.getRefreshToken()))
+                .build();
     }
 
-    private boolean isLoggedOut(String key) {
-        Auth res = redisUtil.getRedisAuthValue(key);
-        if (res == null) {
-            throw new StoredAuthValueNotExistException("[ERROR] No value referred by those key");
+    @Override
+    public LogoutResponse logout(String accessToken) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+        authenticationService.deleteAuth(customerUuid);
+
+        logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
+        return LogoutResponse.builder()
+                .isSuccessful(true)
+                .build();
+    }
+
+    @Override
+    public SignOutResponse signOut(String accessToken) {
+        UUID uuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+        authenticationService.deleteAuth(uuid);
+        customerService.withdrawCustomer(uuid);
+        logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
+        return SignOutResponse.builder()
+                .wasSignedOut(true)
+                .build();
+    }
+
+    /*
+     * 검증 1. jwt 자체 유효성 검증(만료기간, 시그니처)
+     * 검증 2. claim 안에 customerUuid 값이 포함되어 있는가? subject가 "RefreshToken"인가?
+     * 검증 3. DB에 저장되어 있는 refresh token과 값이 일치하는가?
+     */
+    private boolean isValidateRefreshToken(String refreshToken) {
+        JwtUtil.validateToken(refreshToken);
+
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class);
+        String sub = JwtUtil.getSubject(refreshToken);
+        if (!sub.equals("RefreshToken")) {
+            return false;
         }
-        return res.isLoggedOut();
+
+        Optional<Auth> maybeAuth = authenticationService.findAuthByCustomerUuid(customerUuid);
+        if (maybeAuth.isEmpty()) {
+            return false;
+        }
+
+        Auth auth = maybeAuth.get();
+        return refreshToken.equals(auth.getRefreshToken());
+    }
+
+    private boolean isEqualCustomer(Customer customer, TemporarySignUpForm temporarySignUpForm) {
+        return customer.getName().equals(temporarySignUpForm.getName())
+                && customer.getGender().equals(extractGender(temporarySignUpForm.getResidentRegistrationNumber()))
+                && customer.getBirthDate()
+                .equals(extractBirthDate(temporarySignUpForm.getResidentRegistrationNumber()));
+    }
+
+    private boolean isValidatePassword(String password, TemporarySignUpForm temporarySignUpForm) {
+        // 같은 문자가 3자리 이상 반복되는가?
+        for (int index = 0; index < password.length() - 2; index++) {
+            if (password.charAt(index) == password.charAt(index + 1)
+                    && password.charAt(index + 1) == password.charAt(index + 2)) {
+                return false;
+            }
+        }
+
+        // 생년월일이 포함됐는가?
+        String birthDate = temporarySignUpForm.getResidentRegistrationNumber().substring(0, 5);
+        if (birthDate.equals(password)) {
+            return false;
+        }
+
+        String phoneNumber = temporarySignUpForm.getPhoneNumber();
+        // 전화번호의 부분 문자열인가?
+        if (phoneNumber.contains(password)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private String decryptPassword(String temporaryToken, List<Integer> pushedOrder) {
+        StringBuilder sb = new StringBuilder();
+        List<Integer> secureKeypadOrderInverse
+                = secureKeypadOrderInverseRedisService.getData(temporaryToken)
+                .getKeypadOrderInverse();
+        // TODO: 비밀번호 길이를 의미하는 상수 어디에 둘 것인가
+        int passwordLength = 6;
+        if (pushedOrder.size() != passwordLength) {
+            throw new IllegalArgumentException("비밀번호 길이가 올바르지 않습니다.");
+        }
+
+        for (int i = 0; i < pushedOrder.size(); i++) {
+            sb.append(secureKeypadOrderInverse.get(pushedOrder.get(i)));
+        }
+        return sb.toString();
+    }
+
+    private Gender extractGender(String residentRegistrationNumber) {
+        if (residentRegistrationNumber.endsWith("4") ||
+                residentRegistrationNumber.endsWith("2")) {
+            return Gender.FEMALE;
+        }
+        return Gender.MALE;
+    }
+
+    private String extractBirthDate(String residentRegistrationNumber) {
+        return residentRegistrationNumber.substring(0, 6);
     }
 }

@@ -2,78 +2,89 @@ package com.swifty.bank.server.core.common.authentication.service.impl;
 
 import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
-import com.swifty.bank.server.core.common.authentication.exception.TokenContentNotValidException;
+import com.swifty.bank.server.core.common.authentication.repository.AuthRepository;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
-import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.utils.DateUtil;
-import com.swifty.bank.server.utils.JwtUtil;
-import com.swifty.bank.server.utils.RedisUtil;
+import com.swifty.bank.server.core.utils.DateUtil;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.util.Date;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
-    private final RedisUtil redisUtil;
-    private final JwtUtil jwtUtil;
+    private final AuthRepository authRepository;
 
-    @Value("${jwt.access-token-expiration-millis}")
-    private int accessTokenExpiration;
-    @Value("${jwt.refresh-token-expiration-millis}")
-    private int refreshTokenExpiration;
+    @Value("${jwt.access-token-expiration-seconds}")
+    private Long accessTokenExpiration;
+    @Value("${jwt.refresh-token-expiration-seconds}")
+    private Long refreshTokenExpiration;
+    @Value("${jwt.temporary-token-expiration-seconds}")
+    private Long temporaryTokenExpiration;
 
     @Override
-    public TokenDto generateTokenDtoWithCustomer(Customer customer) {
-        TokenDto tokens = new TokenDto(createAccessToken(customer), createRefreshToken(customer));
-        saveRefreshTokenInRedis(tokens.getRefreshToken());
-        return tokens;
-    }
-
-    private String createAccessToken(Customer customer) {
+    public String createAccessToken(UUID customerUuid) {
         Claims claims = Jwts.claims();
-        Date now = DateUtil.now();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + accessTokenExpiration * 1000L);
 
-        claims.put("id", customer.getId());
-        claims.put("scopes", List.of(new SimpleGrantedAuthority("CUSTOMER")));
-        claims.setSubject("ACCESS");
-        claims.setExpiration(DateUtil.millisToDate(now.getTime() + accessTokenExpiration * 1000L));
-        return jwtUtil.generateToken(claims);
+        claims.setSubject("AccessToken");
+        claims.put("customerUuid", customerUuid);
+        return JwtUtil.generateToken(claims, expiration);
     }
 
-    private String createRefreshToken(Customer customer) {
+    @Override
+    public String createRefreshToken(UUID customerUuid) {
         Claims claims = Jwts.claims();
-        Date now = DateUtil.now();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + refreshTokenExpiration * 1000L);
 
-        claims.put("id", customer.getId());
-        claims.put("scopes", List.of(new SimpleGrantedAuthority("CUSTOMER")));
-        claims.setSubject("REFRESH");
-        claims.setExpiration(DateUtil.millisToDate(now.getTime() + refreshTokenExpiration * 1000L));
-        return jwtUtil.generateToken(claims);
+        claims.setSubject("Auth");
+        claims.put("customerUuid", customerUuid);
+        return JwtUtil.generateToken(claims, expiration);
     }
 
-    private void saveRefreshTokenInRedis(String token) {
-        UUID uuid = UUID.fromString(jwtUtil.getClaimByKeyFromToken("id", token).toString());
-        Auth previousAuth = redisUtil.getRedisAuthValue(uuid.toString());
-        Auth newAuth;
+    @Override
+    public String createTemporaryToken() {
+        Claims claims = Jwts.claims();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + temporaryTokenExpiration * 1000L);
 
-        if (previousAuth != null) {
-            newAuth = new Auth(token, previousAuth.isLoggedOut());
-            UUID prevUuid = UUID.fromString(
-                    jwtUtil.getClaimByKeyFromToken("id", previousAuth.getRefreshToken()).toString());
+        claims.setSubject("TemporaryToken");
+        return JwtUtil.generateToken(claims, expiration);
+    }
 
-            if (!uuid.toString().equals(prevUuid.toString())) {
-                throw new TokenContentNotValidException("[ERROR] Two token's owner is different");
-            }
-        } else {
-            newAuth = new Auth(token, false);
+    @Override
+    public TokenDto generateTokenDto(UUID customerUuid) {
+        return new TokenDto(createAccessToken(customerUuid), createRefreshToken(customerUuid));
+    }
+
+    @Override
+    public void deleteAuth(UUID customerUuid) {
+        Optional<Auth> maybeAuth = authRepository.findAuthByUuid(customerUuid);
+        maybeAuth.ifPresent(authRepository::delete);
+    }
+
+    @Override
+    public Optional<Auth> findAuthByCustomerUuid(UUID customerUuid) {
+        return authRepository.findAuthByUuid(customerUuid);
+    }
+
+    @Override
+    @Transactional(readOnly = false)
+    public Auth saveRefreshTokenInDatabase(String refreshToken) {
+        UUID customerUuid = UUID.fromString(JwtUtil.getClaimByKey(refreshToken, "customerUuid").toString());
+
+        Optional<Auth> maybeAuth = authRepository.findAuthByUuid(customerUuid);
+
+        if (maybeAuth.isPresent()) {
+            Auth auth = maybeAuth.get();
+            auth.updateRefreshToken(refreshToken);
+            return auth;
         }
-        redisUtil.saveAuthRedis(uuid.toString(), newAuth);
+        return authRepository.save(new Auth(customerUuid, refreshToken));
     }
 }
