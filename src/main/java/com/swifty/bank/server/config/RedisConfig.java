@@ -1,6 +1,6 @@
 package com.swifty.bank.server.config;
 
-import com.swifty.bank.server.core.common.redis.value.SecureKeypadOrderInverse;
+import com.swifty.bank.server.core.common.redis.value.SBoxKey;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -31,9 +31,9 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, SecureKeypadOrderInverse> secureKeypadIndexesRedisTemplate(
+    public RedisTemplate<String, SBoxKey> secureKeypadIndexesRedisTemplate(
             RedisConnectionFactory connectionFactory) {
-        return createRedisTemplate(connectionFactory, SecureKeypadOrderInverse.class);
+        return createRedisTemplate(connectionFactory, SBoxKey.class);
     }
 
     public <T> RedisTemplate<String, T> createRedisTemplate(RedisConnectionFactory redisConnectionFactory,

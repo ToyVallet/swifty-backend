@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SecureKeypadOrderInverse {
-    private List<Integer> keypadOrderInverse;
+public class SBoxKey {
+    private List<Integer> key;
 }

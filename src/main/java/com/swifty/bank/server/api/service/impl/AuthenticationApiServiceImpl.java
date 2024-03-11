@@ -12,7 +12,7 @@ import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
-import com.swifty.bank.server.core.common.redis.service.SecureKeypadOrderInverseRedisService;
+import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
 import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import com.swifty.bank.server.core.domain.customer.Customer;
@@ -21,6 +21,7 @@ import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.utils.JwtUtil;
+import com.swifty.bank.server.core.utils.SBoxUtil;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,12 +34,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
+    private final static int PASSWORD_LEN = 6;
+
     private final CustomerService customerService;
     private final AuthenticationService authenticationService;
 
     private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
     private final LogoutAccessTokenRedisService logoutAccessTokenRedisService;
-    private final SecureKeypadOrderInverseRedisService secureKeypadOrderInverseRedisService;
+    private final SBoxKeyRedisService sBoxKeyRedisService;
 
     @Override
     public CheckLoginAvailabilityResponse checkLoginAvailability(
@@ -81,7 +84,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         TemporarySignUpForm temporarySignUpForm = temporarySignUpFormRedisService.getData(temporaryToken);
 
         // 비밀번호 복호화
-        String password = decryptPassword(temporaryToken, signWithFormRequest.getPushedOrder());
+        List<Integer> key = sBoxKeyRedisService.getData(temporaryToken).getKey();
+        List<Integer> decrypted = SBoxUtil.decrypt(signWithFormRequest.getPushedOrder(), key);
+        String password = String.join("",
+                decrypted
+                        .stream()
+                        .map(Object::toString)
+                        .toList()
+        );
 
         // 비밀번호 규칙 검증
         if (!isValidatePassword(password, temporarySignUpForm)) {
@@ -218,6 +228,11 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     private boolean isValidatePassword(String password, TemporarySignUpForm temporarySignUpForm) {
+        // 6자리인가?
+        if (password.length() != PASSWORD_LEN) {
+            throw new IllegalArgumentException("비밀번호 길이가 올바르지 않습니다.");
+        }
+        
         // 같은 문자가 3자리 이상 반복되는가?
         for (int index = 0; index < password.length() - 2; index++) {
             if (password.charAt(index) == password.charAt(index + 1)
@@ -239,23 +254,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         }
 
         return true;
-    }
-
-    private String decryptPassword(String temporaryToken, List<Integer> pushedOrder) {
-        StringBuilder sb = new StringBuilder();
-        List<Integer> secureKeypadOrderInverse
-                = secureKeypadOrderInverseRedisService.getData(temporaryToken)
-                .getKeypadOrderInverse();
-        // TODO: 비밀번호 길이를 의미하는 상수 어디에 둘 것인가
-        int passwordLength = 6;
-        if (pushedOrder.size() != passwordLength) {
-            throw new IllegalArgumentException("비밀번호 길이가 올바르지 않습니다.");
-        }
-
-        for (int i = 0; i < pushedOrder.size(); i++) {
-            sb.append(secureKeypadOrderInverse.get(pushedOrder.get(i)));
-        }
-        return sb.toString();
     }
 
     private Gender extractGender(String residentRegistrationNumber) {
