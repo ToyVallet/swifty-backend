@@ -28,7 +28,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         // 화이트 리스트로 preHandle 관리
         // 프리패스 권한
         if (hasProperAnnotation(handler, PassAuth.class)) {
-            return false;
+            return true;
         }
 
         // 임시 회원가입 권한
