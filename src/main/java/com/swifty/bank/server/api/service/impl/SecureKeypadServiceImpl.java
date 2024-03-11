@@ -11,11 +11,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -87,8 +85,7 @@ public class SecureKeypadServiceImpl implements SecureKeypadService {
         }};
 
         // 키패드 섞을 순서(key) 결정 (랜덤)
-        List<Integer> key = new ArrayList<>(IntStream.range(0, keypadSize).boxed().toList());
-        Collections.shuffle(key);
+        List<Integer> key = SBoxUtil.generateKey(keypadSize);
 
         // 순서 섞기
         List<Integer> shuffledOrder = SBoxUtil.encrypt(plainOrder, key);
