@@ -17,9 +17,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Transactional(readOnly = true)
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final BCryptPasswordEncoder encoder;
@@ -30,8 +30,8 @@ public class CustomerServiceImpl implements CustomerService {
     // Send access token(JWT) to frontend with encrypted UUID
     // Condition of Retrieval : JPQL
 
-    @Transactional
     @Override
+    @Transactional
     public Customer join(JoinDto joinDto) {
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -69,8 +69,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     }
 
-    @Transactional
     @Override
+    @Transactional
     public Customer updateCustomerInfo(UUID customerUuid,
                                        CustomerInfoUpdateConditionRequest customerInfoUpdateConditionRequest) {
 
@@ -96,8 +96,8 @@ public class CustomerServiceImpl implements CustomerService {
         return customer;
     }
 
-    @Transactional
     @Override
+    @Transactional
     public Customer updatePhoneNumber(UUID customerUuid, String phoneNumber) {
         Customer customer = customerRepository.findOneByUuid(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException("[ERROR] No customer " +
@@ -105,21 +105,23 @@ public class CustomerServiceImpl implements CustomerService {
                         " number and nationality"));
 
         customer.updatePhoneNumber(phoneNumber);
+        customerRepository.save(customer);
         return customer;
     }
 
-    @Transactional
     @Override
+    @Transactional
     public Customer updateDeviceId(UUID customerUuid, String deviceId) {
         Customer customer = customerRepository.findOneByUuid(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException("[ERROR] : No customer found by the device id"));
 
         customer.updateDeviceId(deviceId);
+        customerRepository.save(customer);
         return customer;
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void withdrawCustomer(UUID customerUuid) {
         Customer customer = customerRepository.findOneByUuid(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
@@ -132,8 +134,8 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findCustomerInfoResponseByUuid(customerUuid);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void updatePassword(UUID customerUuid, String newPassword) {
         String encodePassword = encoder.encode(newPassword);
 
@@ -141,14 +143,21 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
 
         customer.resetPassword(encodePassword);
+        customerRepository.save(customer);
     }
 
     @Override
     public boolean isEqualCustomer(Customer customer, String name, String registrationNumber) {
-        return customer.getName().equals(name)
-                && customer.getGender().equals(extractGender(registrationNumber))
-                && customer.getBirthDate()
-                .equals(extractBirthDate(registrationNumber));
+        if (!customer.getName().equals(name)) {
+            return false;
+        }
+        if (!customer.getGender().sameGender(extractGender(registrationNumber))) {
+            return false;
+        }
+        if (!customer.getBirthDate().equals(extractBirthDate(registrationNumber))) {
+            return false;
+        }
+        return true;
     }
 
     @Override

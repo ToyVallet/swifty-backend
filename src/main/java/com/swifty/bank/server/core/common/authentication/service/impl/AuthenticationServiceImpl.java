@@ -43,7 +43,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Claims claims = Jwts.claims();
         Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + refreshTokenExpiration * 1000L);
 
-        claims.setSubject("Auth");
+        claims.setSubject("RefreshToken");
         claims.put("customerUuid", customerUuid);
         return JwtUtil.generateToken(claims, expiration);
     }
@@ -63,6 +63,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+
     public void deleteAuth(UUID customerUuid) {
         Optional<Auth> maybeAuth = authRepository.findAuthByUuid(customerUuid);
         maybeAuth.ifPresent(authRepository::delete);
@@ -74,7 +75,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    @Transactional(readOnly = false)
     public Auth saveRefreshTokenInDatabase(String refreshToken) {
         UUID customerUuid = UUID.fromString(JwtUtil.getClaimByKey(refreshToken, "customerUuid").toString());
 
@@ -83,6 +83,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (maybeAuth.isPresent()) {
             Auth auth = maybeAuth.get();
             auth.updateRefreshToken(refreshToken);
+            authRepository.save(auth);
             return auth;
         }
         return authRepository.save(new Auth(customerUuid, refreshToken));

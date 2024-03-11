@@ -28,15 +28,18 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final AuthenticationService authenticationService;
+    private final BCryptPasswordEncoder encoder;
 
     private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
     private final LogoutAccessTokenRedisService logoutAccessTokenRedisService;
@@ -161,6 +164,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
+    @Transactional
     public ReissueResponse reissue(String refreshToken) {
         if (!authenticationService.isValidateRefreshToken(refreshToken)) {
             return ReissueResponse.builder()
@@ -178,6 +182,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
+    @Transactional
     public LogoutResponse logout(String accessToken) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
         authenticationService.deleteAuth(customerUuid);
@@ -189,6 +194,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
+    @Transactional
     public SignOutResponse signOut(String accessToken) {
         UUID uuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
         authenticationService.deleteAuth(uuid);
