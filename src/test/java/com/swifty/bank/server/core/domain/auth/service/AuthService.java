@@ -141,4 +141,54 @@ public class AuthService {
 
         assertThat(maybeAuth.isEmpty());
     }
+
+    @Test
+    public void notRefreshToken( ) {
+        UUID customerUuid = UUID.randomUUID();
+        String accessToken = authenticationService.createAccessToken(customerUuid);
+
+        assertThat(!authenticationService.isValidateRefreshToken(accessToken));
+    }
+
+    @Test
+    public void notStoredRefreshToken( ) {
+        UUID customerUuid = UUID.randomUUID();
+        String accessToken = authenticationService.createAccessToken(customerUuid);
+
+        assertThat(!authenticationService.isValidateRefreshToken(accessToken));
+    }
+
+    @Test
+    public void validRefreshToken( ) {
+        UUID customerUuid = UUID.randomUUID();
+        String refreshToken = authenticationService.createRefreshToken(customerUuid);
+
+        authenticationService.saveRefreshTokenInDatabase(refreshToken);
+
+        assertThat(authenticationService.isValidateRefreshToken(refreshToken));
+    }
+
+    @Test
+    public void shortPassword( ) {
+        String password = "0";
+        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111"));
+    }
+
+    @Test
+    public void repeatedPassword( ) {
+        String password = "000000";
+        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111"));
+    }
+
+    @Test
+    public void birthdayPassword( ) {
+        String password = "001010";
+        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111"));
+    }
+
+    @Test
+    public void phoneNumberPassword( ) {
+        String password = "111111";
+        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111"));
+    }
 }
