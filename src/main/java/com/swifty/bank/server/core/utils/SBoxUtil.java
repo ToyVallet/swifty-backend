@@ -6,11 +6,11 @@ import java.util.List;
 
 public class SBoxUtil {
     public static List<Integer> encrypt(List<Integer> plain, List<Integer> key) {
-        List<Integer> encrypted = new ArrayList<>();
-        for (Integer p : plain) {
-            encrypted.add(key.get(p));
-        }
-        return encrypted;
+        return new ArrayList<>() {{
+            for (Integer p : plain) {
+                add(key.get(p));
+            }
+        }};
     }
 
     public static List<Integer> decrypt(List<Integer> encrypted, List<Integer> key) {
@@ -19,10 +19,10 @@ public class SBoxUtil {
             inverse.set(key.get(i), i);
         }
 
-        List<Integer> decrypted = new ArrayList<>();
-        for (Integer e : encrypted) {
-            decrypted.add(inverse.get(e));
-        }
-        return decrypted;
+        return new ArrayList<>() {{
+            for (Integer e : encrypted) {
+                add(inverse.get(e));
+            }
+        }};
     }
 }
