@@ -23,7 +23,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.HashMap;
 import java.util.Map;
 
-@Transactional
 @Testcontainers
 @Disabled
 @WebAppConfiguration

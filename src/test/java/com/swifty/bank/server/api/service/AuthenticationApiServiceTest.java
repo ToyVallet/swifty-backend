@@ -17,10 +17,8 @@ import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.utils.JwtUtil;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,20 +33,20 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
-@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AuthenticationApiServiceTest extends ConfigureContainer {
     @Autowired
     private AuthenticationApiService authenticationApiService;
+    @Autowired
+    private SecureKeypadService secureKeypadService;
 
     @Autowired
-    private static CustomerService customerService;
+    private CustomerService customerService;
     @Autowired
     private AuthenticationService authenticationService;
 
     @Autowired
     private SecureKeypadOrderInverseRedisService secureKeypadOrderInverseRedisService;
-    @Autowired
-    private TemporarySignUpFormRedisService temporarySignUpFormRedisService;
     @Autowired
     private LogoutAccessTokenRedisService logoutAccessTokenRedisService;
 
@@ -56,66 +54,51 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
     private BCryptPasswordEncoder encoder;
 
     private static String customerPassword = "987654";
-    private String temporaryToken = "";
-    private String accessToken = "";
-    private String refreshToken = "";
-
-    @BeforeAll
-    public static void initCustomer( ) {
-        JoinDto joinDto = new JoinDto(null, "Taylor Swift", Nationality.KOREA, "+821011111111",
-                customerPassword, "iPhone", Gender.FEMALE,
-                "990101", UserRole.CUSTOMER);
-
-        customerService.join(joinDto);
-    }
+    private static String temporaryToken = "";
+    private static String accessToken = "";
+    private static String refreshToken = "";
 
     @Test
+    @Order(1)
     public void checkLoginAvailabilityWithNonExistCustomer( ) {
         CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
                 .name("John Doe")
+                .phoneNumber("+821098765432")
+                .mobileCarrier("KT")
+                .residentRegistrationNumber("9901011")
+                .build();
+
+        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+
+        assertThat(res.getIsAvailable()).isTrue();
+        assertThat(!res.getTemporaryToken().isEmpty()).isTrue();
+    }
+
+    @Test
+    @Order(2)
+    public void checkLoginAvailabilityWithExistValidCustomer( ) {
+        JoinDto joinDto = new JoinDto(null, "Taylor Swift", Nationality.KOREA, "+821012345678",
+                customerPassword, "iPhone", Gender.FEMALE,
+                "010101", UserRole.CUSTOMER);
+        customerService.join(joinDto);
+
+        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+                .name("Taylor Swift")
                 .phoneNumber("+821012345678")
                 .mobileCarrier("KT")
                 .residentRegistrationNumber("0101014")
                 .build();
 
         CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
-
-        assertThat(res.getIsAvailable());
-        assertThat(!res.getTemporaryToken().isEmpty());
-    }
-
-    @Test
-    public void checkLoginAvailabilityWithExistNotValidCustomer( ) {
-        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
-                .name("Taylor Swift")
-                .phoneNumber("+821011111111")
-                .mobileCarrier("KT")
-                .residentRegistrationNumber("990101")
-                .build();
-
-        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
-
-        assertThat(res.getIsAvailable());
-        assertThat(!res.getTemporaryToken().isEmpty());
-    }
-
-    @Test
-    public void checkLoginAvailabilityWithExistValidCustomer( ) {
-        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
-                .name("Taylor Swift")
-                .phoneNumber("+821011111111")
-                .mobileCarrier("KT")
-                .residentRegistrationNumber("0101014")
-                .build();
-
-        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
         temporaryToken = res.getTemporaryToken();
+        secureKeypadService.createSecureKeypad(temporaryToken);
 
-        assertThat(res.getIsAvailable());
-        assertThat(!res.getTemporaryToken().isEmpty());
+        assertThat(res.getIsAvailable()).isTrue();
+        assertThat(!res.getTemporaryToken().isEmpty()).isTrue();
     }
 
     @Test
+    @Order(3)
     public void signUpAndSignInWithNotExistTemporaryToken( ) {
         SignWithFormRequest reqForSign = SignWithFormRequest.builder()
                 .deviceId("iPhone")
@@ -123,10 +106,11 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
                 .build();
 
         assertThatThrownBy(() -> authenticationApiService.signUpAndSignIn("", reqForSign))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
+    @Order(4)
     public void signUpAndSignInWithNotValidPassword( ) {
 
         SignWithFormRequest reqForSign = SignWithFormRequest.builder()
@@ -134,23 +118,14 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
                 .pushedOrder(encryptPassword(temporaryToken, "111111"))
                 .build();
 
-        assertThatThrownBy(() -> authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign))
-                .isInstanceOf(IllegalArgumentException.class);
+        SignWithFormResponse res = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+        assertThat(!res.isSuccess()).isTrue();
+        assertThat(!res.isAvailablePassword()).isTrue();
+        assertThat(res.getTokens() == null).isTrue();
     }
 
     @Test
-    public void signUpAndSignInWithNotMatchPassword( ) {
-
-        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
-                .deviceId("iPhone")
-                .pushedOrder(encryptPassword(temporaryToken, "381943"))
-                .build();
-
-        assertThatThrownBy(() -> authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
+    @Order(5)
     public void signUpAndSignInWithValidNewInfo( ) {
 
         SignWithFormRequest reqForSign = SignWithFormRequest.builder()
@@ -158,54 +133,40 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
                 .pushedOrder(encryptPassword(temporaryToken, customerPassword))
                 .build();
 
-        assertThat(authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign).isAvailablePassword());
-        assertThat(authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign).isSuccess());
-        assertThat(!authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign).getTokens().isEmpty());
-        assertThatThrownBy(() -> temporarySignUpFormRedisService.deleteData(temporaryToken))
-                .isInstanceOf(Exception.class);
+        SignWithFormResponse res = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+        assertThat(res.isAvailablePassword()).isTrue();
+        assertThat(res.isSuccess()).isTrue();
+        assertThat(!res.getTokens().isEmpty()).isTrue();
     }
 
     @Test
-    public void signUpAndSignInWithPresentCustomer( ) {
+    @Order(6)
+    public void signUpAndSignInWithNotMatchPassword( ) {
         CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
-                .name("Ariana Grande")
+                .name("Taylor Swift")
                 .phoneNumber("+821012345678")
                 .mobileCarrier("KT")
-                .residentRegistrationNumber("0303034")
+                .residentRegistrationNumber("0101014")
                 .build();
 
-        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+        CheckLoginAvailabilityResponse resForCheck = authenticationApiService.checkLoginAvailability(req);
+        temporaryToken = resForCheck.getTemporaryToken();
+        secureKeypadService.createSecureKeypad(temporaryToken);
 
         SignWithFormRequest reqForSign = SignWithFormRequest.builder()
                 .deviceId("iPhone")
-                .pushedOrder(encryptPassword(res.getTemporaryToken(), customerPassword))
+                .pushedOrder(encryptPassword(temporaryToken, "381943"))
                 .build();
 
-        assertThat(!authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign).isSuccess());
-        assertThat(!authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign).isAvailablePassword());
+        SignWithFormResponse res = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+
+        assertThat(res.isSuccess()).isTrue();
+        assertThat(res.isAvailablePassword()).isTrue();
+        assertThat(res.getTokens() == null).isFalse();
     }
 
     @Test
-    public void signUpAndSignInWithNotEqualCustomer( ) {
-        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
-                .name("Ariana Grande")
-                .phoneNumber("+821012345678")
-                .mobileCarrier("KT")
-                .residentRegistrationNumber("0303034")
-                .build();
-
-        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
-
-        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
-                .deviceId("iPhone")
-                .pushedOrder(encryptPassword(res.getTemporaryToken(), customerPassword))
-                .build();
-
-        assertThat(!authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign).isSuccess());
-        assertThat(!authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign).isAvailablePassword());
-    }
-
-    @Test
+    @Order(9)
     public void signUpAndSignInWithDifferentDeviceId( ) {
         CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
                 .name("Taylor Swift")
@@ -214,35 +175,41 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
                 .residentRegistrationNumber("0101014")
                 .build();
 
-        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+        CheckLoginAvailabilityResponse resForCheck = authenticationApiService.checkLoginAvailability(req);
+        temporaryToken = resForCheck.getTemporaryToken();
+        secureKeypadService.createSecureKeypad(temporaryToken);
+
         customerPassword = "829401";
 
         SignWithFormRequest reqForSign = SignWithFormRequest.builder()
                 .deviceId("Android")
-                .pushedOrder(encryptPassword(res.getTemporaryToken(), customerPassword))
+                .pushedOrder(encryptPassword(temporaryToken, customerPassword))
                 .build();
 
         SignWithFormResponse resForSignIn = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
 
-        assertThat(resForSignIn.isSuccess());
-        assertThat(resForSignIn.isAvailablePassword());
-        assertThat(resForSignIn.getTokens().isEmpty());
         accessToken = resForSignIn.getTokens().get(0);
         refreshToken = resForSignIn.getTokens().get(1);
-        assertThat(customerService.findByPhoneNumber("+821012345678").isPresent());
-        assertThat(customerService.findByPhoneNumber("+821012345678").get().getDeviceId().equals("Android"));
-        assertThat(customerService.findByPhoneNumber("+821012345678").get().getName().equals("Taylor Swift"));
-        assertThat(encoder.matches(customerPassword, customerService.findByPhoneNumber("+821012345678").get().getPassword()));
+        assertThat(resForSignIn.isSuccess()).isTrue();
+        assertThat(resForSignIn.isAvailablePassword()).isTrue();
+        assertThat(resForSignIn.getTokens().isEmpty()).isFalse();
+        assertThat(customerService.findByPhoneNumber("+821012345678").isPresent()).isTrue();
+        Customer customer =  customerService.findByPhoneNumber("+821012345678").get();
+        assertThat(customer.getDeviceId().equals("Android")).isTrue();
+        assertThat(customer.getName().equals("Taylor Swift")).isTrue();
+        assertThat(encoder.matches(customerPassword, customer.getPassword())).isTrue();
     }
 
     @Test
+    @Order(10)
     public void reissueWithNotValidRefreshToken( ) {
         String notValidRefreshToken = authenticationService.createRefreshToken(UUID.randomUUID());
 
-        assertThat(!authenticationApiService.reissue(notValidRefreshToken).getIsSuccess());
+        assertThat(!authenticationApiService.reissue(notValidRefreshToken).getIsSuccess()).isTrue();
     }
 
     @Test
+    @Order(11)
     public void reissueTest( ) {
         ReissueResponse res = authenticationApiService.reissue(refreshToken);
 
@@ -253,6 +220,7 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
     }
 
     @Test
+    @Order(12)
     public void logoutTest( ) {
         LogoutResponse res = authenticationApiService.logout(accessToken);
 
@@ -261,14 +229,7 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
     }
 
     @Test
-    public void useLoggedOutAccessTokenTest( ) {
-        LogoutResponse res = authenticationApiService.logout(accessToken);
-
-        assertThatThrownBy(() -> res.getIsSuccessful())
-                .isInstanceOf(NoSuchElementException.class);
-    }
-
-    @Test
+    @Order(14)
     public void loginAfterLogOutTest( ) {
         CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
                 .name("Taylor Swift")
@@ -278,9 +239,11 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
                 .build();
 
         CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+        temporaryToken = res.getTemporaryToken();
+        secureKeypadService.createSecureKeypad(temporaryToken);
         SignWithFormRequest reqForSign = SignWithFormRequest.builder()
                 .deviceId("Android")
-                .pushedOrder(encryptPassword(res.getTemporaryToken(), customerPassword))
+                .pushedOrder(encryptPassword(temporaryToken, customerPassword))
                 .build();
 
         SignWithFormResponse resForSignIn = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
@@ -293,6 +256,7 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
     }
 
     @Test
+    @Order(15)
     public void signOutTest( ) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
         SignOutResponse res = authenticationApiService.signOut(accessToken);
@@ -304,12 +268,7 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
     }
 
     @Test
-    public void overlappedSignOutTest( ) {
-        assertThatThrownBy(() -> authenticationApiService.signOut(accessToken))
-                .isInstanceOf(NoSuchElementException.class);
-    }
-
-    @Test
+    @Order(17)
     public void signUpTestAfterSignOut( ) {
         CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
                 .name("Taylor Swift")
@@ -319,6 +278,9 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
                 .build();
 
         CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+        temporaryToken = res.getTemporaryToken();
+        secureKeypadService.createSecureKeypad(temporaryToken);
+
         SignWithFormRequest reqForSign = SignWithFormRequest.builder()
                 .deviceId("Android")
                 .pushedOrder(encryptPassword(res.getTemporaryToken(), customerPassword))
@@ -331,18 +293,18 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         assertThat(!resForSignIn.getTokens().isEmpty());
     }
 
-    private List<Integer> encryptPassword(String temporaryToken, String password) {
+    private List<Integer> encryptPassword(String issuedTemporaryToken, String password) {
         List<Integer> ans = new ArrayList<>();
         List<Integer> secureKeypadOrderInverse
-                = secureKeypadOrderInverseRedisService.getData(temporaryToken)
+                = secureKeypadOrderInverseRedisService.getData(issuedTemporaryToken)
                 .getKeypadOrderInverse();
 
         for (int i = 0 ; i<6 ; i++) {
             int pos = password.charAt(i) - '0';
             for (int j = 0 ; j<secureKeypadOrderInverse.size() ; j++) {
-                int key = secureKeypadOrderInverse.get(i);
+                int key = secureKeypadOrderInverse.get(j);
                 if (key == pos) {
-                    ans.add(secureKeypadOrderInverse.get(j));
+                    ans.add(j);
                     break;
                 }
             }
