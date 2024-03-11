@@ -10,14 +10,14 @@ public class SBoxUtil {
         Integer max = Collections.max(key);
         Integer min = Collections.min(key);
 
-        if (!(min.equals(1) && max.equals(key.size()))) {
+        if (!(min.equals(0) && max.equals(key.size() - 1))) {
             throw new IllegalArgumentException("올바르지 않은 키값 입니다.");
         }
     }
 
     public static List<Integer> encrypt(List<Integer> plain, List<Integer> key) {
         validateKey(key);
-        
+
         return new ArrayList<>() {{
             for (Integer p : plain) {
                 add(key.get(p));
