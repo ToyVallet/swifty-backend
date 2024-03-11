@@ -3,11 +3,10 @@ package com.swifty.bank.server.api.service;
 import com.swifty.bank.server.api.ConfigureContainer;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
-import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.*;
 import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import com.swifty.bank.server.core.common.redis.service.SecureKeypadOrderInverseRedisService;
 import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
@@ -30,6 +29,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -49,6 +49,8 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
     private SecureKeypadOrderInverseRedisService secureKeypadOrderInverseRedisService;
     @Autowired
     private TemporarySignUpFormRedisService temporarySignUpFormRedisService;
+    @Autowired
+    private LogoutAccessTokenRedisService logoutAccessTokenRedisService;
 
     @Autowired
     private BCryptPasswordEncoder encoder;
@@ -242,14 +244,55 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
 
     @Test
     public void reissueTest( ) {
-        String notValidRefreshToken = authenticationService.createRefreshToken(UUID.randomUUID());
-        ReissueResponse res = authenticationApiService.reissue(notValidRefreshToken);
+        ReissueResponse res = authenticationApiService.reissue(refreshToken);
 
         assertThat(res.getIsSuccess());
         assertThat(!res.getTokens().isEmpty());
         accessToken = res.getTokens().get(0);
         refreshToken = res.getTokens().get(1);
     }
+
+    @Test
+    public void logoutTest( ) {
+        LogoutResponse res = authenticationApiService.logout(accessToken);
+
+        assertThat(res.getIsSuccessful());
+        assertThat(logoutAccessTokenRedisService.getData(accessToken).equals("false"));
+    }
+
+    @Test
+    public void useLoggedOutAccessTokenTest( ) {
+        LogoutResponse res = authenticationApiService.logout(accessToken);
+
+        assertThatThrownBy(() -> res.getIsSuccessful())
+                .isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    public void loginAfterLogOutTest( ) {
+        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+                .name("Taylor Swift")
+                .phoneNumber("+821012345678")
+                .mobileCarrier("KT")
+                .residentRegistrationNumber("0101014")
+                .build();
+
+        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+                .deviceId("Android")
+                .pushedOrder(encryptPassword(res.getTemporaryToken(), customerPassword))
+                .build();
+
+        SignWithFormResponse resForSignIn = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+
+        assertThat(resForSignIn.isSuccess());
+        assertThat(resForSignIn.isAvailablePassword());
+        assertThat(!resForSignIn.getTokens().isEmpty());
+        accessToken = resForSignIn.getTokens().get(0);
+        refreshToken = resForSignIn.getTokens().get(1);
+    }
+
+
 
     private List<Integer> encryptPassword(String temporaryToken, String password) {
         List<Integer> ans = new ArrayList<>();
