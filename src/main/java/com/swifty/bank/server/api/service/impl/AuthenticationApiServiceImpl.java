@@ -21,6 +21,8 @@ import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.utils.JwtUtil;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -56,7 +58,11 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         // 기존에 가입된 번호인 경우, db 내용과 요청 폼이 일치하는지 확인
         if (maybeCustomer.isPresent()) {
             Customer customer = maybeCustomer.get();
-            if (!isEqualCustomer(customer, temporarySignUpForm)) {
+            if (!customerService.isEqualCustomer(
+                    customer,
+                    temporarySignUpForm.getName(),
+                    temporarySignUpForm.getResidentRegistrationNumber())
+            ) {
                 return CheckLoginAvailabilityResponse.builder()
                         .isAvailable(false)
                         .temporaryToken("")
@@ -84,7 +90,10 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         String password = decryptPassword(temporaryToken, signWithFormRequest.getPushedOrder());
 
         // 비밀번호 규칙 검증
-        if (!isValidatePassword(password, temporarySignUpForm)) {
+        if (!authenticationService.isValidateSignUpPassword(password,
+                temporarySignUpForm.getResidentRegistrationNumber(),
+                temporarySignUpForm.getPhoneNumber())
+        ) {
             return SignWithFormResponse.builder()
                     .isSuccess(false)
                     .isAvailablePassword(false)
@@ -99,7 +108,10 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Customer customer = mayBeCustomerByPhoneNumber.get();
 
             // 기존 회원이면서 이름, 성별, 생년월일이 일치하는가?
-            if (isEqualCustomer(customer, temporarySignUpForm)) {
+            if (customerService.isEqualCustomer(customer,
+                    temporarySignUpForm.getName(),
+                    temporarySignUpForm.getResidentRegistrationNumber())
+            ) {
                 TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
                 authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
                 temporarySignUpFormRedisService.deleteData(temporaryToken);
@@ -124,8 +136,8 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                     .phoneNumber(temporarySignUpForm.getPhoneNumber())
                     .password(password)
                     .deviceId(signWithFormRequest.getDeviceId())
-                    .gender(extractGender(temporarySignUpForm.getResidentRegistrationNumber()))
-                    .birthDate(extractBirthDate(temporarySignUpForm.getResidentRegistrationNumber()))
+                    .gender(customerService.extractGender(temporarySignUpForm.getResidentRegistrationNumber()))
+                    .birthDate(customerService.extractBirthDate(temporarySignUpForm.getResidentRegistrationNumber()))
                     .build();
 
             // DB에 회원 추가
@@ -150,7 +162,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     public ReissueResponse reissue(String refreshToken) {
-        if (!isValidateRefreshToken(refreshToken)) {
+        if (!authenticationService.isValidateRefreshToken(refreshToken)) {
             return ReissueResponse.builder()
                     .isSuccess(false)
                     .tokens(null)
@@ -187,60 +199,6 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 .build();
     }
 
-    /*
-     * 검증 1. jwt 자체 유효성 검증(만료기간, 시그니처)
-     * 검증 2. claim 안에 customerUuid 값이 포함되어 있는가? subject가 "RefreshToken"인가?
-     * 검증 3. DB에 저장되어 있는 refresh token과 값이 일치하는가?
-     */
-    private boolean isValidateRefreshToken(String refreshToken) {
-        JwtUtil.validateToken(refreshToken);
-
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class);
-        String sub = JwtUtil.getSubject(refreshToken);
-        if (!sub.equals("RefreshToken")) {
-            return false;
-        }
-
-        Optional<Auth> maybeAuth = authenticationService.findAuthByCustomerUuid(customerUuid);
-        if (maybeAuth.isEmpty()) {
-            return false;
-        }
-
-        Auth auth = maybeAuth.get();
-        return refreshToken.equals(auth.getRefreshToken());
-    }
-
-    private boolean isEqualCustomer(Customer customer, TemporarySignUpForm temporarySignUpForm) {
-        return customer.getName().equals(temporarySignUpForm.getName())
-                && customer.getGender().equals(extractGender(temporarySignUpForm.getResidentRegistrationNumber()))
-                && customer.getBirthDate()
-                .equals(extractBirthDate(temporarySignUpForm.getResidentRegistrationNumber()));
-    }
-
-    private boolean isValidatePassword(String password, TemporarySignUpForm temporarySignUpForm) {
-        // 같은 문자가 3자리 이상 반복되는가?
-        for (int index = 0; index < password.length() - 2; index++) {
-            if (password.charAt(index) == password.charAt(index + 1)
-                    && password.charAt(index + 1) == password.charAt(index + 2)) {
-                return false;
-            }
-        }
-
-        // 생년월일이 포함됐는가?
-        String birthDate = temporarySignUpForm.getResidentRegistrationNumber().substring(0, 5);
-        if (birthDate.equals(password)) {
-            return false;
-        }
-
-        String phoneNumber = temporarySignUpForm.getPhoneNumber();
-        // 전화번호의 부분 문자열인가?
-        if (phoneNumber.contains(password)) {
-            return false;
-        }
-
-        return true;
-    }
-
     private String decryptPassword(String temporaryToken, List<Integer> pushedOrder) {
         StringBuilder sb = new StringBuilder();
         List<Integer> secureKeypadOrderInverse
@@ -256,17 +214,5 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             sb.append(secureKeypadOrderInverse.get(pushedOrder.get(i)));
         }
         return sb.toString();
-    }
-
-    private Gender extractGender(String residentRegistrationNumber) {
-        if (residentRegistrationNumber.endsWith("4") ||
-                residentRegistrationNumber.endsWith("2")) {
-            return Gender.FEMALE;
-        }
-        return Gender.MALE;
-    }
-
-    private String extractBirthDate(String residentRegistrationNumber) {
-        return residentRegistrationNumber.substring(0, 6);
     }
 }

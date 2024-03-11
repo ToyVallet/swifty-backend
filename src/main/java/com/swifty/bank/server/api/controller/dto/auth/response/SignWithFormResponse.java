@@ -4,8 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 @Builder
 public class SignWithFormResponse {
     @Schema(description = "회원가입/로그인에 성공하면 true, 실패시 false",

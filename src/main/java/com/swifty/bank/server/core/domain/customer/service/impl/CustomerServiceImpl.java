@@ -3,6 +3,7 @@ package com.swifty.bank.server.core.domain.customer.service.impl;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.CustomerStatus;
+import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.dto.CustomerInfoDto;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.repository.CustomerRepository;
@@ -140,5 +141,27 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new NoSuchElementException("No such Customer"));
 
         customer.resetPassword(encodePassword);
+    }
+
+    @Override
+    public boolean isEqualCustomer(Customer customer, String name, String registrationNumber) {
+        return customer.getName().equals(name)
+                && customer.getGender().equals(extractGender(registrationNumber))
+                && customer.getBirthDate()
+                .equals(extractBirthDate(registrationNumber));
+    }
+
+    @Override
+    public Gender extractGender(String residentRegistrationNumber) {
+        if (residentRegistrationNumber.endsWith("4") ||
+                residentRegistrationNumber.endsWith("2")) {
+            return Gender.FEMALE;
+        }
+        return Gender.MALE;
+    }
+
+    @Override
+    public String extractBirthDate(String residentRegistrationNumber) {
+        return residentRegistrationNumber.substring(0, 6);
     }
 }
