@@ -292,7 +292,44 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         refreshToken = resForSignIn.getTokens().get(1);
     }
 
+    @Test
+    public void signOutTest( ) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+        SignOutResponse res = authenticationApiService.signOut(accessToken);
 
+        assertThat(res.getWasSignedOut());
+        assertThat(logoutAccessTokenRedisService.getData(accessToken).equals("false"));
+        assertThat(authenticationService.findAuthByCustomerUuid(customerUuid).isEmpty());
+        assertThat(customerService.findByUuid(customerUuid).isEmpty());
+    }
+
+    @Test
+    public void overlappedSignOutTest( ) {
+        assertThatThrownBy(() -> authenticationApiService.signOut(accessToken))
+                .isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    public void signUpTestAfterSignOut( ) {
+        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+                .name("Taylor Swift")
+                .phoneNumber("+821012345678")
+                .mobileCarrier("KT")
+                .residentRegistrationNumber("0101014")
+                .build();
+
+        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+                .deviceId("Android")
+                .pushedOrder(encryptPassword(res.getTemporaryToken(), customerPassword))
+                .build();
+
+        SignWithFormResponse resForSignIn = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+
+        assertThat(resForSignIn.isSuccess());
+        assertThat(resForSignIn.isAvailablePassword());
+        assertThat(!resForSignIn.getTokens().isEmpty());
+    }
 
     private List<Integer> encryptPassword(String temporaryToken, String password) {
         List<Integer> ans = new ArrayList<>();
