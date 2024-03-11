@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class SBoxUtil {
-
     // key는 [0,key.size()-1] 범위를 모두 포함한 경우만 허용
     public static void validateKey(List<Integer> key) {
         boolean isInvalid = false;
@@ -17,6 +17,12 @@ public class SBoxUtil {
         if (isInvalid) {
             throw new IllegalArgumentException(key + ": 올바르지 않은 키값 입니다.");
         }
+    }
+
+    public static List<Integer> generateKey(int len) {
+        List<Integer> key = new ArrayList<>(IntStream.range(0, len).boxed().toList());
+        Collections.shuffle(key);
+        return key;
     }
 
     public static void validateTarget(List<Integer> target, List<Integer> key) {
