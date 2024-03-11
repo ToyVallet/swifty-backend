@@ -233,7 +233,23 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         assertThat(encoder.matches(customerPassword, customerService.findByPhoneNumber("+821012345678").get().getPassword()));
     }
 
+    @Test
+    public void reissueWithNotValidRefreshToken( ) {
+        String notValidRefreshToken = authenticationService.createRefreshToken(UUID.randomUUID());
 
+        assertThat(!authenticationApiService.reissue(notValidRefreshToken).getIsSuccess());
+    }
+
+    @Test
+    public void reissueTest( ) {
+        String notValidRefreshToken = authenticationService.createRefreshToken(UUID.randomUUID());
+        ReissueResponse res = authenticationApiService.reissue(notValidRefreshToken);
+
+        assertThat(res.getIsSuccess());
+        assertThat(!res.getTokens().isEmpty());
+        accessToken = res.getTokens().get(0);
+        refreshToken = res.getTokens().get(1);
+    }
 
     private List<Integer> encryptPassword(String temporaryToken, String password) {
         List<Integer> ans = new ArrayList<>();
