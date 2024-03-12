@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,8 +50,7 @@ public class SecureKeypadController {
                     })
     })
     public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
-            @Parameter(description = "Authorization에 temporary token을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String temporaryToken
+            @CookieValue("temporaryToken") String temporaryToken
     ) {
         CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(JwtUtil.removeType(temporaryToken));
 
