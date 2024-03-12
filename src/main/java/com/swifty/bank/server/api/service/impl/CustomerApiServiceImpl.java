@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CustomerApiServiceImpl implements CustomerApiService {
     private final CustomerService customerService;
@@ -39,7 +38,6 @@ public class CustomerApiServiceImpl implements CustomerApiService {
                 .build();
     }
 
-    @Transactional
     @Override
     public void customerInfoUpdate(String accessToken,
                                    CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
@@ -64,7 +62,6 @@ public class CustomerApiServiceImpl implements CustomerApiService {
         return false;
     }
 
-    @Transactional
     @Override
     public void resetPassword(String accessToken, PasswordRequest passwordRequest) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
@@ -72,7 +69,6 @@ public class CustomerApiServiceImpl implements CustomerApiService {
         customerService.updatePassword(customerUuid, newPassword);
     }
 
-    @Transactional
     @Override
     public void customerWithdrawal(String accessToken) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);

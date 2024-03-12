@@ -1,5 +1,6 @@
 package com.swifty.bank.server.api.service;
 
+import com.swifty.bank.server.api.ConfigureContainer;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @Slf4j
 @SpringBootTest
-class CustomerApiServiceTest {
+class CustomerApiServiceTest extends ConfigureContainer {
 
     @Autowired
     private CustomerApiService customerApiService;
@@ -51,7 +52,7 @@ class CustomerApiServiceTest {
     private String accessToken;
 
     @BeforeEach
-    private void join(){
+    public void join(){
         validator = Validation.buildDefaultValidatorFactory().getValidator();
         JoinDto joinDto = JoinDto.builder()
                 .name(name)

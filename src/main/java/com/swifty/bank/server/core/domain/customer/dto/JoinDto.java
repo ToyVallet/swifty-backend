@@ -1,6 +1,7 @@
 package com.swifty.bank.server.core.domain.customer.dto;
 
 import com.swifty.bank.server.core.common.authentication.constant.UserRole;
+import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import java.util.UUID;
