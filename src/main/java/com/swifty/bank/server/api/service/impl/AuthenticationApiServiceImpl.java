@@ -20,12 +20,15 @@ import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -78,6 +81,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 temporaryToken,
                 temporarySignUpForm
         );
+
         return CheckLoginAvailabilityResponse.builder()
                 .isAvailable(true)
                 .temporaryToken(temporaryToken)

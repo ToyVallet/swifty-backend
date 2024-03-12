@@ -12,6 +12,7 @@ import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,14 +21,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @Controller
@@ -57,12 +59,16 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<CheckLoginAvailabilityResponse> checkLoginAvailability(
-            @Valid @RequestBody CheckLoginAvailabilityRequest body
+            @Valid @RequestBody CheckLoginAvailabilityRequest body,
+            HttpServletResponse response
     ) {
         CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(body);
+        ResponseCookie temporaryCookie =
+                CookieUtils.createCookie("temporaryToken", res.getTemporaryToken());
 
         return ResponseEntity
                 .ok()
+                .header(HttpHeaders.SET_COOKIE, temporaryCookie.toString())
                 .body(res);
     }
 
@@ -88,16 +94,22 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<SignWithFormResponse> signWithForm(
-            @Parameter(description = "Authorization에 TemporaryToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String temporaryToken,
+            @CookieValue("temporaryToken") String temporaryToken,
             @Valid @RequestBody SignWithFormRequest body
     ) {
         SignWithFormResponse res = authenticationApiService.signUpAndSignIn(
                 JwtUtil.removeType(temporaryToken),
                 body);
 
+        ResponseCookie accessCookie =
+                CookieUtils.createCookie("accessToken", res.getTokens().get(0));
+        ResponseCookie refreshCookie =
+                CookieUtils.createCookie("refreshToken", res.getTokens().get(1));
+
         return ResponseEntity
                 .ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(res);
     }
 
@@ -123,13 +135,19 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<ReissueResponse> reissueTokens(
-            @Parameter(description = "Authorization에 RefreshToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String refreshToken
+            @CookieValue("refreshToken") String refreshToken
     ) {
         ReissueResponse res = authenticationApiService.reissue(JwtUtil.removeType(refreshToken));
 
+        ResponseCookie accessCookie =
+                CookieUtils.createCookie("accessToken", res.getTokens().get(0));
+        ResponseCookie refreshCookie =
+                CookieUtils.createCookie("refreshToken", res.getTokens().get(1));
+
         return ResponseEntity
                 .ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(res);
     }
 
@@ -159,8 +177,15 @@ public class AuthenticationController {
     ) {
         LogoutResponse res = authenticationApiService.logout(JwtUtil.removeType(accessToken));
 
+        ResponseCookie accessCookie =
+                CookieUtils.createCookie("accessToken", "");
+        ResponseCookie refreshCookie =
+                CookieUtils.createCookie("refreshToken", "");
+
         return ResponseEntity
                 .ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(res);
     }
 
@@ -190,8 +215,15 @@ public class AuthenticationController {
     ) {
         SignOutResponse res = authenticationApiService.signOut(JwtUtil.removeType(accessToken));
 
+        ResponseCookie accessCookie =
+                CookieUtils.createCookie("accessToken", "");
+        ResponseCookie refreshCookie =
+                CookieUtils.createCookie("refreshToken", "");
+
         return ResponseEntity
                 .ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(res);
     }
 }
