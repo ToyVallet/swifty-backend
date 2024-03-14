@@ -21,10 +21,14 @@ public class RedisConfig {
     @Value("${spring.data.redis.port}")
     private int redisPort;
 
+    @Value("${spring.datasource.url}")
+    private String mysqlUrl;
+
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         log.info("redis host={}",redisHost);
         log.info("redis port={}",redisPort);
+        log.info("mysql url={}",mysqlUrl);
         return new LettuceConnectionFactory(redisHost, redisPort);
     }
 
