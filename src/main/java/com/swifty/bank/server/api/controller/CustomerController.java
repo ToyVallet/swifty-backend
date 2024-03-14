@@ -1,11 +1,13 @@
 package com.swifty.bank.server.api.controller;
 
 import com.swifty.bank.server.api.controller.annotation.CustomerAuth;
+import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.customer.request.CustomerInfoUpdateConditionRequest;
 import com.swifty.bank.server.api.controller.dto.customer.request.PasswordRequest;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
+import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +18,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +32,19 @@ import org.springframework.web.bind.annotation.*;
 public class CustomerController {
     private final CustomerApiService customerApiService;
 
+    @PassAuth
+    @GetMapping("test")
+    public ResponseEntity<?> test(){
+
+        ResponseCookie temporaryCookie =
+                CookieUtils.createCookie("test", "cookie");
+        log.info("{}",temporaryCookie.getValue());
+        return ResponseEntity
+
+                .ok()
+                .header(HttpHeaders.SET_COOKIE, temporaryCookie.toString())
+                .body("쿠키 테스트");
+    }
     @CustomerAuth
     @GetMapping("")
     @Operation(summary = "회원정보 조회", description = "jwt access 토큰으로 회원정보를 조회합니다.")
