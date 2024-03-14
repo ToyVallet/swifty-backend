@@ -10,8 +10,8 @@ public class CookieUtils {
         ResponseCookie cookie = ResponseCookie.from(name, token)
                 .httpOnly(false)
                 .maxAge(60 * 60 * 12)
-                .domain("localhost")
-                .secure(true)
+//                .domain("localhost")
+                .secure(false)
                 .path("/")
                 .build();
 
