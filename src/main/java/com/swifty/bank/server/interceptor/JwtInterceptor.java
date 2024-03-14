@@ -25,7 +25,7 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
-        log.info(req.getRequestURL().toString());
+        log.info("interceptor={}",req.getRequestURL().toString());
         // 화이트 리스트로 preHandle 관리
         // 프리패스 권한
         if (hasProperAnnotation(handler, PassAuth.class)) {

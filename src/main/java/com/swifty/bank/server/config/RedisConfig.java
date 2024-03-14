@@ -2,6 +2,7 @@ package com.swifty.bank.server.config;
 
 import com.swifty.bank.server.core.common.redis.value.SecureKeypadOrderInverse;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+@Slf4j
 @Configuration
 public class RedisConfig {
     @Value("${spring.data.redis.host}")
@@ -21,6 +23,8 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
+        log.info("redis host={}",redisHost);
+        log.info("redis port={}",redisPort);
         return new LettuceConnectionFactory(redisHost, redisPort);
     }
 
