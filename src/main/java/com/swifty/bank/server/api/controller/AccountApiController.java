@@ -22,12 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -55,7 +50,7 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> register(@RequestHeader("Authorization") String jwt,
+    public ResponseEntity<?> register(@CookieValue("access-token") String jwt,
                                       @RequestBody AccountRegisterRequest req) {
         AccountRegisterResponse res = accountApiService.register(jwt, req);
 
@@ -85,7 +80,7 @@ public class AccountApiController {
                     })
     })
     public ResponseEntity<?> updateNickname(
-            @RequestHeader("Authorization") String jwt,
+            @CookieValue("access-token") String jwt,
             @RequestBody ReviseAccountNicknameRequest req
     ) {
         UpdateAccountNicknameResponse res = accountApiService.updateNickname(jwt, req);
@@ -116,8 +111,7 @@ public class AccountApiController {
                     })
     })
     public ResponseEntity<?> updatePassword(
-            @RequestHeader("Authorization")
-            String jwt,
+            @CookieValue("access-token") String jwt,
             @RequestBody
             ReviseUnitedAccountPasswordRequest req
     ) {
@@ -149,8 +143,7 @@ public class AccountApiController {
                     })
     })
     public ResponseEntity<?> retrieveBalanceWithCurrency(
-            @RequestHeader("authorization")
-            String jwt,
+            @CookieValue("access-token") String jwt,
             @RequestBody
             RetrieveBalanceWithCurrencyRequest req
     ) {
@@ -182,8 +175,7 @@ public class AccountApiController {
                     })
     })
     public ResponseEntity<?> withdrawAccount(
-            @RequestHeader("Authorization")
-            String jwt,
+            @CookieValue("access-token") String jwt,
             @RequestBody
             WithdrawUnitedAccountRequest req
     ) {
@@ -215,8 +207,7 @@ public class AccountApiController {
                     })
     })
     public ResponseEntity<?> updateUnitedAccount(
-            @RequestHeader("Authorization")
-            String jwt,
+            @CookieValue("access-token") String jwt,
             @RequestBody
             UpdateUnitedAccountStatusRequest req
     ) {
@@ -248,8 +239,7 @@ public class AccountApiController {
                     })
     })
     public ResponseEntity<?> updateSubAccountStatus(
-            @RequestHeader("Authorization")
-            String jwt,
+            @CookieValue("access-token") String jwt,
             @RequestBody
             UpdateSubAccountStatusRequest req
     ) {
@@ -281,8 +271,7 @@ public class AccountApiController {
                     })
     })
     public ResponseEntity<?> updateSubAccountStatus(
-            @RequestHeader("Authorization")
-            String jwt,
+            @CookieValue("access-token") String jwt,
             @RequestBody
             UpdateDefaultCurrencyRequest req
     ) {
@@ -314,8 +303,7 @@ public class AccountApiController {
                     })
     })
     public ResponseEntity<?> listUnitedAccountWithCustomer(
-            @RequestHeader("Authorization")
-            String jwt
+            @CookieValue("access-token") String jwt
     ) {
         ListUnitedAccountWithCustomerResponse res = accountApiService.listUnitedAccountWithCustomer(jwt);
 
