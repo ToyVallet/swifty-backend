@@ -10,6 +10,7 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCu
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
+import com.swifty.bank.server.api.controller.dto.account.response.*;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
@@ -56,7 +57,7 @@ public class AccountApiController {
     })
     public ResponseEntity<?> register(@RequestHeader("Authorization") String jwt,
                                       @RequestBody AccountRegisterRequest req) {
-        ResponseResult<?> res = accountApiService.register(jwt, req);
+        AccountRegisterResponse res = accountApiService.register(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -87,7 +88,7 @@ public class AccountApiController {
             @RequestHeader("Authorization") String jwt,
             @RequestBody ReviseAccountNicknameRequest req
     ) {
-        ResponseResult<?> res = accountApiService.updateNickname(jwt, req);
+        UpdateAccountNicknameResponse res = accountApiService.updateNickname(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -120,7 +121,7 @@ public class AccountApiController {
             @RequestBody
             ReviseUnitedAccountPasswordRequest req
     ) {
-        ResponseResult<?> res = accountApiService.updatePassword(jwt, req);
+        ReviseUnitedAccountPasswordResponse res = accountApiService.updatePassword(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -153,7 +154,7 @@ public class AccountApiController {
             @RequestBody
             RetrieveBalanceWithCurrencyRequest req
     ) {
-        ResponseResult<?> res = accountApiService.retrieveBalanceWithCurrency(jwt, req);
+        RetrieveBalanceWithCurrencyResponse res = accountApiService.retrieveBalanceWithCurrency(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -186,7 +187,7 @@ public class AccountApiController {
             @RequestBody
             WithdrawUnitedAccountRequest req
     ) {
-        ResponseResult<?> res = accountApiService.withdraw(jwt, req);
+        WithdrawUnitedAccountResponse res = accountApiService.withdraw(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -219,7 +220,7 @@ public class AccountApiController {
             @RequestBody
             UpdateUnitedAccountStatusRequest req
     ) {
-        ResponseResult<?> res = accountApiService.updateUnitedAccountStatus(jwt, req);
+        UpdateUnitedAccountStatusResponse res = accountApiService.updateUnitedAccountStatus(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -252,7 +253,7 @@ public class AccountApiController {
             @RequestBody
             UpdateSubAccountStatusRequest req
     ) {
-        ResponseResult<?> res = accountApiService.updateSubAccountStatus(jwt, req);
+        UpdateSubAccountStatusResponse res = accountApiService.updateSubAccountStatus(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -261,13 +262,31 @@ public class AccountApiController {
 
     @CustomerAuth
     @PostMapping(value = "/update-default-currency")
+    @Operation(summary = "통합 계좌의 대표환을 바꾸는 액션", description = "통합 계좌의 대표 환을 변경한다")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공적으로 변경한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = UpdateDefaultCurrencyResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
     public ResponseEntity<?> updateSubAccountStatus(
             @RequestHeader("Authorization")
             String jwt,
             @RequestBody
             UpdateDefaultCurrencyRequest req
     ) {
-        ResponseResult<?> res = accountApiService.updateDefaultCurrency(jwt, req);
+        UpdateDefaultCurrencyResponse res = accountApiService.updateDefaultCurrency(jwt, req);
 
         return ResponseEntity
                 .ok()
@@ -281,7 +300,7 @@ public class AccountApiController {
             @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ListUnitedAccountResponse.class))
+                                    schema = @Schema(implementation = ListUnitedAccountWithCustomerResponse.class))
                     }),
             @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
                     content = {
@@ -298,7 +317,7 @@ public class AccountApiController {
             @RequestHeader("Authorization")
             String jwt
     ) {
-        ResponseResult<?> res = accountApiService.listUnitedAccountWithCustomer(jwt);
+        ListUnitedAccountWithCustomerResponse res = accountApiService.listUnitedAccountWithCustomer(jwt);
 
         return ResponseEntity
                 .ok()
