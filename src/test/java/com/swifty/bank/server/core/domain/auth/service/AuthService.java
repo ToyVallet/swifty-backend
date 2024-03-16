@@ -15,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -26,15 +28,14 @@ import static org.assertj.core.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles(profiles = "test")
-@ContextConfiguration(locations = {"classpath:config/application.yaml"})
 @WebAppConfiguration
-@Disabled
+@SpringBootTest
 public class AuthService {
-    @Spy
+    @SpyBean
     private AuthRepository authRepository;
 
-    @InjectMocks
-    private AuthenticationServiceImpl authenticationService;
+    @SpyBean
+    private AuthenticationService authenticationService;
 
     @Test
     @DisplayName("Access-Token 생성")
@@ -42,9 +43,9 @@ public class AuthService {
         UUID customerUuid = UUID.randomUUID();
 
         String accessToken = authenticationService.createAccessToken(customerUuid);
-        assertThat(!JwtUtil.isExpiredToken(accessToken));
+        assertThat(!JwtUtil.isExpiredToken(accessToken)).isTrue();
         assertThat(JwtUtil.getSubject(accessToken)).isEqualTo("AccessToken");
-        assertThat(JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class).compareTo(customerUuid) == 0);
+        assertThat(JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class).compareTo(customerUuid) == 0).isTrue();
     }
 
     @Test
@@ -53,13 +54,13 @@ public class AuthService {
         UUID customerUuid = UUID.randomUUID();
 
         String refreshToken = authenticationService.createRefreshToken(customerUuid);
-        assertThat(!JwtUtil.isExpiredToken(refreshToken));
-        assertThat(JwtUtil.getSubject(refreshToken)).isEqualTo("Auth");
-        assertThat(JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class).compareTo(customerUuid) == 0);
+        assertThat(!JwtUtil.isExpiredToken(refreshToken)).isTrue();
+        assertThat(JwtUtil.getSubject(refreshToken)).isEqualTo("RefreshToken");
+        assertThat(JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class).compareTo(customerUuid) == 0).isTrue();
     }
 
     @Test
-    @DisplayName("Refresh-Token 생성")
+    @DisplayName("Temporary-Token 생성")
     public void createTemporaryTokenTest( ) {
         String temporaryToken = authenticationService.createTemporaryToken();
         assertThat(JwtUtil.getSubject(temporaryToken)).isEqualTo("TemporaryToken");
@@ -121,11 +122,12 @@ public class AuthService {
     public void findExistingAuthTest( ) {
         UUID customerUuid = UUID.randomUUID();
         String refreshToken = authenticationService.createRefreshToken(customerUuid);
+        authenticationService.saveRefreshTokenInDatabase(refreshToken);
 
         Optional<Auth> maybeAuth = authenticationService.findAuthByCustomerUuid(customerUuid);
-        assertThat(maybeAuth.isPresent());
-        assertThat(maybeAuth.get().getCustomerUuid().compareTo(customerUuid));
-        assertThat(maybeAuth.get().getRefreshToken().compareTo(refreshToken));
+        assertThat(maybeAuth.isPresent()).isTrue();
+        assertThat(maybeAuth.get().getCustomerUuid().compareTo(customerUuid) == 0).isTrue();
+        assertThat(maybeAuth.get().getRefreshToken().compareTo(refreshToken) == 0).isTrue();
     }
 
     @Test
@@ -139,7 +141,7 @@ public class AuthService {
 
         Optional<Auth> maybeAuth = authenticationService.findAuthByCustomerUuid(customerUuid);
 
-        assertThat(maybeAuth.isEmpty());
+        assertThat(maybeAuth.isEmpty()).isTrue();
     }
 
     @Test
@@ -147,7 +149,7 @@ public class AuthService {
         UUID customerUuid = UUID.randomUUID();
         String accessToken = authenticationService.createAccessToken(customerUuid);
 
-        assertThat(!authenticationService.isValidateRefreshToken(accessToken));
+        assertThat(!authenticationService.isValidateRefreshToken(accessToken)).isTrue();
     }
 
     @Test
@@ -155,7 +157,7 @@ public class AuthService {
         UUID customerUuid = UUID.randomUUID();
         String accessToken = authenticationService.createAccessToken(customerUuid);
 
-        assertThat(!authenticationService.isValidateRefreshToken(accessToken));
+        assertThat(!authenticationService.isValidateRefreshToken(accessToken)).isTrue();
     }
 
     @Test
@@ -165,30 +167,30 @@ public class AuthService {
 
         authenticationService.saveRefreshTokenInDatabase(refreshToken);
 
-        assertThat(authenticationService.isValidateRefreshToken(refreshToken));
+        assertThat(authenticationService.isValidateRefreshToken(refreshToken)).isTrue();
     }
 
     @Test
     public void shortPassword( ) {
         String password = "0";
-        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111"));
+        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111")).isTrue();
     }
 
     @Test
     public void repeatedPassword( ) {
         String password = "000000";
-        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111"));
+        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111")).isTrue();
     }
 
     @Test
     public void birthdayPassword( ) {
-        String password = "001010";
-        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111"));
+        String password = "101010";
+        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111")).isTrue();
     }
 
     @Test
     public void phoneNumberPassword( ) {
         String password = "111111";
-        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111"));
+        assertThat(!authenticationService.isValidateSignUpPassword(password, "101010", "+821011111111")).isTrue();
     }
 }

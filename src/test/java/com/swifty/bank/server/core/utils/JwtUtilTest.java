@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 @ActiveProfiles(profiles = "test")
 @ContextConfiguration(locations = {"classpath:config/application.yaml"})
 @WebAppConfiguration
-@Disabled
 public class JwtUtilTest {
     private static Claims claims;
 
