@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Testcontainers
-@Disabled
 @WebAppConfiguration
 @ActiveProfiles("test")
 public class ConfigureContainer {

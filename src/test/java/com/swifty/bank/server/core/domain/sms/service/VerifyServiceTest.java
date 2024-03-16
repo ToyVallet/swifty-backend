@@ -1,5 +1,6 @@
 package com.swifty.bank.server.core.domain.sms.service;
 
+import com.swifty.bank.server.api.ConfigureContainer;
 import com.swifty.bank.server.core.common.redis.service.impl.OtpRedisServiceImpl;
 import com.swifty.bank.server.core.domain.sms.service.impl.TwilioMessageService;
 import com.swifty.bank.server.core.domain.sms.service.impl.VerifyServiceImpl;
@@ -9,6 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -16,16 +20,16 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
 
-@Disabled
 @ExtendWith(MockitoExtension.class)
-@ContextConfiguration(locations = {"classpath:config/application.yaml"})
+@ActiveProfiles(profiles = "test")
 @WebAppConfiguration
-public class VerifyServiceTest {
+@SpringBootTest
+public class VerifyServiceTest extends ConfigureContainer {
 
-    @Spy
+    @SpyBean
     private OtpRedisServiceImpl redisService;
 
-    @InjectMocks
+    @SpyBean
     private VerifyServiceImpl verifyService;
 
     private final Long verificationTimeout = 5L;
@@ -35,7 +39,7 @@ public class VerifyServiceTest {
         String phoneNumber = "+821012345678";
         String expectedOtp = "123456";
 
-        assertThat(!verifyService.sendVerificationCode(expectedOtp));
+        assertThat(!verifyService.sendVerificationCode(expectedOtp)).isTrue();
     }
 
     @Test
