@@ -6,12 +6,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Schema(description = "회원가입/로그인 가능 여부 확인 폼")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CheckLoginAvailabilityRequest {
     @NotNull
     @NotBlank
