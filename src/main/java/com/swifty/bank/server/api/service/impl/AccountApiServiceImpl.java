@@ -66,9 +66,19 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
         }
 
+        // 비밀번호 복호화
+        List<Integer> key = sBoxKeyRedisService.getData(accessToken).getKey();
+        List<Integer> decrypted = SBoxUtil.decrypt(req.getPushedOrder(), key);
+        String password = String.join("",
+                decrypted
+                        .stream()
+                        .map(Object::toString)
+                        .toList()
+        );
+
         AccountSaveDto dto = new AccountSaveDto(
                 req.getProduct(),
-                req.getAccountPassword(),
+                password,
                 req.getCurrencies(),
                 req.getDefaultCurrency(),
                 customer.get()
