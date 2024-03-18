@@ -13,7 +13,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +25,7 @@ public class CustomerApiServiceImpl implements CustomerApiService {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         CustomerInfoDto customerInfoDto = customerService.findCustomerInfoDtoByUuid(customerUuid)
-                .orElseThrow(() -> new NoSuchElementException());
+                .orElseThrow(() -> new NoSuchElementException("고객 조회에 실패했습니다."));
 
         return CustomerInfoResponse.builder()
                 .name(customerInfoDto.getName())
