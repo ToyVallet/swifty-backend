@@ -36,8 +36,10 @@ import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
 import com.swifty.bank.server.core.domain.keypad.service.dto.SecureKeypadDto;
 import com.swifty.bank.server.core.utils.JwtUtil;
+import com.swifty.bank.server.core.utils.SBoxUtil;
 import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -121,9 +123,19 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
         }
 
+        // 비밀번호 복호화
+        List<Integer> key = sBoxKeyRedisService.getData(accessToken).getKey();
+        List<Integer> decrypted = SBoxUtil.decrypt(req.getPushedOrder(), key);
+        String password = String.join("",
+                decrypted
+                        .stream()
+                        .map(Object::toString)
+                        .toList()
+        );
+
         try {
             AccountPasswordUpdateDto dto = new AccountPasswordUpdateDto(
-                    mayCustomer.get(), req.getAccountUuid(), req.getPassword()
+                    mayCustomer.get(), req.getAccountUuid(), password
             );
             accountService.updateUnitedAccountPassword(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
