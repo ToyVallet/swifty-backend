@@ -22,6 +22,8 @@ import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAc
 import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.core.utils.CookieUtils;
+import com.swifty.bank.server.core.utils.DateUtil;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -351,8 +353,14 @@ public class AccountApiController {
 
         return ResponseEntity
                 .ok()
-                .header(HttpHeaders.SET_COOKIE,
-                        CookieUtils.createCookie("keypad-token", res.getKeypadToken()).toString())
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        CookieUtils.createCookie(
+                                "keypad-token",
+                                res.getKeypadToken(),
+                                DateUtil.diffInSeconds(DateUtil.now(), JwtUtil.getExpireDate(res.getKeypadToken()))
+                        ).toString()
+                )
                 .body(res);
     }
 }

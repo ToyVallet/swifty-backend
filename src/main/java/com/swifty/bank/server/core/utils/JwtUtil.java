@@ -57,6 +57,17 @@ public class JwtUtil {
                 .getBody();
     }
 
+    public static Date getExpireDate(String jwt) {
+        validateToken(jwt);
+
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey.getBytes())
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody()
+                .getExpiration();
+    }
+
     /*
      * validate
      * 1. JWT was incorrectly constructed

@@ -20,6 +20,7 @@ import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormRespo
 import com.swifty.bank.server.api.controller.dto.auth.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.utils.CookieUtils;
+import com.swifty.bank.server.core.utils.DateUtil;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -70,7 +71,13 @@ public class AuthenticationApiController {
             return ResponseEntity
                     .ok()
                     .header(HttpHeaders.SET_COOKIE,
-                            CookieUtils.createCookie("temporary-token", res.getTemporaryToken()).toString())
+                            CookieUtils.createCookie(
+                                    "temporary-token",
+                                    res.getTemporaryToken(),
+                                    DateUtil.diffInSeconds(DateUtil.now(),
+                                            JwtUtil.getExpireDate(res.getTemporaryToken()))
+                            ).toString()
+                    )
                     .body(res);
         }
 
@@ -201,8 +208,14 @@ public class AuthenticationApiController {
 
         return ResponseEntity
                 .ok()
-                .header(HttpHeaders.SET_COOKIE,
-                        CookieUtils.createCookie("keypad-token", res.getKeypadToken()).toString())
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        CookieUtils.createCookie(
+                                "keypad-token",
+                                res.getKeypadToken(),
+                                DateUtil.diffInSeconds(DateUtil.now(), JwtUtil.getExpireDate(res.getKeypadToken()))
+                        ).toString()
+                )
                 .body(res);
     }
 
@@ -238,11 +251,33 @@ public class AuthenticationApiController {
                 body);
 
         if (res.isSuccess()) {
+            String accessToken = res.getTokens().get(0);
+            String refreshToken = res.getTokens().get(1);
+
             HttpHeaders headers = new HttpHeaders(
                     new LinkedMultiValueMap<>() {{
                         put(HttpHeaders.SET_COOKIE,
-                                List.of(CookieUtils.createCookie("access-token", res.getTokens().get(0)).toString(),
-                                        CookieUtils.createCookie("refresh-token", res.getTokens().get(1)).toString())
+                                List.of(
+                                        CookieUtils.createCookie(
+                                                "access-token",
+                                                accessToken,
+                                                DateUtil.diffInSeconds(DateUtil.now(),
+                                                        JwtUtil.getExpireDate(accessToken))
+                                        ).toString(),
+                                        CookieUtils.createCookie("refresh-token",
+                                                refreshToken,
+                                                DateUtil.diffInSeconds(DateUtil.now(),
+                                                        JwtUtil.getExpireDate(refreshToken))
+                                        ).toString(),
+                                        CookieUtils.createCookie("temporary-token",
+                                                temporaryToken,
+                                                0L  // 사용을 다했으니 만료 시키기
+                                        ).toString(),
+                                        CookieUtils.createCookie("keypad-token",
+                                                keypadToken,
+                                                0L  // 사용을 다했으니 만료 시키기
+                                        ).toString()
+                                )
                         );
                     }}
             );
@@ -284,11 +319,22 @@ public class AuthenticationApiController {
         ReissueResponse res = authenticationApiService.reissue(JwtUtil.removeType(refreshToken));
 
         if (res.getIsSuccess()) {
+            String accessToken = res.getTokens().get(0);
+            String newRefreshToken = res.getTokens().get(1);
+
             HttpHeaders headers = new HttpHeaders(
                     new LinkedMultiValueMap<>() {{
                         put(HttpHeaders.SET_COOKIE,
-                                List.of(CookieUtils.createCookie("access-token", res.getTokens().get(0)).toString(),
-                                        CookieUtils.createCookie("refresh-token", res.getTokens().get(1)).toString())
+                                List.of(
+                                        CookieUtils.createCookie("access-token",
+                                                accessToken,
+                                                DateUtil.diffInSeconds(DateUtil.now(),
+                                                        JwtUtil.getExpireDate(accessToken))).toString(),
+                                        CookieUtils.createCookie("refresh-token",
+                                                newRefreshToken,
+                                                DateUtil.diffInSeconds(DateUtil.now(),
+                                                        JwtUtil.getExpireDate(newRefreshToken))).toString()
+                                )
                         );
                     }}
             );
@@ -331,6 +377,13 @@ public class AuthenticationApiController {
         if (res.getIsSuccess()) {
             return ResponseEntity
                     .ok()
+                    .header(
+                            HttpHeaders.SET_COOKIE,
+                            CookieUtils.createCookie("access-token",
+                                    accessToken,
+                                    0L  // 사용을 다했으므로 만료 시키기
+                            ).toString()
+                    )
                     .body(res);
         }
         return ResponseEntity
@@ -366,6 +419,13 @@ public class AuthenticationApiController {
         if (res.getIsSuccess()) {
             return ResponseEntity
                     .ok()
+                    .header(
+                            HttpHeaders.SET_COOKIE,
+                            CookieUtils.createCookie("access-token",
+                                    accessToken,
+                                    0L  // 사용을 다했으므로 만료 시키기
+                            ).toString()
+                    )
                     .body(res);
         }
         return ResponseEntity

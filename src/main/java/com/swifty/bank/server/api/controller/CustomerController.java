@@ -9,6 +9,7 @@ import com.swifty.bank.server.api.controller.dto.customer.response.CreateSecureK
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
 import com.swifty.bank.server.core.utils.CookieUtils;
+import com.swifty.bank.server.core.utils.DateUtil;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -127,6 +128,13 @@ public class CustomerController {
             if (isMatchPassword) {
                 return ResponseEntity
                         .ok()
+                        .header(
+                                HttpHeaders.SET_COOKIE,
+                                CookieUtils.createCookie("keypad-token",
+                                        keypadToken,
+                                        0L  // 사용을 다했으니 만료 시키기
+                                ).toString()
+                        )
                         .body(new MessageResponse("비밀번호가 일치합니다."));
             }
         } catch (NoSuchElementException e) {
@@ -167,6 +175,13 @@ public class CustomerController {
 
             return ResponseEntity
                     .ok()
+                    .header(
+                            HttpHeaders.SET_COOKIE,
+                            CookieUtils.createCookie("keypad-token",
+                                    keypadToken,
+                                    0L  // 사용을 다했으니 만료 시키기
+                            ).toString()
+                    )
                     .body(new MessageResponse("비밀번호 변경에 성공했습니다."));
         } catch (NoSuchElementException e) {
             return ResponseEntity
@@ -198,8 +213,14 @@ public class CustomerController {
 
         return ResponseEntity
                 .ok()
-                .header(HttpHeaders.SET_COOKIE,
-                        CookieUtils.createCookie("keypad-token", res.getKeypadToken()).toString())
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        CookieUtils.createCookie(
+                                "keypad-token",
+                                res.getKeypadToken(),
+                                DateUtil.diffInSeconds(DateUtil.now(), JwtUtil.getExpireDate(res.getKeypadToken()))
+                        ).toString()
+                )
                 .body(res);
     }
 }
