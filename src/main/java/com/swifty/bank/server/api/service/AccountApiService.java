@@ -1,24 +1,25 @@
 package com.swifty.bank.server.api.service;
 
 import com.swifty.bank.server.api.controller.dto.account.request.*;
+import com.swifty.bank.server.api.controller.dto.account.response.*;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 
 public interface AccountApiService {
-    public ResponseResult<?> register(String jwt, AccountRegisterRequest req);
+    public AccountRegisterResponse register(String jwt, AccountRegisterRequest req);
 
-    public ResponseResult<?> updateNickname(String jwt, ReviseAccountNicknameRequest req);
+    public UpdateAccountNicknameResponse updateNickname(String jwt, ReviseAccountNicknameRequest req);
 
-    public ResponseResult<?> updatePassword(String jwt, ReviseUnitedAccountPasswordRequest req);
+    public ReviseUnitedAccountPasswordResponse updatePassword(String jwt, ReviseUnitedAccountPasswordRequest req);
 
-    public ResponseResult<?> retrieveBalanceWithCurrency(String jwt, RetrieveBalanceWithCurrencyRequest req);
+    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String jwt, RetrieveBalanceWithCurrencyRequest req);
 
-    public ResponseResult<?> withdraw(String jwt, WithdrawUnitedAccountRequest req);
+    public WithdrawUnitedAccountResponse withdraw(String jwt, WithdrawUnitedAccountRequest req);
 
-    public ResponseResult<?> updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req);
+    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req);
 
-    public ResponseResult<?> updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req);
+    public UpdateSubAccountStatusResponse updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req);
 
-    public ResponseResult<?> updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req);
+    public UpdateDefaultCurrencyResponse updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req);
 
-    public ResponseResult<?> listUnitedAccountWithCustomer(String jwt);
+    public ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String jwt);
 }
