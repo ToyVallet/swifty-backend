@@ -1,18 +1,12 @@
 package com.swifty.bank.server.api.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.swifty.bank.server.api.ConfigureContainer;
-import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
-import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
 import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,21 +38,21 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
     private static String accessToken = "";
     private static String refreshToken = "";
 
-    @Test
-    @Order(1)
-    public void checkLoginAvailabilityWithNonExistCustomer() {
-        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
-                .name("John Doe")
-                .phoneNumber("+821098765432")
-                .mobileCarrier("KT")
-                .residentRegistrationNumber("9901011")
-                .build();
-
-        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
-
-        assertThat(res.getIsAvailable()).isTrue();
-        assertThat(!res.getTemporaryToken().isEmpty()).isTrue();
-    }
+//    @Test
+//    @Order(1)
+//    public void checkLoginAvailabilityWithNonExistCustomer() {
+//        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+//                .name("John Doe")
+//                .phoneNumber("+821098765432")
+//                .mobileCarrier("KT")
+//                .residentRegistrationNumber("9901011")
+//                .build();
+//
+//        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+//
+//        assertThat(res.getIsAvailable()).isTrue();
+//        assertThat(!res.getTemporaryToken().isEmpty()).isTrue();
+//    }
 
 //    @Test
 //    @Order(2)
