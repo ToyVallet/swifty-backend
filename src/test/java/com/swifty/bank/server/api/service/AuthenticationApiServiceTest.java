@@ -1,28 +1,44 @@
 package com.swifty.bank.server.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+<<<<<<< HEAD
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.swifty.bank.server.api.ConfigureContainer;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
+=======
+
+import com.swifty.bank.server.api.ConfigureContainer;
+import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
+>>>>>>> 82edea7 (test: 키패드 관련 코드 테스트 코드 주석 처리)
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
+<<<<<<< HEAD
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import com.swifty.bank.server.core.common.redis.service.SecureKeypadOrderInverseRedisService;
 import com.swifty.bank.server.core.domain.customer.Customer;
+=======
+import com.swifty.bank.server.core.common.authentication.constant.UserRole;
+import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
+import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
+import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
+>>>>>>> 82edea7 (test: 키패드 관련 코드 테스트 코드 주석 처리)
 import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.utils.JwtUtil;
+<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.List;
+=======
+>>>>>>> 82edea7 (test: 키패드 관련 코드 테스트 코드 주석 처리)
 import java.util.UUID;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -46,7 +62,7 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
     private AuthenticationService authenticationService;
 
     @Autowired
-    private SecureKeypadOrderInverseRedisService secureKeypadOrderInverseRedisService;
+    private SBoxKeyRedisService sBoxKeyRedisService;
     @Autowired
     private LogoutAccessTokenRedisService logoutAccessTokenRedisService;
 
@@ -97,6 +113,7 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         assertThat(!res.getTemporaryToken().isEmpty()).isTrue();
     }
 
+<<<<<<< HEAD
     @Test
     @Order(3)
     public void signUpAndSignInWithNotExistTemporaryToken() {
@@ -104,11 +121,77 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
                 .deviceId("iPhone")
                 .pushedOrder(encryptPassword(temporaryToken, customerPassword))
                 .build();
+=======
+//    @Test
+//    @Order(3)
+//    public void signUpAndSignInWithNotExistTemporaryToken() {
+//        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+//                .deviceId("iPhone")
+//                .pushedOrder(encryptPassword(temporaryToken, customerPassword))
+//                .build();
+//
+//        assertThatThrownBy(() -> authenticationApiService.signUpAndSignIn("", reqForSign))
+//                .isInstanceOf(NullPointerException.class);
+//    }
+//
+//    @Test
+//    @Order(4)
+//    public void signUpAndSignInWithNotValidPassword() {
+//
+//        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+//                .deviceId("iPhone")
+//                .pushedOrder(encryptPassword(temporaryToken, "111111"))
+//                .build();
+//
+//        SignWithFormResponse res = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+//        assertThat(!res.isSuccess()).isTrue();
+//        assertThat(!res.isAvailablePassword()).isTrue();
+//        assertThat(res.getTokens() == null).isTrue();
+//    }
+//
+//    @Test
+//    @Order(5)
+//    public void signUpAndSignInWithValidNewInfo() {
+//
+//        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+//                .deviceId("iPhone")
+//                .pushedOrder(encryptPassword(temporaryToken, customerPassword))
+//                .build();
+//
+//        SignWithFormResponse res = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+//        assertThat(res.isAvailablePassword()).isTrue();
+//        assertThat(res.isSuccess()).isTrue();
+//        assertThat(!res.getTokens().isEmpty()).isTrue();
+//    }
+>>>>>>> 82edea7 (test: 키패드 관련 코드 테스트 코드 주석 처리)
 
-        assertThatThrownBy(() -> authenticationApiService.signUpAndSignIn("", reqForSign))
-                .isInstanceOf(NullPointerException.class);
-    }
+//    @Test
+//    @Order(6)
+//    public void signUpAndSignInWithNotMatchPassword() {
+//        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+//                .name("Taylor Swift")
+//                .phoneNumber("+821012345678")
+//                .mobileCarrier("KT")
+//                .residentRegistrationNumber("0101014")
+//                .build();
+//
+//        CheckLoginAvailabilityResponse resForCheck = authenticationApiService.checkLoginAvailability(req);
+//        temporaryToken = resForCheck.getTemporaryToken();
+//        secureKeypadService.createSecureKeypad(temporaryToken);
+//
+//        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+//                .deviceId("iPhone")
+//                .pushedOrder(encryptPassword(temporaryToken, "381943"))
+//                .build();
+//
+//        SignWithFormResponse res = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+//
+//        assertThat(res.isSuccess()).isTrue();
+//        assertThat(res.isAvailablePassword()).isTrue();
+//        assertThat(res.getTokens() == null).isFalse();
+//    }
 
+<<<<<<< HEAD
     @Test
     @Order(4)
     public void signUpAndSignInWithNotValidPassword() {
@@ -199,6 +282,42 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         assertThat(customer.getName().equals("Taylor Swift")).isTrue();
         assertThat(encoder.matches(customerPassword, customer.getPassword())).isTrue();
     }
+=======
+//    @Test
+//    @Order(9)
+//    public void signUpAndSignInWithDifferentDeviceId() {
+//        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+//                .name("Taylor Swift")
+//                .phoneNumber("+821012345678")
+//                .mobileCarrier("KT")
+//                .residentRegistrationNumber("0101014")
+//                .build();
+//
+//        CheckLoginAvailabilityResponse resForCheck = authenticationApiService.checkLoginAvailability(req);
+//        temporaryToken = resForCheck.getTemporaryToken();
+//        secureKeypadService.createSecureKeypad(temporaryToken);
+//
+//        customerPassword = "829401";
+//
+//        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+//                .deviceId("Android")
+//                .pushedOrder(encryptPassword(temporaryToken, customerPassword))
+//                .build();
+//
+//        SignWithFormResponse resForSignIn = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+//
+//        accessToken = resForSignIn.getTokens().get(0);
+//        refreshToken = resForSignIn.getTokens().get(1);
+//        assertThat(resForSignIn.isSuccess()).isTrue();
+//        assertThat(resForSignIn.isAvailablePassword()).isTrue();
+//        assertThat(resForSignIn.getTokens().isEmpty()).isFalse();
+//        assertThat(customerService.findByPhoneNumber("+821012345678").isPresent()).isTrue();
+//        Customer customer = customerService.findByPhoneNumber("+821012345678").get();
+//        assertThat(customer.getDeviceId().equals("Android")).isTrue();
+//        assertThat(customer.getName().equals("Taylor Swift")).isTrue();
+//        assertThat(encoder.matches(customerPassword, customer.getPassword())).isTrue();
+//    }
+>>>>>>> 82edea7 (test: 키패드 관련 코드 테스트 코드 주석 처리)
 
     @Test
     @Order(10)
@@ -228,6 +347,7 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         assertThat(logoutAccessTokenRedisService.getData(accessToken).equals("false"));
     }
 
+<<<<<<< HEAD
     @Test
     @Order(14)
     public void loginAfterLogOutTest() {
@@ -254,6 +374,34 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         accessToken = resForSignIn.getTokens().get(0);
         refreshToken = resForSignIn.getTokens().get(1);
     }
+=======
+//    @Test
+//    @Order(14)
+//    public void loginAfterLogOutTest() {
+//        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+//                .name("Taylor Swift")
+//                .phoneNumber("+821012345678")
+//                .mobileCarrier("KT")
+//                .residentRegistrationNumber("0101014")
+//                .build();
+//
+//        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+//        temporaryToken = res.getTemporaryToken();
+//        secureKeypadService.createSecureKeypad(temporaryToken);
+//        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+//                .deviceId("Android")
+//                .pushedOrder(encryptPassword(temporaryToken, customerPassword))
+//                .build();
+//
+//        SignWithFormResponse resForSignIn = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+//
+//        assertThat(resForSignIn.isSuccess());
+//        assertThat(resForSignIn.isAvailablePassword());
+//        assertThat(!resForSignIn.getTokens().isEmpty());
+//        accessToken = resForSignIn.getTokens().get(0);
+//        refreshToken = resForSignIn.getTokens().get(1);
+//    }
+>>>>>>> 82edea7 (test: 키패드 관련 코드 테스트 코드 주석 처리)
 
     @Test
     @Order(15)
@@ -267,6 +415,7 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         assertThat(customerService.findByUuid(customerUuid).isEmpty());
     }
 
+<<<<<<< HEAD
     @Test
     @Order(17)
     public void signUpTestAfterSignOut() {
@@ -312,4 +461,51 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
 
         return ans;
     }
+=======
+//    @Test
+//    @Order(17)
+//    public void signUpTestAfterSignOut() {
+//        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+//                .name("Taylor Swift")
+//                .phoneNumber("+821012345678")
+//                .mobileCarrier("KT")
+//                .residentRegistrationNumber("0101014")
+//                .build();
+//
+//        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+//        temporaryToken = res.getTemporaryToken();
+//        secureKeypadService.createSecureKeypad(temporaryToken);
+//
+//        SignWithFormRequest reqForSign = SignWithFormRequest.builder()
+//                .deviceId("Android")
+//                .pushedOrder(encryptPassword(res.getTemporaryToken(), customerPassword))
+//                .build();
+//
+//        SignWithFormResponse resForSignIn = authenticationApiService.signUpAndSignIn(temporaryToken, reqForSign);
+//
+//        assertThat(resForSignIn.isSuccess());
+//        assertThat(resForSignIn.isAvailablePassword());
+//        assertThat(!resForSignIn.getTokens().isEmpty());
+//    }
+
+//    private List<Integer> encryptPassword(String issuedTemporaryToken, String password) {
+//        List<Integer> ans = new ArrayList<>();
+//        List<Integer> secureKeypadOrderInverse
+//                = sBoxKeyRedisService.getData(issuedTemporaryToken)
+//                .getKey();
+//
+//        for (int i = 0; i < 6; i++) {
+//            int pos = password.charAt(i) - '0';
+//            for (int j = 0; j < secureKeypadOrderInverse.size(); j++) {
+//                int key = secureKeypadOrderInverse.get(j);
+//                if (key == pos) {
+//                    ans.add(j);
+//                    break;
+//                }
+//            }
+//        }
+//
+//        return ans;
+//    }
+>>>>>>> 82edea7 (test: 키패드 관련 코드 테스트 코드 주석 처리)
 }
