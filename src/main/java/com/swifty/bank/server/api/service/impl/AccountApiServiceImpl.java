@@ -8,10 +8,16 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCu
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
-import com.swifty.bank.server.api.controller.dto.account.response.*;
+import com.swifty.bank.server.api.controller.dto.account.response.AccountRegisterResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.ListUnitedAccountWithCustomerResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.RetrieveBalanceWithCurrencyResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.ReviseUnitedAccountPasswordResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateAccountNicknameResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateDefaultCurrencyResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccountStatusResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
 import com.swifty.bank.server.api.service.AccountApiService;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.service.dto.Result;
 import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
@@ -24,6 +30,7 @@ import com.swifty.bank.server.core.domain.account.dto.WithdrawUnitedAccountDto;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import java.util.HashMap;
@@ -38,6 +45,7 @@ import org.springframework.stereotype.Service;
 public class AccountApiServiceImpl implements AccountApiService {
     private final AccountService accountService;
     private final CustomerService customerService;
+    private final SecureKeypadService secureKeypadService;
 
     @Override
     public AccountRegisterResponse register(String token, AccountRegisterRequest req) {
@@ -123,7 +131,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
+    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String token,
+                                                                           RetrieveBalanceWithCurrencyRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
@@ -181,7 +190,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req) {
+    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String jwt,
+                                                                       UpdateUnitedAccountStatusRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);

@@ -11,13 +11,13 @@ import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormReques
 import com.swifty.bank.server.api.controller.dto.auth.request.StealVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckVerificationCodeResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SendVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.StealVerificationCodeResponse;
-import com.swifty.bank.server.api.controller.dto.keypad.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
