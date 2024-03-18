@@ -17,7 +17,9 @@ import com.swifty.bank.server.api.controller.dto.auth.response.SendVerificationC
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.StealVerificationCodeResponse;
+import com.swifty.bank.server.api.controller.dto.keypad.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.api.service.SecureKeypadService;
 import com.swifty.bank.server.api.service.SmsService;
 import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
@@ -35,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,6 +49,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AuthenticationApiController {
     private final AuthenticationApiService authenticationApiService;
     private final SmsService smsService;
+    private final SecureKeypadService secureKeypadService;
 
     @PassAuth
     @PostMapping("/check-login-availability")
@@ -167,6 +171,36 @@ public class AuthenticationApiController {
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         CheckVerificationCodeResponse res = smsService.checkVerificationCode(
                 checkVerificationCodeRequest);
+
+        return ResponseEntity
+                .ok()
+                .body(res);
+    }
+
+    @TemporaryAuth
+    @GetMapping(value = "/create-keypad")
+    @Operation(summary = "순서가 섞인 키패드 이미지 리스트 제공")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "키패드 이미지 리스트",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = CreateSecureKeypadResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
+    public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
+            @CookieValue("temporaryToken") String temporaryToken
+    ) {
+        CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(JwtUtil.removeType(temporaryToken));
 
         return ResponseEntity
                 .ok()
