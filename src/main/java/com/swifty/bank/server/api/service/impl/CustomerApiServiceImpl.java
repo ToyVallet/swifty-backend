@@ -72,10 +72,10 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     }
 
     @Override
-    public void resetPassword(String accessToken, PasswordRequest passwordRequest) {
+    public void resetPassword(String accessToken, String keypadToken, PasswordRequest passwordRequest) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
-        String newPassword = decryptPassword(accessToken, passwordRequest.getPushedOrder());
+        String newPassword = decryptPassword(keypadToken, passwordRequest.getPushedOrder());
 
         customerService.updatePassword(customerUuid, newPassword);
     }

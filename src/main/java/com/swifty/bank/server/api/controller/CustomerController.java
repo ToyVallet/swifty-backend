@@ -157,9 +157,13 @@ public class CustomerController {
     })
     public ResponseEntity<MessageResponse> resetPassword(
             @CookieValue("access-token") String accessToken,
+            @CookieValue("keypad-token") String keypadToken,
             @RequestBody PasswordRequest passwordRequest) {
         try {
-            customerApiService.resetPassword(JwtUtil.removeType(accessToken), passwordRequest);
+            customerApiService.resetPassword(
+                    JwtUtil.removeType(accessToken),
+                    JwtUtil.removeType(keypadToken),
+                    passwordRequest);
 
             return ResponseEntity
                     .ok()

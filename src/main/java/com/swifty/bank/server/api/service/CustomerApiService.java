@@ -12,7 +12,7 @@ public interface CustomerApiService {
 
     boolean confirmPassword(String accessToken, String keypadToken, PasswordRequest passwordRequest);
 
-    void resetPassword(String accessToken, PasswordRequest passwordRequest);
+    void resetPassword(String accessToken, String keypadToken, PasswordRequest passwordRequest);
 
     void customerWithdrawal(String accessToken);
 
