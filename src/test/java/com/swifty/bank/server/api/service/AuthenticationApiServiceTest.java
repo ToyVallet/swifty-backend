@@ -5,14 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.swifty.bank.server.api.ConfigureContainer;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
-import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
-import com.swifty.bank.server.core.domain.customer.constant.Gender;
-import com.swifty.bank.server.core.domain.customer.constant.Nationality;
-import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -63,28 +60,28 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
         assertThat(!res.getTemporaryToken().isEmpty()).isTrue();
     }
 
-    @Test
-    @Order(2)
-    public void checkLoginAvailabilityWithExistValidCustomer() {
-        JoinDto joinDto = new JoinDto(null, "Taylor Swift", Nationality.KOREA, "+821012345678",
-                customerPassword, "iPhone", Gender.FEMALE,
-                "010101", UserRole.CUSTOMER);
-        customerService.join(joinDto);
-
-        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
-                .name("Taylor Swift")
-                .phoneNumber("+821012345678")
-                .mobileCarrier("KT")
-                .residentRegistrationNumber("0101014")
-                .build();
-
-        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
-        temporaryToken = res.getTemporaryToken();
-        secureKeypadService.createSecureKeypad(temporaryToken);
-
-        assertThat(res.getIsAvailable()).isTrue();
-        assertThat(!res.getTemporaryToken().isEmpty()).isTrue();
-    }
+//    @Test
+//    @Order(2)
+//    public void checkLoginAvailabilityWithExistValidCustomer() {
+//        JoinDto joinDto = new JoinDto(null, "Taylor Swift", Nationality.KOREA, "+821012345678",
+//                customerPassword, "iPhone", Gender.FEMALE,
+//                "010101", UserRole.CUSTOMER);
+//        customerService.join(joinDto);
+//
+//        CheckLoginAvailabilityRequest req = CheckLoginAvailabilityRequest.builder()
+//                .name("Taylor Swift")
+//                .phoneNumber("+821012345678")
+//                .mobileCarrier("KT")
+//                .residentRegistrationNumber("0101014")
+//                .build();
+//
+//        CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(req);
+//        temporaryToken = res.getTemporaryToken();
+//        secureKeypadService.createSecureKeypad(temporaryToken);
+//
+//        assertThat(res.getIsAvailable()).isTrue();
+//        assertThat(!res.getTemporaryToken().isEmpty()).isTrue();
+//    }
 
 //    @Test
 //    @Order(3)

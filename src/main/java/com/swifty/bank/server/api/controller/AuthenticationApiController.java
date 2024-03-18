@@ -19,8 +19,6 @@ import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormRespo
 import com.swifty.bank.server.api.controller.dto.auth.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.keypad.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
-import com.swifty.bank.server.api.service.SecureKeypadService;
-import com.swifty.bank.server.api.service.SmsService;
 import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,8 +46,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Tag(name = "회원가입/로그인/회원탈퇴 관련 API")
 public class AuthenticationApiController {
     private final AuthenticationApiService authenticationApiService;
-    private final SmsService smsService;
-    private final SecureKeypadService secureKeypadService;
 
     @PassAuth
     @PostMapping("/check-login-availability")
@@ -101,7 +97,7 @@ public class AuthenticationApiController {
     public ResponseEntity<StealVerificationCodeResponse> stealVerificationCode(
             @CookieValue("temporary-token") String temporaryToken,
             @RequestBody @Valid StealVerificationCodeRequest stealVerificationCodeRequest) {
-        StealVerificationCodeResponse res = smsService.stealVerificationCode(
+        StealVerificationCodeResponse res = authenticationApiService.stealVerificationCode(
                 stealVerificationCodeRequest);
 
         return ResponseEntity
@@ -133,7 +129,7 @@ public class AuthenticationApiController {
     public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(
             @CookieValue("temporary-token") String temporaryToken,
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
-        SendVerificationCodeResponse res = smsService.sendVerificationCode(
+        SendVerificationCodeResponse res = authenticationApiService.sendVerificationCode(
                 sendVerificationCodeRequest);
         if (res.getIsSuccess()) {
             return ResponseEntity
@@ -169,7 +165,7 @@ public class AuthenticationApiController {
     public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(
             @CookieValue("temporary-token") String temporaryToken,
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
-        CheckVerificationCodeResponse res = smsService.checkVerificationCode(
+        CheckVerificationCodeResponse res = authenticationApiService.checkVerificationCode(
                 checkVerificationCodeRequest);
         if (res.getIsSuccess()) {
             return ResponseEntity
@@ -200,7 +196,8 @@ public class AuthenticationApiController {
     public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
             @CookieValue("temporary-token") String temporaryToken
     ) {
-        CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(JwtUtil.removeType(temporaryToken));
+        CreateSecureKeypadResponse res = authenticationApiService.createSecureKeypad(
+                JwtUtil.removeType(temporaryToken));
 
         return ResponseEntity
                 .ok()

@@ -1,28 +1,42 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.CheckVerificationCodeRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.SendVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.StealVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.CheckVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.SendVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.StealVerificationCodeResponse;
+import com.swifty.bank.server.api.controller.dto.keypad.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
+import com.swifty.bank.server.core.common.redis.service.OtpRedisService;
 import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
 import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
+import com.swifty.bank.server.core.common.redis.value.SBoxKey;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
+import com.swifty.bank.server.core.domain.keypad.service.dto.SecureKeypadDto;
+import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.core.utils.JwtUtil;
+import com.swifty.bank.server.core.utils.RandomUtil;
 import com.swifty.bank.server.core.utils.SBoxUtil;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +49,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final AuthenticationService authenticationService;
+    private final VerifyService verifyService;
+    private final OtpRedisService otpRedisService;
+    private final SecureKeypadService secureKeypadService;
 
     private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
     private final LogoutAccessTokenRedisService logoutAccessTokenRedisService;
@@ -163,6 +180,71 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 .isSuccess(false)
                 .isAvailablePassword(true)
                 .tokens(null)
+                .build();
+    }
+
+    @Override
+    public StealVerificationCodeResponse stealVerificationCode(
+            StealVerificationCodeRequest stealVerificationCodeRequest) {
+        String otp = RandomUtil.generateOtp(6);
+
+        otpRedisService.setData(
+                stealVerificationCodeRequest.getPhoneNumber(),
+                otp,
+                5L,
+                TimeUnit.MINUTES
+        );
+        return StealVerificationCodeResponse.builder()
+                .otp(otp)
+                .build();
+    }
+
+    @Override
+    public SendVerificationCodeResponse sendVerificationCode(SendVerificationCodeRequest sendVerificationCodeRequest) {
+        boolean isSent = verifyService.sendVerificationCode(
+                sendVerificationCodeRequest.getPhoneNumber());
+
+        if (!isSent) {
+            return SendVerificationCodeResponse.builder()
+                    .isSuccess(false)
+                    .build();
+        }
+        return SendVerificationCodeResponse.builder()
+                .isSuccess(true)
+                .build();
+    }
+
+    @Override
+    public CheckVerificationCodeResponse checkVerificationCode(
+            CheckVerificationCodeRequest checkVerificationCodeRequest) {
+        boolean isValidVerificationCode = verifyService.checkVerificationCode(
+                checkVerificationCodeRequest.getPhoneNumber(),
+                checkVerificationCodeRequest.getVerificationCode());
+
+        if (!isValidVerificationCode) {
+            return CheckVerificationCodeResponse.builder()
+                    .isSuccess(false)
+                    .build();
+        }
+        return CheckVerificationCodeResponse.builder()
+                .isSuccess(true)
+                .build();
+    }
+
+    @Override
+    public CreateSecureKeypadResponse createSecureKeypad(String temporaryToken) {
+        SecureKeypadDto secureKeypadDto = secureKeypadService.createSecureKeypad();
+
+        // redis에 섞은 순서에 대한 정보 저장
+        sBoxKeyRedisService.setData(
+                temporaryToken,
+                SBoxKey.builder()
+                        .key(secureKeypadDto.getKey())
+                        .build()
+        );
+
+        return CreateSecureKeypadResponse.builder()
+                .keypad(secureKeypadDto.getShuffledKeypadImages())
                 .build();
     }
 

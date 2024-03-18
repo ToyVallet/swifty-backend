@@ -1,9 +1,7 @@
-package com.swifty.bank.server.api.service.impl;
+package com.swifty.bank.server.core.domain.keypad.service.impl;
 
-import com.swifty.bank.server.api.controller.dto.keypad.response.CreateSecureKeypadResponse;
-import com.swifty.bank.server.api.service.SecureKeypadService;
-import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
-import com.swifty.bank.server.core.common.redis.value.SBoxKey;
+import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
+import com.swifty.bank.server.core.domain.keypad.service.dto.SecureKeypadDto;
 import com.swifty.bank.server.core.utils.SBoxUtil;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
@@ -23,17 +21,17 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class SecureKeypadServiceImpl implements SecureKeypadService {
-    private final Map<String, Integer> keypadPathDict = new HashMap<>() {{
-        put("assets/images/keypad/0.svg", 0);
-        put("assets/images/keypad/1.svg", 1);
-        put("assets/images/keypad/2.svg", 2);
-        put("assets/images/keypad/3.svg", 3);
-        put("assets/images/keypad/4.svg", 4);
-        put("assets/images/keypad/5.svg", 5);
-        put("assets/images/keypad/6.svg", 6);
-        put("assets/images/keypad/7.svg", 7);
-        put("assets/images/keypad/8.svg", 8);
-        put("assets/images/keypad/9.svg", 9);
+    private final Map<Integer, String> keypadPathDict = new HashMap<>() {{
+        put(0, "assets/images/keypad/0.svg");
+        put(1, "assets/images/keypad/1.svg");
+        put(2, "assets/images/keypad/2.svg");
+        put(3, "assets/images/keypad/3.svg");
+        put(4, "assets/images/keypad/4.svg");
+        put(5, "assets/images/keypad/5.svg");
+        put(6, "assets/images/keypad/6.svg");
+        put(7, "assets/images/keypad/7.svg");
+        put(8, "assets/images/keypad/8.svg");
+        put(9, "assets/images/keypad/9.svg");
     }};
     private final List<String> keypadPaths = List.of(
             "assets/images/keypad/0.svg",
@@ -48,7 +46,6 @@ public class SecureKeypadServiceImpl implements SecureKeypadService {
             "assets/images/keypad/9.svg"
     );
     private final List<String> keypadFiles;
-    private final SBoxKeyRedisService sBoxKeyRedisService;
 
     @PostConstruct
     private void init() {
@@ -72,16 +69,14 @@ public class SecureKeypadServiceImpl implements SecureKeypadService {
         );
     }
 
+    // 0~9 숫자가 적힌 이미지를 랜덤으로 섞어 반환
     @Override
-    public CreateSecureKeypadResponse createSecureKeypad(String temporaryToken) {
+    public SecureKeypadDto createSecureKeypad() {
         final int keypadSize = keypadFiles.size();
 
-        // 각 키패드 이미지에 대응하는 숫자 추출
-        // ex) "assets/images/keypad/1.svg"는 숫자 1을 의미
+        // len 만큼
         List<Integer> plainOrder = new ArrayList<>() {{
-            for (String path : keypadPaths) {
-                add(keypadPathDict.get(path));
-            }
+            this.addAll(keypadPathDict.keySet().stream().sorted().toList());
         }};
 
         // 키패드 섞을 순서(key) 결정 (랜덤)
@@ -96,15 +91,9 @@ public class SecureKeypadServiceImpl implements SecureKeypadService {
             keypad.set(shuffledOrder.get(i), keypadFiles.get(i));
         }
 
-        // redis에 섞은 순서에 대한 정보 저장
-        sBoxKeyRedisService.setData(
-                temporaryToken,
-                SBoxKey.builder()
-                        .key(key)
-                        .build()
-        );
-        return CreateSecureKeypadResponse.builder()
-                .keypad(keypad)
+        return SecureKeypadDto.builder()
+                .key(key)
+                .shuffledKeypadImages(keypad)
                 .build();
     }
 }
