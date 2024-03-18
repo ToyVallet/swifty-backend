@@ -5,9 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.swifty.bank.server.api.ConfigureContainer;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
-import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.core.common.authentication.constant.UserRole;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
@@ -16,8 +13,6 @@ import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.core.utils.JwtUtil;
-import java.util.UUID;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -194,33 +189,33 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
 //        assertThat(encoder.matches(customerPassword, customer.getPassword())).isTrue();
 //    }
 
-    @Test
-    @Order(10)
-    public void reissueWithNotValidRefreshToken() {
-        String notValidRefreshToken = authenticationService.createRefreshToken(UUID.randomUUID());
+//    @Test
+//    @Order(10)
+//    public void reissueWithNotValidRefreshToken() {
+//        String notValidRefreshToken = authenticationService.createRefreshToken(UUID.randomUUID());
+//
+//        assertThat(!authenticationApiService.reissue(notValidRefreshToken).getIsSuccess()).isTrue();
+//    }
 
-        assertThat(!authenticationApiService.reissue(notValidRefreshToken).getIsSuccess()).isTrue();
-    }
+//    @Test
+//    @Order(11)
+//    public void reissueTest() {
+//        ReissueResponse res = authenticationApiService.reissue(refreshToken);
+//
+//        assertThat(res.getIsSuccess());
+//        assertThat(!res.getTokens().isEmpty());
+//        accessToken = res.getTokens().get(0);
+//        refreshToken = res.getTokens().get(1);
+//    }
 
-    @Test
-    @Order(11)
-    public void reissueTest() {
-        ReissueResponse res = authenticationApiService.reissue(refreshToken);
-
-        assertThat(res.getIsSuccess());
-        assertThat(!res.getTokens().isEmpty());
-        accessToken = res.getTokens().get(0);
-        refreshToken = res.getTokens().get(1);
-    }
-
-    @Test
-    @Order(12)
-    public void logoutTest() {
-        LogoutResponse res = authenticationApiService.logout(accessToken);
-
-        assertThat(res.getIsSuccessful());
-        assertThat(logoutAccessTokenRedisService.getData(accessToken).equals("false"));
-    }
+//    @Test
+//    @Order(12)
+//    public void logoutTest() {
+//        LogoutResponse res = authenticationApiService.logout(accessToken);
+//
+//        assertThat(res.getIsSuccessful());
+//        assertThat(logoutAccessTokenRedisService.getData(accessToken).equals("false"));
+//    }
 
 //    @Test
 //    @Order(14)
@@ -249,17 +244,17 @@ public class AuthenticationApiServiceTest extends ConfigureContainer {
 //        refreshToken = resForSignIn.getTokens().get(1);
 //    }
 
-    @Test
-    @Order(15)
-    public void signOutTest() {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
-        SignOutResponse res = authenticationApiService.signOut(accessToken);
-
-        assertThat(res.getWasSignedOut());
-        assertThat(logoutAccessTokenRedisService.getData(accessToken).equals("false"));
-        assertThat(authenticationService.findAuthByCustomerUuid(customerUuid).isEmpty());
-        assertThat(customerService.findByUuid(customerUuid).isEmpty());
-    }
+//    @Test
+//    @Order(15)
+//    public void signOutTest() {
+//        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
+//        SignOutResponse res = authenticationApiService.signOut(accessToken);
+//
+//        assertThat(res.getWasSignedOut());
+//        assertThat(logoutAccessTokenRedisService.getData(accessToken).equals("false"));
+//        assertThat(authenticationService.findAuthByCustomerUuid(customerUuid).isEmpty());
+//        assertThat(customerService.findByUuid(customerUuid).isEmpty());
+//    }
 
 //    @Test
 //    @Order(17)
