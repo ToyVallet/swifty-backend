@@ -8,7 +8,6 @@ import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
-import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
@@ -16,19 +15,13 @@ import com.swifty.bank.server.core.common.redis.service.SecureKeypadOrderInverse
 import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -193,7 +186,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
         return LogoutResponse.builder()
-                .isSuccessful(true)
+                .isSuccess(true)
                 .build();
     }
 
@@ -205,7 +198,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         customerService.withdrawCustomer(uuid);
         logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
         return SignOutResponse.builder()
-                .wasSignedOut(true)
+                .isSuccess(true)
                 .build();
     }
 

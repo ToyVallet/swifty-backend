@@ -8,5 +8,5 @@ import lombok.Data;
 @Builder
 public class LogoutResponse {
     @Schema(description = "로그아웃에 성공한 경우에는 true, 실패시 false를 반환합니다", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
-    private final Boolean isSuccessful;
+    private final Boolean isSuccess;
 }

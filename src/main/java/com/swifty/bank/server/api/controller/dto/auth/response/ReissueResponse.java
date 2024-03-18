@@ -13,8 +13,8 @@ public class ReissueResponse {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean isSuccess;
 
-    @Schema(description = "성공시 AccessToken, RefreshToken 반환",
-            example = "[{AccessToken}, {RefreshToken}]",
+    @Schema(description = "성공시 access token, refresh token 반환",
+            example = "[{access token}, {refresh token}]",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private List<String> tokens;
 }

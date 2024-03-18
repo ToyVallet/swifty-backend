@@ -15,21 +15,22 @@ import com.swifty.bank.server.api.service.AuthenticationApiService;
 import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequiredArgsConstructor
 @Controller
@@ -47,28 +48,26 @@ public class AuthenticationController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = CheckLoginAvailabilityResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+            @ApiResponse(responseCode = "400", description = "회원가입/로그인이 불가한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
-                    }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
-                    content = {
-                            @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
+                                    schema = @Schema(implementation = CheckLoginAvailabilityResponse.class))
                     })
     })
     public ResponseEntity<CheckLoginAvailabilityResponse> checkLoginAvailability(
-            @Valid @RequestBody CheckLoginAvailabilityRequest body,
-            HttpServletResponse response
+            @Valid @RequestBody CheckLoginAvailabilityRequest body
     ) {
         CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(body);
-        ResponseCookie temporaryCookie =
-                CookieUtils.createCookie("temporaryToken", res.getTemporaryToken());
+        if (res.getIsAvailable()) {
+            return ResponseEntity
+                    .ok()
+                    .header(HttpHeaders.SET_COOKIE,
+                            CookieUtils.createCookie("temporary-token", res.getTemporaryToken()).toString())
+                    .body(res);
+        }
 
         return ResponseEntity
-                .ok()
-                .header(HttpHeaders.SET_COOKIE, temporaryCookie.toString())
+                .badRequest()
                 .body(res);
     }
 
@@ -77,12 +76,12 @@ public class AuthenticationController {
     @Operation(summary = "신규 회원인 경우 회원가입과 로그인 순서대로 처리, 기존 회원의 경우 로그인 처리",
             description = "휴대폰 번호로 가입된 회원이 존재하면서 이름, 주민등록번호 정보가 불일치하는 경우 로그인 실패")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+            @ApiResponse(responseCode = "200", description = "회원가입/로그인에 성공한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = SignWithFormResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+            @ApiResponse(responseCode = "400", description = "회원가입/로그인에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
@@ -94,39 +93,47 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<SignWithFormResponse> signWithForm(
-            @CookieValue("temporaryToken") String temporaryToken,
+            @CookieValue("temporary-token") String temporaryToken,
             @Valid @RequestBody SignWithFormRequest body
     ) {
         SignWithFormResponse res = authenticationApiService.signUpAndSignIn(
                 JwtUtil.removeType(temporaryToken),
                 body);
 
-        ResponseCookie accessCookie =
-                CookieUtils.createCookie("accessToken", res.getTokens().get(0));
-        ResponseCookie refreshCookie =
-                CookieUtils.createCookie("refreshToken", res.getTokens().get(1));
+        if (res.isSuccess()) {
+            HttpHeaders headers = new HttpHeaders(
+                    new LinkedMultiValueMap<>() {{
+                        put(HttpHeaders.SET_COOKIE,
+                                List.of(CookieUtils.createCookie("access-token", res.getTokens().get(0)).toString(),
+                                        CookieUtils.createCookie("refresh-token", res.getTokens().get(1)).toString())
+                        );
+                    }}
+            );
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .body(res);
+        }
 
         return ResponseEntity
-                .ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .badRequest()
                 .body(res);
     }
 
     @PassAuth
     @PostMapping("/reissue")
-    @Operation(summary = "액세스 토큰 만료시 리프레시 토큰을 이용한 토큰들 재발급",
-            description = "유효한 리프레시 토큰 필요, 만약 리프레시 토큰도 만료시 재로그인 필요함")
+    @Operation(summary = "유효한 refresh token을 이용하여 access token, refresh token 재발급",
+            description = "유효한 refresh token 필요")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+            @ApiResponse(responseCode = "200", description = "성공적으로 발급된 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = ReissueResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "헤더의 리프레시 토큰이 잘못된 경우",
+            @ApiResponse(responseCode = "400", description = "발급에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
+                                    schema = @Schema(implementation = ReissueResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
                     content = {
@@ -135,34 +142,43 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<ReissueResponse> reissueTokens(
-            @CookieValue("refreshToken") String refreshToken
+            @CookieValue("refresh-token") String refreshToken
     ) {
         ReissueResponse res = authenticationApiService.reissue(JwtUtil.removeType(refreshToken));
 
-        ResponseCookie accessCookie =
-                CookieUtils.createCookie("accessToken", res.getTokens().get(0));
-        ResponseCookie refreshCookie =
-                CookieUtils.createCookie("refreshToken", res.getTokens().get(1));
+        if (res.getIsSuccess()) {
+            HttpHeaders headers = new HttpHeaders(
+                    new LinkedMultiValueMap<>() {{
+                        put(HttpHeaders.SET_COOKIE,
+                                List.of(CookieUtils.createCookie("access-token", res.getTokens().get(0)).toString(),
+                                        CookieUtils.createCookie("refresh-token", res.getTokens().get(1)).toString())
+                        );
+                    }}
+            );
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .body(res);
+        }
 
         return ResponseEntity
-                .ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .badRequest()
                 .body(res);
     }
 
     @CustomerAuth
     @PostMapping("/log-out")
+    @Operation(summary = "로그아웃", description = "유효한 access token으로 요청해야 함")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+            @ApiResponse(responseCode = "200", description = "성공적으로 로그아웃한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = LogoutResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "헤더의 토큰이 잘못된 경우",
+            @ApiResponse(responseCode = "400", description = "로그아웃에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
+                                    schema = @Schema(implementation = LogoutResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
                     content = {
@@ -170,38 +186,34 @@ public class AuthenticationController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    @Operation(summary = "유효한 유저가 로그인 하게 함", description = "이를 시도하는 유저는 로그인 되어 있는 상태여야 하며 액세스 토큰 역시 유효해야 함")
     public ResponseEntity<LogoutResponse> logOut(
-            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String accessToken
+            @CookieValue("access-token") String accessToken
     ) {
         LogoutResponse res = authenticationApiService.logout(JwtUtil.removeType(accessToken));
 
-        ResponseCookie accessCookie =
-                CookieUtils.createCookie("accessToken", "");
-        ResponseCookie refreshCookie =
-                CookieUtils.createCookie("refreshToken", "");
-
+        if (res.getIsSuccess()) {
+            return ResponseEntity
+                    .ok()
+                    .body(res);
+        }
         return ResponseEntity
-                .ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .badRequest()
                 .body(res);
     }
 
     @CustomerAuth
     @PostMapping("/sign-out")
-    @Operation(summary = "유효한 유저의 회원 탈퇴 기능", description = "유효한 액세스 토큰이 필요하며 유저는 로그인 되어 있어야 함")
+    @Operation(summary = "회원 탈퇴", description = "유효한 access token으로 요청해야 함")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+            @ApiResponse(responseCode = "200", description = "성공적으로 회원 탈퇴한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = SignOutResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+            @ApiResponse(responseCode = "400", description = "회원 탈퇴에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
+                                    schema = @Schema(implementation = SignOutResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
                     content = {
@@ -210,20 +222,17 @@ public class AuthenticationController {
                     })
     })
     public ResponseEntity<SignOutResponse> signOut(
-            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true)
-            @RequestHeader("Authorization") String accessToken
+            @CookieValue("access-token") String accessToken
     ) {
         SignOutResponse res = authenticationApiService.signOut(JwtUtil.removeType(accessToken));
 
-        ResponseCookie accessCookie =
-                CookieUtils.createCookie("accessToken", "");
-        ResponseCookie refreshCookie =
-                CookieUtils.createCookie("refreshToken", "");
-
+        if (res.getIsSuccess()) {
+            return ResponseEntity
+                    .ok()
+                    .body(res);
+        }
         return ResponseEntity
-                .ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .badRequest()
                 .body(res);
     }
 }

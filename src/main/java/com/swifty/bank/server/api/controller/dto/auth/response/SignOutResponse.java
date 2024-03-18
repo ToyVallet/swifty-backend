@@ -11,5 +11,5 @@ public class SignOutResponse {
     @Schema(description = "성공하면 true, 실패시 false",
             example = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean wasSignedOut;
+    private Boolean isSuccess;
 }
