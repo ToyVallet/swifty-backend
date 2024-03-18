@@ -5,13 +5,20 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.api.controller.dto.MessageResponse;
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.CheckVerificationCodeRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.SendVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.StealVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.CheckVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.SendVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
+import com.swifty.bank.server.api.service.SmsService;
 import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,9 +42,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 @Controller
 @RequestMapping(value = "/auth")
-@Tag(name = "Authentication API")
-public class AuthenticationController {
+@Tag(name = "회원가입/로그인/회원탈퇴 관련 API")
+public class AuthenticationApiController {
     private final AuthenticationApiService authenticationApiService;
+    private final SmsService smsService;
 
     @PassAuth
     @PostMapping("/check-login-availability")
@@ -68,6 +76,100 @@ public class AuthenticationController {
 
         return ResponseEntity
                 .badRequest()
+                .body(res);
+    }
+
+    @TemporaryAuth
+    @PostMapping(value = "/steal-verification-code")
+    @Operation(summary = "인증번호 훔쳐보기", description = "생성된 인증번호를 훔쳐봅니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증번호가 성공적으로 발급된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = StealVerificationCodeResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
+    public ResponseEntity<StealVerificationCodeResponse> stealVerificationCode(
+            @CookieValue("temporaryToken") String temporaryToken,
+            @RequestBody @Valid StealVerificationCodeRequest stealVerificationCodeRequest) {
+        StealVerificationCodeResponse res = smsService.stealVerificationCode(
+                stealVerificationCodeRequest);
+
+        return ResponseEntity
+                .ok()
+                .body(res);
+    }
+
+    @TemporaryAuth
+    @PostMapping(value = "/send-verification-code")
+    @Operation(summary = "인증번호 발송", description = "요청받은 전화번호로 인증번호를 발송합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증번호가 정상적으로 발송된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = SendVerificationCodeResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우(전화번호가 잘못된 경우, Twilio 서비스에서 문자 전송이 실패한 경우 등)",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+
+    })
+    public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(
+            @CookieValue("temporaryToken") String temporaryToken,
+            @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
+        SendVerificationCodeResponse res = smsService.sendVerificationCode(
+                sendVerificationCodeRequest);
+
+        return ResponseEntity
+                .ok()
+                .body(res);
+    }
+
+    @TemporaryAuth
+    @PostMapping(value = "/check-verification-code")
+    @Operation(summary = "인증번호 검증", description = "인증번호를 검증합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증번호가 일치한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = CheckVerificationCodeResponse.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
+    public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(
+            @CookieValue("temporaryToken") String temporaryToken,
+            @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
+        CheckVerificationCodeResponse res = smsService.checkVerificationCode(
+                checkVerificationCodeRequest);
+
+        return ResponseEntity
+                .ok()
                 .body(res);
     }
 

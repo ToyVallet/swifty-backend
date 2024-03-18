@@ -1,4 +1,4 @@
-package com.swifty.bank.server.api.controller.dto.sms.request;
+package com.swifty.bank.server.api.controller.dto.auth.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -10,10 +10,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StealVerificationCodeRequest {
+@Data
+public class CheckVerificationCodeRequest {
     @NotNull
     @NotBlank
     @Size(min = 3, max = 18)
@@ -22,4 +22,10 @@ public class StealVerificationCodeRequest {
             example = "+821012345678",
             requiredMode = RequiredMode.REQUIRED)
     private String phoneNumber;
+
+    @NotNull
+    @Size(min = 6, max = 6)
+    @Schema(example = "123456",
+            requiredMode = RequiredMode.REQUIRED)
+    private String verificationCode;
 }
