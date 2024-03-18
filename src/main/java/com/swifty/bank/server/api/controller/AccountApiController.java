@@ -10,10 +10,16 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCu
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
-import com.swifty.bank.server.api.controller.dto.account.response.*;
-import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.AccountRegisterResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.ListUnitedAccountWithCustomerResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.RetrieveBalanceWithCurrencyResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.ReviseUnitedAccountPasswordResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateAccountNicknameResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateDefaultCurrencyResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccountStatusResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
 import com.swifty.bank.server.api.service.AccountApiService;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,7 +28,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequiredArgsConstructor
@@ -50,9 +61,11 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> register(@CookieValue("access-token") String jwt,
-                                      @RequestBody AccountRegisterRequest req) {
-        AccountRegisterResponse res = accountApiService.register(jwt, req);
+    public ResponseEntity<AccountRegisterResponse> register(
+            @CookieValue("access-token") String accessToken,
+            @RequestBody AccountRegisterRequest req
+    ) {
+        AccountRegisterResponse res = accountApiService.register(accessToken, req);
 
         return ResponseEntity
                 .ok()
@@ -79,11 +92,11 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> updateNickname(
-            @CookieValue("access-token") String jwt,
+    public ResponseEntity<UpdateAccountNicknameResponse> updateNickname(
+            @CookieValue("access-token") String accessToken,
             @RequestBody ReviseAccountNicknameRequest req
     ) {
-        UpdateAccountNicknameResponse res = accountApiService.updateNickname(jwt, req);
+        UpdateAccountNicknameResponse res = accountApiService.updateNickname(accessToken, req);
 
         return ResponseEntity
                 .ok()
@@ -110,12 +123,12 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> updatePassword(
-            @CookieValue("access-token") String jwt,
+    public ResponseEntity<ReviseUnitedAccountPasswordResponse> updatePassword(
+            @CookieValue("access-token") String accessToken,
             @RequestBody
             ReviseUnitedAccountPasswordRequest req
     ) {
-        ReviseUnitedAccountPasswordResponse res = accountApiService.updatePassword(jwt, req);
+        ReviseUnitedAccountPasswordResponse res = accountApiService.updatePassword(accessToken, req);
 
         return ResponseEntity
                 .ok()
@@ -142,12 +155,12 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> retrieveBalanceWithCurrency(
-            @CookieValue("access-token") String jwt,
+    public ResponseEntity<RetrieveBalanceWithCurrencyResponse> retrieveBalanceWithCurrency(
+            @CookieValue("access-token") String accessToken,
             @RequestBody
             RetrieveBalanceWithCurrencyRequest req
     ) {
-        RetrieveBalanceWithCurrencyResponse res = accountApiService.retrieveBalanceWithCurrency(jwt, req);
+        RetrieveBalanceWithCurrencyResponse res = accountApiService.retrieveBalanceWithCurrency(accessToken, req);
 
         return ResponseEntity
                 .ok()
@@ -174,12 +187,12 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> withdrawAccount(
-            @CookieValue("access-token") String jwt,
+    public ResponseEntity<WithdrawUnitedAccountResponse> withdrawAccount(
+            @CookieValue("access-token") String accessToken,
             @RequestBody
             WithdrawUnitedAccountRequest req
     ) {
-        WithdrawUnitedAccountResponse res = accountApiService.withdraw(jwt, req);
+        WithdrawUnitedAccountResponse res = accountApiService.withdraw(accessToken, req);
 
         return ResponseEntity
                 .ok()
@@ -206,12 +219,12 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> updateUnitedAccount(
-            @CookieValue("access-token") String jwt,
+    public ResponseEntity<UpdateUnitedAccountStatusResponse> updateUnitedAccount(
+            @CookieValue("access-token") String accessToken,
             @RequestBody
             UpdateUnitedAccountStatusRequest req
     ) {
-        UpdateUnitedAccountStatusResponse res = accountApiService.updateUnitedAccountStatus(jwt, req);
+        UpdateUnitedAccountStatusResponse res = accountApiService.updateUnitedAccountStatus(accessToken, req);
 
         return ResponseEntity
                 .ok()
@@ -238,12 +251,12 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> updateSubAccountStatus(
-            @CookieValue("access-token") String jwt,
+    public ResponseEntity<UpdateSubAccountStatusResponse> updateSubAccountStatus(
+            @CookieValue("access-token") String accessToken,
             @RequestBody
             UpdateSubAccountStatusRequest req
     ) {
-        UpdateSubAccountStatusResponse res = accountApiService.updateSubAccountStatus(jwt, req);
+        UpdateSubAccountStatusResponse res = accountApiService.updateSubAccountStatus(accessToken, req);
 
         return ResponseEntity
                 .ok()
@@ -270,12 +283,12 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> updateSubAccountStatus(
-            @CookieValue("access-token") String jwt,
+    public ResponseEntity<UpdateDefaultCurrencyResponse> updateSubAccountStatus(
+            @CookieValue("access-token") String accessToken,
             @RequestBody
             UpdateDefaultCurrencyRequest req
     ) {
-        UpdateDefaultCurrencyResponse res = accountApiService.updateDefaultCurrency(jwt, req);
+        UpdateDefaultCurrencyResponse res = accountApiService.updateDefaultCurrency(accessToken, req);
 
         return ResponseEntity
                 .ok()
@@ -302,10 +315,10 @@ public class AccountApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<?> listUnitedAccountWithCustomer(
-            @CookieValue("access-token") String jwt
+    public ResponseEntity<ListUnitedAccountWithCustomerResponse> listUnitedAccountWithCustomer(
+            @CookieValue("access-token") String accessToken
     ) {
-        ListUnitedAccountWithCustomerResponse res = accountApiService.listUnitedAccountWithCustomer(jwt);
+        ListUnitedAccountWithCustomerResponse res = accountApiService.listUnitedAccountWithCustomer(accessToken);
 
         return ResponseEntity
                 .ok()
