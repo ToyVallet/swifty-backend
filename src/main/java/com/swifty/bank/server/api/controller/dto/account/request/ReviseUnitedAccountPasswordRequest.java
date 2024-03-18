@@ -8,12 +8,10 @@ import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 @Getter
 @Schema(description = "UnitedAccount 비밀번호 수정 요청 폼")
 @NoArgsConstructor
-@RequiredArgsConstructor
 public class ReviseUnitedAccountPasswordRequest {
     @NotNull
     @Schema(description = "UnitedAccount의 UUID",
