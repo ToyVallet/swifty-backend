@@ -32,7 +32,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Claims claims = Jwts.claims();
         Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + accessTokenExpiration * 1000L);
 
-        claims.setSubject("AccessToken");
+        claims.setSubject("access-token");
         claims.put("customerUuid", customerUuid);
         return JwtUtil.generateToken(claims, expiration);
     }
@@ -42,7 +42,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Claims claims = Jwts.claims();
         Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + refreshTokenExpiration * 1000L);
 
-        claims.setSubject("RefreshToken");
+        claims.setSubject("refresh-token");
         claims.put("customerUuid", customerUuid);
         return JwtUtil.generateToken(claims, expiration);
     }
@@ -52,7 +52,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Claims claims = Jwts.claims();
         Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + temporaryTokenExpiration * 1000L);
 
-        claims.setSubject("TemporaryToken");
+        claims.setSubject("temporary-token");
         return JwtUtil.generateToken(claims, expiration);
     }
 
