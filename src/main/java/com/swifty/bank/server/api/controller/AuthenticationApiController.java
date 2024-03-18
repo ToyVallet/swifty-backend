@@ -92,12 +92,7 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = StealVerificationCodeResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
-                    content = {
-                            @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
-                    }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
@@ -116,19 +111,19 @@ public class AuthenticationApiController {
 
     @TemporaryAuth
     @PostMapping(value = "/send-verification-code")
-    @Operation(summary = "인증번호 발송", description = "요청받은 전화번호로 인증번호를 발송합니다.")
+    @Operation(summary = "인증번호 발송", description = "요청받은 전화번호로 인증번호 문자를 발송합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "인증번호가 정상적으로 발송된 경우",
+            @ApiResponse(responseCode = "200", description = "인증번호 문자가 정상적으로 발송된 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = SendVerificationCodeResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+            @ApiResponse(responseCode = "400", description = "인증번호 문자 전송에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
                     }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우(전화번호가 잘못된 경우, Twilio 서비스에서 문자 전송이 실패한 경우 등)",
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우(전화번호가 잘못된 경우, Twilio 서비스에서 문자 전송이 실패한 경우 등)",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
@@ -140,9 +135,14 @@ public class AuthenticationApiController {
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
         SendVerificationCodeResponse res = smsService.sendVerificationCode(
                 sendVerificationCodeRequest);
+        if (res.getIsSuccess()) {
+            return ResponseEntity
+                    .ok()
+                    .body(res);
+        }
 
         return ResponseEntity
-                .ok()
+                .badRequest()
                 .body(res);
     }
 
@@ -160,7 +160,7 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
                     }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
@@ -171,9 +171,14 @@ public class AuthenticationApiController {
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         CheckVerificationCodeResponse res = smsService.checkVerificationCode(
                 checkVerificationCodeRequest);
+        if (res.getIsSuccess()) {
+            return ResponseEntity
+                    .ok()
+                    .body(res);
+        }
 
         return ResponseEntity
-                .ok()
+                .badRequest()
                 .body(res);
     }
 
@@ -186,12 +191,7 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = CreateSecureKeypadResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
-                    content = {
-                            @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
-                    }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
@@ -222,7 +222,7 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
                     }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
@@ -271,7 +271,7 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = ReissueResponse.class))
                     }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
@@ -316,7 +316,7 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = LogoutResponse.class))
                     }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
@@ -351,7 +351,7 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = SignOutResponse.class))
                     }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효한데 서버가 처리에 실패한 경우",
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
