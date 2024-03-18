@@ -98,7 +98,7 @@ public class CustomerController {
     }
 
     @CustomerAuth
-    @PostMapping("/password")
+    @PostMapping("/validate-password")
     @Operation(summary = "회원 비밀번호 일치여부 확인", description = "access token에 대응되는 회원의 비밀번호와 일치하는지 확인합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "비밀번호가 일치한 경우",
@@ -134,34 +134,8 @@ public class CustomerController {
                 .body(new MessageResponse("비밀번호가 불일치합니다."));
     }
 
-    @TemporaryAuth
-    @GetMapping(value = "/create-keypad")
-    @Operation(summary = "개인 식별 비밀번호 확인을 위한 키패드 이미지 제공", description = "순서가 섞인 키패드 이미지 리스트를 반환")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "키패드 이미지 리스트",
-                    content = {
-                            @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = CreateSecureKeypadResponse.class))
-                    }),
-            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
-                    content = {
-                            @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
-                    })
-    })
-    public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
-            @CookieValue("access-token") String accessToken
-    ) {
-        CreateSecureKeypadResponse res
-                = customerApiService.createSecureKeypad(JwtUtil.removeType(accessToken));
-
-        return ResponseEntity
-                .ok()
-                .body(res);
-    }
-
     @CustomerAuth
-    @PatchMapping("/password")
+    @PatchMapping("/update-password")
     @Operation(summary = "회원 비밀번호 변경", description = "access token에 대응되는 회원의 비밀번호 변경")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "비밀번호 변경에 성공한 경우",
@@ -189,5 +163,31 @@ public class CustomerController {
                     .badRequest()
                     .body(new MessageResponse("비밀번호 변경에 실패했습니다."));
         }
+    }
+    
+    @TemporaryAuth
+    @GetMapping(value = "/create-keypad")
+    @Operation(summary = "개인 식별 비밀번호 확인을 위한 키패드 이미지 제공", description = "순서가 섞인 키패드 이미지 리스트를 반환")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "키패드 이미지 리스트",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = CreateSecureKeypadResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
+    public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
+            @CookieValue("access-token") String accessToken
+    ) {
+        CreateSecureKeypadResponse res
+                = customerApiService.createSecureKeypad(JwtUtil.removeType(accessToken));
+
+        return ResponseEntity
+                .ok()
+                .body(res);
     }
 }
