@@ -1,25 +1,44 @@
 package com.swifty.bank.server.api.service;
 
-import com.swifty.bank.server.api.controller.dto.account.request.*;
-import com.swifty.bank.server.api.controller.dto.account.response.*;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
+import com.swifty.bank.server.api.controller.dto.account.request.AccountRegisterRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.RetrieveBalanceWithCurrencyRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.ReviseAccountNicknameRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.ReviseUnitedAccountPasswordRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCurrencyRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
+import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
+import com.swifty.bank.server.api.controller.dto.account.response.AccountRegisterResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.CreateSecureKeypadResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.ListUnitedAccountWithCustomerResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.RetrieveBalanceWithCurrencyResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.ReviseUnitedAccountPasswordResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateAccountNicknameResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateDefaultCurrencyResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccountStatusResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
 
 public interface AccountApiService {
-    public AccountRegisterResponse register(String jwt, AccountRegisterRequest req);
+    AccountRegisterResponse register(String accessToken, AccountRegisterRequest req);
 
-    public UpdateAccountNicknameResponse updateNickname(String jwt, ReviseAccountNicknameRequest req);
+    UpdateAccountNicknameResponse updateNickname(String accessToken, ReviseAccountNicknameRequest req);
 
-    public ReviseUnitedAccountPasswordResponse updatePassword(String jwt, ReviseUnitedAccountPasswordRequest req);
+    ReviseUnitedAccountPasswordResponse updatePassword(String accessToken, ReviseUnitedAccountPasswordRequest req);
 
-    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String jwt, RetrieveBalanceWithCurrencyRequest req);
+    RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String accessToken,
+                                                                    RetrieveBalanceWithCurrencyRequest req);
 
-    public WithdrawUnitedAccountResponse withdraw(String jwt, WithdrawUnitedAccountRequest req);
+    WithdrawUnitedAccountResponse withdraw(String accessToken, WithdrawUnitedAccountRequest req);
 
-    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req);
+    UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String accessToken,
+                                                                UpdateUnitedAccountStatusRequest req);
 
-    public UpdateSubAccountStatusResponse updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req);
+    UpdateSubAccountStatusResponse updateSubAccountStatus(String accessToken, UpdateSubAccountStatusRequest req);
 
-    public UpdateDefaultCurrencyResponse updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req);
+    UpdateDefaultCurrencyResponse updateDefaultCurrency(String accessToken, UpdateDefaultCurrencyRequest req);
 
-    public ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String jwt);
+    ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String accessToken);
+
+    CreateSecureKeypadResponse createSecureKeypad(String accessToken);
 }

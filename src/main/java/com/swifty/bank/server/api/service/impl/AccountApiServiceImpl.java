@@ -9,6 +9,7 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccoun
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
 import com.swifty.bank.server.api.controller.dto.account.response.AccountRegisterResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.controller.dto.account.response.ListUnitedAccountWithCustomerResponse;
 import com.swifty.bank.server.api.controller.dto.account.response.RetrieveBalanceWithCurrencyResponse;
 import com.swifty.bank.server.api.controller.dto.account.response.ReviseUnitedAccountPasswordResponse;
@@ -18,6 +19,8 @@ import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccou
 import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
 import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
 import com.swifty.bank.server.api.service.AccountApiService;
+import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
+import com.swifty.bank.server.core.common.redis.value.SBoxKey;
 import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
@@ -31,6 +34,7 @@ import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
+import com.swifty.bank.server.core.domain.keypad.service.dto.SecureKeypadDto;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import java.util.HashMap;
@@ -46,6 +50,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     private final AccountService accountService;
     private final CustomerService customerService;
     private final SecureKeypadService secureKeypadService;
+
+    private final SBoxKeyRedisService sBoxKeyRedisService;
 
     @Override
     public AccountRegisterResponse register(String token, AccountRegisterRequest req) {
@@ -296,5 +302,22 @@ public class AccountApiServiceImpl implements AccountApiService {
                 true,
                 accountService.listUnitedAccountWithCustomer(dto)
         );
+    }
+
+    @Override
+    public CreateSecureKeypadResponse createSecureKeypad(String accessToken) {
+        SecureKeypadDto secureKeypadDto = secureKeypadService.createSecureKeypad();
+
+        // redis에 섞은 순서에 대한 정보 저장
+        sBoxKeyRedisService.setData(
+                accessToken,
+                SBoxKey.builder()
+                        .key(secureKeypadDto.getKey())
+                        .build()
+        );
+
+        return CreateSecureKeypadResponse.builder()
+                .keypad(secureKeypadDto.getShuffledKeypadImages())
+                .build();
     }
 }
