@@ -129,25 +129,29 @@ public class CustomerController {
     @PatchMapping("/password")
     @Operation(summary = "회원 비밀번호 변경", description = "jwt access 토큰과 입력한 신규 비밀번호로 변경")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "비밀번호를 변경하였습니다.",
+            @ApiResponse(responseCode = "200", description = "비밀번호 변경에 성공한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "비밀번호를 변경을 실패 하였습니다.",
+            @ApiResponse(responseCode = "400", description = "비밀번호 변경에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<MessageResponse> passwordReset(@CookieValue("accessToken") String accessToken
+    public ResponseEntity<MessageResponse> resetPassword(@CookieValue("accessToken") String accessToken
             , @RequestBody PasswordRequest passwordRequest) {
-        accessToken = JwtUtil.removeType(accessToken);
+        try {
+            customerApiService.resetPassword(JwtUtil.removeType(accessToken), passwordRequest);
 
-        customerApiService.resetPassword(accessToken, passwordRequest);
-
-        return ResponseEntity
-                .ok()
-                .body(new MessageResponse("비밀번호를 변경하였습니다."));
+            return ResponseEntity
+                    .ok()
+                    .body(new MessageResponse("비밀번호 변경에 성공했습니다."));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("비밀번호 변경에 실패했습니다."));
+        }
     }
 }
