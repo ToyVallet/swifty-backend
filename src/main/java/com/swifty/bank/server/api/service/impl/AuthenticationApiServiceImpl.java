@@ -182,7 +182,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
         return LogoutResponse.builder()
-                .isSuccessful(true)
+                .isSuccess(true)
                 .build();
     }
 
@@ -193,7 +193,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         customerService.withdrawCustomer(uuid);
         logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
         return SignOutResponse.builder()
-                .wasSignedOut(true)
+                .isSuccess(true)
                 .build();
     }
 
@@ -232,7 +232,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         if (password.length() != PASSWORD_LEN) {
             throw new IllegalArgumentException("비밀번호 길이가 올바르지 않습니다.");
         }
-        
+
         // 같은 문자가 3자리 이상 반복되는가?
         for (int index = 0; index < password.length() - 2; index++) {
             if (password.charAt(index) == password.charAt(index + 1)
