@@ -14,11 +14,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequiredArgsConstructor
 @Controller
@@ -44,15 +51,19 @@ public class CustomerController {
                     })
     })
     public ResponseEntity<CustomerInfoResponse> customerInfo(
-            @CookieValue("accessToken") String accessToken
+            @CookieValue("access-token") String accessToken
     ) {
-        accessToken = JwtUtil.removeType(accessToken);
+        try {
+            CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(JwtUtil.removeType(accessToken));
 
-        CustomerInfoResponse customerInfo = customerApiService.getCustomerInfo(accessToken);
-
-        return ResponseEntity
-                .ok()
-                .body(customerInfo);
+            return ResponseEntity
+                    .ok()
+                    .body(customerInfo);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .build();
+        }
     }
 
     @CustomerAuth
@@ -70,7 +81,9 @@ public class CustomerController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<MessageResponse> customerInfoUpdate(@Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken, @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
+    public ResponseEntity<MessageResponse> customerInfoUpdate(
+            @Parameter(description = "Authorization에 AccessToken을 포함시켜 주세요", example = "Bearer ey...", required = true) @RequestHeader("Authorization") String accessToken,
+            @RequestBody CustomerInfoUpdateConditionRequest customerInfoUpdateCondition) {
         accessToken = JwtUtil.removeType(accessToken);
 
         customerApiService.customerInfoUpdate(accessToken, customerInfoUpdateCondition);
@@ -99,7 +112,7 @@ public class CustomerController {
             , @RequestBody PasswordRequest password) {
         accessToken = JwtUtil.removeType(accessToken);
 
-        boolean isMatchPassword = customerApiService.confirmPassword(accessToken,password);
+        boolean isMatchPassword = customerApiService.confirmPassword(accessToken, password);
 
         if (isMatchPassword) {
             return ResponseEntity
@@ -131,7 +144,7 @@ public class CustomerController {
             , @RequestBody PasswordRequest passwordRequest) {
         accessToken = JwtUtil.removeType(accessToken);
 
-        customerApiService.resetPassword(accessToken,passwordRequest);
+        customerApiService.resetPassword(accessToken, passwordRequest);
 
         return ResponseEntity
                 .ok()
