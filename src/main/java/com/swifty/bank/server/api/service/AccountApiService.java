@@ -20,7 +20,7 @@ import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAc
 import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
 
 public interface AccountApiService {
-    AccountRegisterResponse register(String accessToken, AccountRegisterRequest req);
+    AccountRegisterResponse register(String accessToken, String keypadToken, AccountRegisterRequest req);
 
     UpdateAccountNicknameResponse updateNickname(String accessToken, ReviseAccountNicknameRequest req);
 
@@ -40,5 +40,5 @@ public interface AccountApiService {
 
     ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String accessToken);
 
-    CreateSecureKeypadResponse createSecureKeypad(String accessToken);
+    CreateSecureKeypadResponse createSecureKeypad();
 }

@@ -57,13 +57,16 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     }
 
     @Override
-    public boolean confirmPassword(String accessToken, PasswordRequest passwordRequest) {
+    public boolean confirmPassword(String accessToken, String keypadToken, PasswordRequest passwordRequest) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Customer customer = customerService.findByUuid(customerUuid)
                 .orElseThrow(() -> new NoSuchElementException("회원 조회에 실패했습니다."));
 
-        String password = decryptPassword(accessToken, passwordRequest.getPushedOrder());
+        String password = decryptPassword(keypadToken, passwordRequest.getPushedOrder());
+
+        // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
+        sBoxKeyRedisService.deleteData(keypadToken);
 
         return encoder.matches(password, customer.getPassword());
     }
@@ -84,12 +87,13 @@ public class CustomerApiServiceImpl implements CustomerApiService {
     }
 
     @Override
-    public CreateSecureKeypadResponse createSecureKeypad(String accessToken) {
+    public CreateSecureKeypadResponse createSecureKeypad() {
         SecureKeypadDto secureKeypadDto = secureKeypadService.createSecureKeypad();
 
+        String keypadToken = secureKeypadService.createKeypadToken();
         // redis에 섞은 순서에 대한 정보 저장
         sBoxKeyRedisService.setData(
-                accessToken,
+                keypadToken,
                 SBoxKey.builder()
                         .key(secureKeypadDto.getKey())
                         .build()

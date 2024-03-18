@@ -196,11 +196,13 @@ public class AuthenticationApiController {
     public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
             @CookieValue("temporary-token") String temporaryToken
     ) {
-        CreateSecureKeypadResponse res = authenticationApiService.createSecureKeypad(
-                JwtUtil.removeType(temporaryToken));
+
+        CreateSecureKeypadResponse res = authenticationApiService.createSecureKeypad();
 
         return ResponseEntity
                 .ok()
+                .header(HttpHeaders.SET_COOKIE,
+                        CookieUtils.createCookie("keypad-token", res.getKeypadToken()).toString())
                 .body(res);
     }
 
@@ -227,10 +229,12 @@ public class AuthenticationApiController {
     })
     public ResponseEntity<SignWithFormResponse> signWithForm(
             @CookieValue("temporary-token") String temporaryToken,
+            @CookieValue("keypad-token") String keypadToken,
             @Valid @RequestBody SignWithFormRequest body
     ) {
         SignWithFormResponse res = authenticationApiService.signUpAndSignIn(
                 JwtUtil.removeType(temporaryToken),
+                JwtUtil.removeType(keypadToken),
                 body);
 
         if (res.isSuccess()) {

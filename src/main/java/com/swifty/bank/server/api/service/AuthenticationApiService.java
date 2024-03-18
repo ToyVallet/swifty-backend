@@ -19,7 +19,7 @@ public interface AuthenticationApiService {
     CheckLoginAvailabilityResponse checkLoginAvailability(
             CheckLoginAvailabilityRequest checkLoginAvailabilityRequest);
 
-    SignWithFormResponse signUpAndSignIn(String temporaryToken, SignWithFormRequest dto);
+    SignWithFormResponse signUpAndSignIn(String temporaryToken, String keypadToken, SignWithFormRequest dto);
 
     StealVerificationCodeResponse stealVerificationCode(
             StealVerificationCodeRequest stealVerificationCodeRequest);
@@ -29,7 +29,7 @@ public interface AuthenticationApiService {
     CheckVerificationCodeResponse checkVerificationCode(
             CheckVerificationCodeRequest checkVerificationCodeRequest);
 
-    CreateSecureKeypadResponse createSecureKeypad(String temporaryToken);
+    CreateSecureKeypadResponse createSecureKeypad();
 
     ReissueResponse reissue(String body);
 

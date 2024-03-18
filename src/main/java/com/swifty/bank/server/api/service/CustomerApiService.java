@@ -10,11 +10,11 @@ public interface CustomerApiService {
 
     void customerInfoUpdate(String accessToken, CustomerInfoUpdateConditionRequest customerInfoUpdateCondition);
 
-    boolean confirmPassword(String accessToken, PasswordRequest passwordRequest);
+    boolean confirmPassword(String accessToken, String keypadToken, PasswordRequest passwordRequest);
 
     void resetPassword(String accessToken, PasswordRequest passwordRequest);
 
     void customerWithdrawal(String accessToken);
 
-    CreateSecureKeypadResponse createSecureKeypad(String accessToken);
+    CreateSecureKeypadResponse createSecureKeypad();
 }

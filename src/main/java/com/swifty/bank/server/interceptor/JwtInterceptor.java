@@ -104,7 +104,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                 JwtUtil.validateToken(token);
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException("Authorization 헤더에 올바른 jwt가 존재하지 않습니다.");
+            throw new IllegalArgumentException("Coockie에 올바른 jwt가 존재하지 않습니다.");
         }
         return cookies;
     }

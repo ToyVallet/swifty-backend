@@ -21,13 +21,14 @@ import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccou
 import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
 import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
 import com.swifty.bank.server.api.service.AccountApiService;
-import com.swifty.bank.server.core.utils.JwtUtil;
+import com.swifty.bank.server.core.utils.CookieUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -65,9 +66,10 @@ public class AccountApiController {
     })
     public ResponseEntity<AccountRegisterResponse> register(
             @CookieValue("access-token") String accessToken,
+            @CookieValue("keypad-token") String keypadToken,
             @RequestBody AccountRegisterRequest req
     ) {
-        AccountRegisterResponse res = accountApiService.register(accessToken, req);
+        AccountRegisterResponse res = accountApiService.register(accessToken, keypadToken, req);
 
         return ResponseEntity
                 .ok()
@@ -345,10 +347,12 @@ public class AccountApiController {
     public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
             @CookieValue("access-token") String accessToken
     ) {
-        CreateSecureKeypadResponse res = accountApiService.createSecureKeypad(JwtUtil.removeType(accessToken));
-        
+        CreateSecureKeypadResponse res = accountApiService.createSecureKeypad();
+
         return ResponseEntity
                 .ok()
+                .header(HttpHeaders.SET_COOKIE,
+                        CookieUtils.createCookie("keypad-token", res.getKeypadToken()).toString())
                 .body(res);
     }
 }

@@ -2,18 +2,24 @@ package com.swifty.bank.server.core.domain.keypad.service.impl;
 
 import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
 import com.swifty.bank.server.core.domain.keypad.service.dto.SecureKeypadDto;
+import com.swifty.bank.server.core.utils.DateUtil;
+import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.core.utils.SBoxUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +27,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class SecureKeypadServiceImpl implements SecureKeypadService {
+    @Value("${jwt.keypad-token-expiration-seconds}")
+    private Long keypadTokenExpiration;
     private final Map<Integer, String> keypadPathDict = new HashMap<>() {{
         put(0, "assets/images/keypad/0.svg");
         put(1, "assets/images/keypad/1.svg");
@@ -95,5 +103,14 @@ public class SecureKeypadServiceImpl implements SecureKeypadService {
                 .key(key)
                 .shuffledKeypadImages(keypad)
                 .build();
+    }
+
+    @Override
+    public String createKeypadToken() {
+        Claims claims = Jwts.claims();
+        Date expiration = DateUtil.millisToDate(DateUtil.now().getTime() + keypadTokenExpiration * 1000L);
+
+        claims.setSubject("keypad-token");
+        return JwtUtil.generateToken(claims, expiration);
     }
 }

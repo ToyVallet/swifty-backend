@@ -56,7 +56,7 @@ public class AccountApiServiceImpl implements AccountApiService {
     private final SBoxKeyRedisService sBoxKeyRedisService;
 
     @Override
-    public AccountRegisterResponse register(String accessToken, AccountRegisterRequest req) {
+    public AccountRegisterResponse register(String accessToken, String keypadToken, AccountRegisterRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
@@ -67,7 +67,7 @@ public class AccountApiServiceImpl implements AccountApiService {
         }
 
         // 비밀번호 복호화
-        List<Integer> key = sBoxKeyRedisService.getData(accessToken).getKey();
+        List<Integer> key = sBoxKeyRedisService.getData(keypadToken).getKey();
         List<Integer> decrypted = SBoxUtil.decrypt(req.getPushedOrder(), key);
         String password = String.join("",
                 decrypted
@@ -85,6 +85,9 @@ public class AccountApiServiceImpl implements AccountApiService {
         );
 
         accountService.saveUnitedAccountAndSubAccounts(dto);
+
+        // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
+        sBoxKeyRedisService.deleteData(keypadToken);
 
         return new AccountRegisterResponse(
                 true
@@ -329,12 +332,13 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public CreateSecureKeypadResponse createSecureKeypad(String accessToken) {
+    public CreateSecureKeypadResponse createSecureKeypad() {
         SecureKeypadDto secureKeypadDto = secureKeypadService.createSecureKeypad();
 
+        String keypadToken = secureKeypadService.createKeypadToken();
         // redis에 섞은 순서에 대한 정보 저장
         sBoxKeyRedisService.setData(
-                accessToken,
+                keypadToken,
                 SBoxKey.builder()
                         .key(secureKeypadDto.getKey())
                         .build()

@@ -99,11 +99,12 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     @Transactional
-    public SignWithFormResponse signUpAndSignIn(String temporaryToken, SignWithFormRequest signWithFormRequest) {
+    public SignWithFormResponse signUpAndSignIn(String temporaryToken, String keypadToken,
+                                                SignWithFormRequest signWithFormRequest) {
         TemporarySignUpForm temporarySignUpForm = temporarySignUpFormRedisService.getData(temporaryToken);
 
         // 비밀번호 복호화
-        List<Integer> key = sBoxKeyRedisService.getData(temporaryToken).getKey();
+        List<Integer> key = sBoxKeyRedisService.getData(keypadToken).getKey();
         List<Integer> decrypted = SBoxUtil.decrypt(signWithFormRequest.getPushedOrder(), key);
         String password = String.join("",
                 decrypted
@@ -137,11 +138,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             ) {
                 TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
                 authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
-                temporarySignUpFormRedisService.deleteData(temporaryToken);
 
                 // 기존 Customer의 비밀번호와 deviceId 업데이트
                 customerService.updateDeviceId(customer.getId(), signWithFormRequest.getDeviceId());
                 customerService.updatePassword(customer.getId(), password);
+
+                // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
+                temporarySignUpFormRedisService.deleteData(temporaryToken);
+                sBoxKeyRedisService.deleteData(keypadToken);
 
                 return SignWithFormResponse.builder()
                         .isSuccess(true)
@@ -167,7 +171,10 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Customer customer = customerService.join(joinDto);
             TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
             authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
+
+            // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
             temporarySignUpFormRedisService.deleteData(temporaryToken);
+            sBoxKeyRedisService.deleteData(keypadToken);
 
             return SignWithFormResponse.builder()
                     .isSuccess(true)
@@ -232,12 +239,13 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     }
 
     @Override
-    public CreateSecureKeypadResponse createSecureKeypad(String temporaryToken) {
+    public CreateSecureKeypadResponse createSecureKeypad() {
         SecureKeypadDto secureKeypadDto = secureKeypadService.createSecureKeypad();
 
+        String keypadToken = secureKeypadService.createKeypadToken();
         // redis에 섞은 순서에 대한 정보 저장
         sBoxKeyRedisService.setData(
-                temporaryToken,
+                keypadToken,
                 SBoxKey.builder()
                         .key(secureKeypadDto.getKey())
                         .build()
@@ -245,6 +253,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         return CreateSecureKeypadResponse.builder()
                 .keypad(secureKeypadDto.getShuffledKeypadImages())
+                .keypadToken(keypadToken)
                 .build();
     }
 

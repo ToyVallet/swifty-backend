@@ -8,6 +8,7 @@ import com.swifty.bank.server.api.controller.dto.customer.request.PasswordReques
 import com.swifty.bank.server.api.controller.dto.customer.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.controller.dto.customer.response.CustomerInfoResponse;
 import com.swifty.bank.server.api.service.CustomerApiService;
+import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -114,10 +116,14 @@ public class CustomerController {
     })
     public ResponseEntity<MessageResponse> confirmPassword(
             @CookieValue("access-token") String accessToken,
+            @CookieValue("keypad-token") String keypadToken,
             @RequestBody PasswordRequest password
     ) {
         try {
-            boolean isMatchPassword = customerApiService.confirmPassword(JwtUtil.removeType(accessToken), password);
+            boolean isMatchPassword = customerApiService.confirmPassword(
+                    JwtUtil.removeType(accessToken),
+                    JwtUtil.removeType(keypadToken),
+                    password);
             if (isMatchPassword) {
                 return ResponseEntity
                         .ok()
@@ -164,7 +170,7 @@ public class CustomerController {
                     .body(new MessageResponse("비밀번호 변경에 실패했습니다."));
         }
     }
-    
+
     @TemporaryAuth
     @GetMapping(value = "/create-keypad")
     @Operation(summary = "개인 식별 비밀번호 확인을 위한 키패드 이미지 제공", description = "순서가 섞인 키패드 이미지 리스트를 반환")
@@ -184,10 +190,12 @@ public class CustomerController {
             @CookieValue("access-token") String accessToken
     ) {
         CreateSecureKeypadResponse res
-                = customerApiService.createSecureKeypad(JwtUtil.removeType(accessToken));
+                = customerApiService.createSecureKeypad();
 
         return ResponseEntity
                 .ok()
+                .header(HttpHeaders.SET_COOKIE,
+                        CookieUtils.createCookie("keypad-token", res.getKeypadToken()).toString())
                 .body(res);
     }
 }
