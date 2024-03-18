@@ -54,8 +54,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     private final SBoxKeyRedisService sBoxKeyRedisService;
 
     @Override
-    public AccountRegisterResponse register(String token, AccountRegisterRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public AccountRegisterResponse register(String accessToken, AccountRegisterRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
@@ -80,8 +80,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public UpdateAccountNicknameResponse updateNickname(String token, ReviseAccountNicknameRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public UpdateAccountNicknameResponse updateNickname(String accessToken, ReviseAccountNicknameRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
@@ -110,8 +110,9 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public ReviseUnitedAccountPasswordResponse updatePassword(String token, ReviseUnitedAccountPasswordRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public ReviseUnitedAccountPasswordResponse updatePassword(String accessToken,
+                                                              ReviseUnitedAccountPasswordRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
@@ -137,9 +138,9 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String token,
+    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String accessToken,
                                                                            RetrieveBalanceWithCurrencyRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
@@ -169,8 +170,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public WithdrawUnitedAccountResponse withdraw(String token, WithdrawUnitedAccountRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public WithdrawUnitedAccountResponse withdraw(String accessToken, WithdrawUnitedAccountRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -196,9 +197,9 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String jwt,
+    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String accessToken,
                                                                        UpdateUnitedAccountStatusRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -226,8 +227,9 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public UpdateSubAccountStatusResponse updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+    public UpdateSubAccountStatusResponse updateSubAccountStatus(String accessToken,
+                                                                 UpdateSubAccountStatusRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -256,8 +258,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public UpdateDefaultCurrencyResponse updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+    public UpdateDefaultCurrencyResponse updateDefaultCurrency(String accessToken, UpdateDefaultCurrencyRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -285,8 +287,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String jwt) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+    public ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String accessToken) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
