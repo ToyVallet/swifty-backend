@@ -8,13 +8,12 @@ import com.swifty.bank.server.core.utils.DateUtil;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-
-import java.util.*;
-
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -90,8 +89,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     /*
-     * 검증 1. jwt 자체 유효성 검증(만료기간, 시그니처)
-     * 검증 2. claim 안에 customerUuid 값이 포함되어 있는가? subject가 "RefreshToken"인가?
+     * 검증 1. JWT 자체 유효성 검증(만료기간, 시그니처)
+     * 검증 2. claim 안에 customerUuid 값이 포함되어 있는가? subject가 "refresh-token"인가?
      * 검증 3. DB에 저장되어 있는 refresh token과 값이 일치하는가?
      */
     @Override
@@ -100,7 +99,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(refreshToken, "customerUuid", UUID.class);
         String sub = JwtUtil.getSubject(refreshToken);
-        if (!sub.equals("RefreshToken")) {
+        if (!sub.equals("refresh-token")) {
             return false;
         }
 
@@ -109,13 +108,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return false;
         }
 
-        Auth auth = maybeAuth.get();
-        return refreshToken.equals(auth.getRefreshToken());
+        return refreshToken.equals(maybeAuth.get().getRefreshToken());
     }
 
     @Override
     public boolean isValidateSignUpPassword(String password, String residentRegistrationNumber, String phoneNumber) {
-        if (password.length() != 6) return false;
+        if (password.length() != 6) {
+            return false;
+        }
 
         // 같은 문자가 3자리 이상 반복되는가?
         for (int index = 0; index < password.length() - 2; index++) {
