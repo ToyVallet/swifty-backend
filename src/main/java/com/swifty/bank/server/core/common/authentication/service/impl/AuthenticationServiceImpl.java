@@ -8,13 +8,12 @@ import com.swifty.bank.server.core.utils.DateUtil;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-
-import java.util.*;
-
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -115,7 +114,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public boolean isValidateSignUpPassword(String password, String residentRegistrationNumber, String phoneNumber) {
-        if (password.length() != 6) return false;
+        if (password.length() != 6) {
+            return false;
+        }
 
         // 같은 문자가 3자리 이상 반복되는가?
         for (int index = 0; index < password.length() - 2; index++) {
