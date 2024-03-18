@@ -180,7 +180,7 @@ public class AuthenticationApiController {
 
     @TemporaryAuth
     @GetMapping(value = "/create-keypad")
-    @Operation(summary = "개인 식별 비밀번호 입력을 위한 키패드 이미지 제공", description = "순서가 섞인 키패드 이미지 리스트를 반환")
+    @Operation(summary = "개인 식별 비밀번호 설정을 위한 키패드 이미지 제공", description = "순서가 섞인 키패드 이미지 리스트를 반환")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "키패드 이미지 리스트",
                     content = {
