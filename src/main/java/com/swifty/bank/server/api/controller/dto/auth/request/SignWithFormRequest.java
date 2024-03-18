@@ -5,10 +5,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+
+import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Schema(description = "최종 회원가입/로그인 폼")
+@Builder
 public class SignWithFormRequest {
     @NotNull
     @Size(min = 6, max = 6)

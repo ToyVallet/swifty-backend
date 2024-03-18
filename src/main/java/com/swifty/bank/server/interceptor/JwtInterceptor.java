@@ -5,9 +5,12 @@ import com.swifty.bank.server.api.controller.annotation.PassAuth;
 import com.swifty.bank.server.api.controller.annotation.TemporaryAuth;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
 import com.swifty.bank.server.core.utils.JwtUtil;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
+        log.info("interceptor={}",req.getRequestURL().toString());
         // 화이트 리스트로 preHandle 관리
         // 프리패스 권한
         if (hasProperAnnotation(handler, PassAuth.class)) {
@@ -47,27 +51,38 @@ public class JwtInterceptor implements HandlerInterceptor {
         return false;
     }
 
-    private void validateTemporaryAuth(String temporaryToken) {
+    private void validateTemporaryAuth(Cookie[] cookies) {
+        String temporaryToken = "";
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals("temporaryToken")) {
+                temporaryToken = cookie.getValue();
+                break;
+            }
+        }
+        if (temporaryToken.isEmpty()) {
+            throw new IllegalArgumentException("temporary token이 아닙니다.");
+        }
         JwtUtil.validateToken(temporaryToken);
         // TemporaryToken인지 검증
         String sub = JwtUtil.getSubject(temporaryToken);
-        if (!sub.equals("TemporaryToken")) {
-            throw new IllegalArgumentException("temporary token이 아닙니다.");
-        }
     }
 
-    private void validateCustomerAuth(String accessToken) {
-        JwtUtil.validateToken(accessToken);
-        // AccessToken인지 검증
-        String sub = JwtUtil.getSubject(accessToken);
-        if (!sub.equals("AccessToken")) {
+    private void validateCustomerAuth(Cookie[] cookies) {
+        String accessToken = "";
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals("access-token")) {
+                accessToken = cookie.getValue();
+                break;
+            }
+        }
+        if (accessToken.isEmpty()) {
             throw new IllegalArgumentException("access token이 아닙니다.");
         }
+        JwtUtil.validateToken(accessToken);
+        String sub = JwtUtil.getSubject(accessToken);
 
-        // customerUuid가 claim에 존재하는지 검증
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
-        // 로그아웃 요청한 AccessToken인지 검증
         String isLoggedOut = logoutAccessTokenRedisService.getData(accessToken);
         if (isLoggedOut != null && isLoggedOut.equals("false")) {
             throw new IllegalArgumentException("로그아웃된 access token입니다.");
@@ -82,14 +97,17 @@ public class JwtInterceptor implements HandlerInterceptor {
         return false;
     }
 
-    private String extractJwtFromCurrentRequestHeader() {
+    private Cookie[] extractJwtFromCurrentRequestHeader() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        Cookie[] cookies = request.getCookies();
         try {
-            String token = JwtUtil.removeType(request.getHeader("Authorization"));
-            JwtUtil.validateToken(token);
-            return token;
+            for (Cookie cookie : cookies) {
+                String token = JwtUtil.removeType(cookie.getValue());
+                JwtUtil.validateToken(token);
+            }
         } catch (Exception e) {
             throw new IllegalArgumentException("Authorization 헤더에 올바른 jwt가 존재하지 않습니다.");
         }
+        return cookies;
     }
 }

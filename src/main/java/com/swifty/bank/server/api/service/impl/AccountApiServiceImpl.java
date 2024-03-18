@@ -8,6 +8,7 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCu
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
+import com.swifty.bank.server.api.controller.dto.account.response.*;
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.api.service.dto.ResponseResult;
 import com.swifty.bank.server.api.service.dto.Result;
@@ -39,15 +40,13 @@ public class AccountApiServiceImpl implements AccountApiService {
     private final CustomerService customerService;
 
     @Override
-    public ResponseResult<?> register(String token, AccountRegisterRequest req) {
+    public AccountRegisterResponse register(String token, AccountRegisterRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 등록된 사용자가 없습니다. 오류가 발생한 UUID : ",
-                    customerUuid
+            return new AccountRegisterResponse(
+                    false
             );
         }
 
@@ -61,23 +60,19 @@ public class AccountApiServiceImpl implements AccountApiService {
 
         accountService.saveUnitedAccountAndSubAccounts(dto);
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] 성공적으로 계좌를 등록했습니다",
-                null
+        return new AccountRegisterResponse(
+                true
         );
     }
 
     @Override
-    public ResponseResult<?> updateNickname(String token, ReviseAccountNicknameRequest req) {
+    public UpdateAccountNicknameResponse updateNickname(String token, ReviseAccountNicknameRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 해당 고객이 존재하지 않습니다.",
-                    null
+            return new UpdateAccountNicknameResponse(
+                    false
             );
         }
 
@@ -90,30 +85,24 @@ public class AccountApiServiceImpl implements AccountApiService {
         try {
             accountService.updateUnitedAccountNickname(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
+            return new UpdateAccountNicknameResponse(
+                    false
             );
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] " + customerUuid.toString() + "의 계좌 닉네임 변경이 완료 되었습니다",
-                null
+        return new UpdateAccountNicknameResponse(
+                true
         );
     }
 
     @Override
-    public ResponseResult<?> updatePassword(String token, ReviseUnitedAccountPasswordRequest req) {
+    public ReviseUnitedAccountPasswordResponse updatePassword(String token, ReviseUnitedAccountPasswordRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 해당 사용자가 없습니다.",
-                    null
+            return new ReviseUnitedAccountPasswordResponse(
+                    false
             );
         }
 
@@ -123,64 +112,55 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
             accountService.updateUnitedAccountPassword(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
+            return new ReviseUnitedAccountPasswordResponse(
+                    false
             );
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] 성공적으로 계좌 비밀번호 변경을 마쳤습니다.",
-                null
+        return new ReviseUnitedAccountPasswordResponse(
+                true
         );
     }
 
     @Override
-    public ResponseResult<?> retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
+    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 해당 사용자가 없습니다.",
+            return new RetrieveBalanceWithCurrencyResponse(
+                    false,
                     null
             );
         }
 
-        Map<String, Object> res = new HashMap<>();
+        Map<String, Double> res = new HashMap<>();
         try {
             RetrieveBalanceOfUnitedAccountByCurrencyDto dto = new RetrieveBalanceOfUnitedAccountByCurrencyDto(
                     mayCustomer.get(), req.getUnitedAccountUuid(), req.getCurrency()
             );
-            res.put("balance", accountService.retrieveBalanceByCurrency(dto));
+            res.put(req.getCurrency().toString(), accountService.retrieveBalanceByCurrency(dto));
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
+            return new RetrieveBalanceWithCurrencyResponse(
+                    false,
                     null
             );
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] 계좌 조회가 성공적으로 완료되었습니다.",
+        return new RetrieveBalanceWithCurrencyResponse(
+                true,
                 res
         );
     }
 
     @Override
-    public ResponseResult<?> withdraw(String token, WithdrawUnitedAccountRequest req) {
+    public WithdrawUnitedAccountResponse withdraw(String token, WithdrawUnitedAccountRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 해당 사용자가 존재하지 않습니다.",
-                    null
+            return new WithdrawUnitedAccountResponse(
+                    false
             );
         }
 
@@ -190,30 +170,24 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
             accountService.withdrawUnitedAccount(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
+            return new WithdrawUnitedAccountResponse(
+                    false
             );
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] 계좌 폐지가 성공적으로 마무리 되었습니다.",
-                null
+        return new WithdrawUnitedAccountResponse(
+                true
         );
     }
 
     @Override
-    public ResponseResult<?> updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req) {
+    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 해당 사용자가 없습니다.",
-                    null
+            return new UpdateUnitedAccountStatusResponse(
+                    false
             );
         }
 
@@ -225,30 +199,24 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
             accountService.updateUnitedAccountStatus(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
+            return new UpdateUnitedAccountStatusResponse(
+                    false
             );
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] 통합 계좌 상태 업데이트가 성공적으로 마무리 되었습니다.",
-                null
+        return new UpdateUnitedAccountStatusResponse(
+                true
         );
     }
 
     @Override
-    public ResponseResult<?> updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req) {
+    public UpdateSubAccountStatusResponse updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 해당 사용자가 없습니다.",
-                    null
+            return new UpdateSubAccountStatusResponse(
+                    false
             );
         }
 
@@ -261,30 +229,24 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
             accountService.updateSubAccountStatus(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
+            return new UpdateSubAccountStatusResponse(
+                    false
             );
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] 통합 계좌의 환계좌 상태 업데이트가 성공적으로 마무리 되었습니다.",
-                null
+        return new UpdateSubAccountStatusResponse(
+                true
         );
     }
 
     @Override
-    public ResponseResult<?> updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req) {
+    public UpdateDefaultCurrencyResponse updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 해당 사용자가 없습니다.",
-                    null
+            return new UpdateDefaultCurrencyResponse(
+                    false
             );
         }
 
@@ -296,38 +258,32 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
             accountService.updateDefaultCurrency(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    e.getMessage(),
-                    null
+            return new UpdateDefaultCurrencyResponse(
+                    false
             );
         }
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] 통합 계좌의 기본 환이 변경되었습니다.",
-                null
+        return new UpdateDefaultCurrencyResponse(
+                true
         );
     }
 
     @Override
-    public ResponseResult<?> listUnitedAccountWithCustomer(String jwt) {
+    public ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String jwt) {
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
-            return new ResponseResult<>(
-                    Result.FAIL,
-                    "[ERROR] 해당 사용자가 없습니다.",
+            return new ListUnitedAccountWithCustomerResponse(
+                    false,
                     null
             );
         }
 
         ListUnitedAccountWithCustomerDto dto = new ListUnitedAccountWithCustomerDto(maybeCustomer.get());
 
-        return new ResponseResult<>(
-                Result.SUCCESS,
-                "[INFO] 특정 고객이 가진 통합 계좌들입니다.",
+        return new ListUnitedAccountWithCustomerResponse(
+                true,
                 accountService.listUnitedAccountWithCustomer(dto)
         );
     }
