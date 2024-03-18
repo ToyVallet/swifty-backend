@@ -99,7 +99,7 @@ public class AuthenticationApiController {
                     })
     })
     public ResponseEntity<StealVerificationCodeResponse> stealVerificationCode(
-            @CookieValue("temporaryToken") String temporaryToken,
+            @CookieValue("temporary-token") String temporaryToken,
             @RequestBody @Valid StealVerificationCodeRequest stealVerificationCodeRequest) {
         StealVerificationCodeResponse res = smsService.stealVerificationCode(
                 stealVerificationCodeRequest);
@@ -131,7 +131,7 @@ public class AuthenticationApiController {
 
     })
     public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(
-            @CookieValue("temporaryToken") String temporaryToken,
+            @CookieValue("temporary-token") String temporaryToken,
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
         SendVerificationCodeResponse res = smsService.sendVerificationCode(
                 sendVerificationCodeRequest);
@@ -167,7 +167,7 @@ public class AuthenticationApiController {
                     })
     })
     public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(
-            @CookieValue("temporaryToken") String temporaryToken,
+            @CookieValue("temporary-token") String temporaryToken,
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         CheckVerificationCodeResponse res = smsService.checkVerificationCode(
                 checkVerificationCodeRequest);
@@ -198,7 +198,7 @@ public class AuthenticationApiController {
                     })
     })
     public ResponseEntity<CreateSecureKeypadResponse> createSecureKeypad(
-            @CookieValue("temporaryToken") String temporaryToken
+            @CookieValue("temporary-token") String temporaryToken
     ) {
         CreateSecureKeypadResponse res = secureKeypadService.createSecureKeypad(JwtUtil.removeType(temporaryToken));
 
