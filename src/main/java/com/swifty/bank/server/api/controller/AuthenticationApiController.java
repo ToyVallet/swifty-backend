@@ -52,7 +52,7 @@ public class AuthenticationApiController {
     @PostMapping("/check-login-availability")
     @Operation(summary = "회원가입/로그인 가능 여부 확인", description = "")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "성공적으로 확인한 경우",
+            @ApiResponse(responseCode = "200", description = "회원가입/로그인이 가능한 경우",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = CheckLoginAvailabilityResponse.class))
@@ -60,10 +60,10 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "회원가입/로그인이 불가한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = CheckLoginAvailabilityResponse.class))
+                                    schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<CheckLoginAvailabilityResponse> checkLoginAvailability(
+    public ResponseEntity<?> checkLoginAvailability(
             @Valid @RequestBody CheckLoginAvailabilityRequest body
     ) {
         CheckLoginAvailabilityResponse res = authenticationApiService.checkLoginAvailability(body);
@@ -83,7 +83,7 @@ public class AuthenticationApiController {
 
         return ResponseEntity
                 .badRequest()
-                .body(res);
+                .body(new MessageRespopnse("회원가입/로그인할 수 없습니다."));
     }
 
     @TemporaryAuth
@@ -124,7 +124,7 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "인증번호 문자 전송에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = SendVerificationCodeResponse.class))
+                                    schema = @Schema(implementation = MessageRespopnse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우(전화번호가 잘못된 경우, Twilio 서비스에서 문자 전송이 실패한 경우 등)",
                     content = {
@@ -133,7 +133,7 @@ public class AuthenticationApiController {
                     })
 
     })
-    public ResponseEntity<SendVerificationCodeResponse> sendVerificationCode(
+    public ResponseEntity<?> sendVerificationCode(
             @CookieValue("temporary-token") String temporaryToken,
             @RequestBody @Valid SendVerificationCodeRequest sendVerificationCodeRequest) {
         SendVerificationCodeResponse res = authenticationApiService.sendVerificationCode(
@@ -146,7 +146,7 @@ public class AuthenticationApiController {
 
         return ResponseEntity
                 .badRequest()
-                .body(res);
+                .body(new MessageRespopnse("인증번호 문자 전송에 실패했습니다."));
     }
 
     @TemporaryAuth
@@ -158,10 +158,10 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = CheckVerificationCodeResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "인증번호가 일치하지 않는 경우, 일치여부 확인에 실패한 경우우",
+            @ApiResponse(responseCode = "400", description = "인증번호가 일치하지 않는 경우, 일치여부 확인에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = CheckVerificationCodeResponse.class))
+                                    schema = @Schema(implementation = MessageResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
@@ -169,7 +169,7 @@ public class AuthenticationApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(
+    public ResponseEntity<?> checkVerificationCode(
             @CookieValue("temporary-token") String temporaryToken,
             @RequestBody @Valid CheckVerificationCodeRequest checkVerificationCodeRequest) {
         CheckVerificationCodeResponse res = authenticationApiService.checkVerificationCode(
@@ -182,7 +182,7 @@ public class AuthenticationApiController {
 
         return ResponseEntity
                 .badRequest()
-                .body(res);
+                .body(new MessageResponse("인증번호 일치여부 확인에 실패했습니다."));
     }
 
     @TemporaryAuth
@@ -232,7 +232,7 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "회원가입/로그인에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = SignWithFormResponse.class))
+                                    schema = @Schema(implementation = MessageResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
@@ -240,7 +240,7 @@ public class AuthenticationApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<SignWithFormResponse> signWithForm(
+    public ResponseEntity<?> signWithForm(
             @CookieValue("temporary-token") String temporaryToken,
             @CookieValue("keypad-token") String keypadToken,
             @Valid @RequestBody SignWithFormRequest body
@@ -290,7 +290,7 @@ public class AuthenticationApiController {
 
         return ResponseEntity
                 .badRequest()
-                .body(res);
+                .body(new MessageResponse("회원가입/로그인을 실패했습니다."));
     }
 
     @PassAuth
@@ -306,7 +306,7 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "발급에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ReissueResponse.class))
+                                    schema = @Schema(implementation = MessageResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
@@ -314,7 +314,7 @@ public class AuthenticationApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<ReissueResponse> reissueTokens(
+    public ResponseEntity<?> reissueTokens(
             @CookieValue("refresh-token") String refreshToken
     ) {
         ReissueResponse res = authenticationApiService.reissue(JwtUtil.removeType(refreshToken));
@@ -349,7 +349,7 @@ public class AuthenticationApiController {
 
         return ResponseEntity
                 .badRequest()
-                .body(res);
+                .body(new MessageResponse("발급에 실패했습니다."));
     }
 
     @CustomerAuth
@@ -364,7 +364,7 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "로그아웃에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = LogoutResponse.class))
+                                    schema = @Schema(implementation = MessageResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
@@ -372,7 +372,7 @@ public class AuthenticationApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<LogoutResponse> logOut(
+    public ResponseEntity<?> logOut(
             @CookieValue("access-token") String accessToken
     ) {
         LogoutResponse res = authenticationApiService.logout(JwtUtil.removeType(accessToken));
@@ -391,7 +391,7 @@ public class AuthenticationApiController {
         }
         return ResponseEntity
                 .badRequest()
-                .body(res);
+                .body(new MessageResponse("로그아웃에 실패했습니다."));
     }
 
     @CustomerAuth
@@ -406,7 +406,7 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "회원 탈퇴에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = SignOutResponse.class))
+                                    schema = @Schema(implementation = MessageResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
@@ -414,7 +414,7 @@ public class AuthenticationApiController {
                                     schema = @Schema(implementation = MessageResponse.class))
                     })
     })
-    public ResponseEntity<SignOutResponse> signOut(
+    public ResponseEntity<?> signOut(
             @CookieValue("access-token") String accessToken
     ) {
         SignOutResponse res = authenticationApiService.signOut(JwtUtil.removeType(accessToken));
@@ -434,6 +434,6 @@ public class AuthenticationApiController {
         }
         return ResponseEntity
                 .badRequest()
-                .body(res);
+                .body(new MessageResponse("회원탈퇴에 실패했습니다."));
     }
 }
