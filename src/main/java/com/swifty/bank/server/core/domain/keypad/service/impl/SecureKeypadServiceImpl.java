@@ -82,7 +82,6 @@ public class SecureKeypadServiceImpl implements SecureKeypadService {
     public SecureKeypadDto createSecureKeypad() {
         final int keypadSize = keypadFiles.size();
 
-        // len 만큼
         List<Integer> plainOrder = new ArrayList<>() {{
             this.addAll(keypadPathDict.keySet().stream().sorted().toList());
         }};
