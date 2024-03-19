@@ -124,7 +124,7 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "인증번호 문자 전송에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
+                                    schema = @Schema(implementation = SendVerificationCodeResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우(전화번호가 잘못된 경우, Twilio 서비스에서 문자 전송이 실패한 경우 등)",
                     content = {
@@ -158,10 +158,10 @@ public class AuthenticationApiController {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = CheckVerificationCodeResponse.class))
                     }),
-            @ApiResponse(responseCode = "400", description = "요청 폼이 잘못된 경우",
+            @ApiResponse(responseCode = "400", description = "인증번호가 일치하지 않는 경우, 일치여부 확인에 실패한 경우우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
+                                    schema = @Schema(implementation = CheckVerificationCodeResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
@@ -232,7 +232,7 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "회원가입/로그인에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageResponse.class))
+                                    schema = @Schema(implementation = SignWithFormResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
                     content = {
@@ -264,7 +264,8 @@ public class AuthenticationApiController {
                                                 DateUtil.diffInSeconds(DateUtil.now(),
                                                         JwtUtil.getExpireDate(accessToken))
                                         ).toString(),
-                                        CookieUtils.createCookie("refresh-token",
+                                        CookieUtils.createCookie(
+                                                "refresh-token",
                                                 refreshToken,
                                                 DateUtil.diffInSeconds(DateUtil.now(),
                                                         JwtUtil.getExpireDate(refreshToken))
@@ -326,11 +327,13 @@ public class AuthenticationApiController {
                     new LinkedMultiValueMap<>() {{
                         put(HttpHeaders.SET_COOKIE,
                                 List.of(
-                                        CookieUtils.createCookie("access-token",
+                                        CookieUtils.createCookie(
+                                                "access-token",
                                                 accessToken,
                                                 DateUtil.diffInSeconds(DateUtil.now(),
                                                         JwtUtil.getExpireDate(accessToken))).toString(),
-                                        CookieUtils.createCookie("refresh-token",
+                                        CookieUtils.createCookie(
+                                                "refresh-token",
                                                 newRefreshToken,
                                                 DateUtil.diffInSeconds(DateUtil.now(),
                                                         JwtUtil.getExpireDate(newRefreshToken))).toString()
@@ -421,7 +424,8 @@ public class AuthenticationApiController {
                     .ok()
                     .header(
                             HttpHeaders.SET_COOKIE,
-                            CookieUtils.createCookie("access-token",
+                            CookieUtils.createCookie(
+                                    "access-token",
                                     accessToken,
                                     0L  // 사용을 다했으므로 만료 시키기
                             ).toString()
