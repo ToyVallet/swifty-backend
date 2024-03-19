@@ -83,7 +83,7 @@ public class AuthenticationApiController {
 
         return ResponseEntity
                 .badRequest()
-                .body(new MessageRespopnse("회원가입/로그인할 수 없습니다."));
+                .body(new MessageResponse("회원가입/로그인할 수 없습니다."));
     }
 
     @TemporaryAuth
@@ -124,7 +124,7 @@ public class AuthenticationApiController {
             @ApiResponse(responseCode = "400", description = "인증번호 문자 전송에 실패한 경우",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = MessageRespopnse.class))
+                                    schema = @Schema(implementation = MessageResponse.class))
                     }),
             @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우(전화번호가 잘못된 경우, Twilio 서비스에서 문자 전송이 실패한 경우 등)",
                     content = {
@@ -146,7 +146,7 @@ public class AuthenticationApiController {
 
         return ResponseEntity
                 .badRequest()
-                .body(new MessageRespopnse("인증번호 문자 전송에 실패했습니다."));
+                .body(new MessageResponse("인증번호 문자 전송에 실패했습니다."));
     }
 
     @TemporaryAuth
