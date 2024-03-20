@@ -1,10 +1,10 @@
 package com.swifty.bank.server.core.domain.account.dto;
 
 import com.swifty.bank.server.core.common.constant.Currency;
-import com.swifty.bank.server.core.common.constant.Product;
+import com.swifty.bank.server.core.common.constant.ProductType;
 import com.swifty.bank.server.core.domain.account.UnitedAccount;
 import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
-import lombok.AllArgsConstructor;
+import com.swifty.bank.server.core.domain.product.Product;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
