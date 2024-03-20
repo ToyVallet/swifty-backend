@@ -1,7 +1,8 @@
 package com.swifty.bank.server.api.controller.dto.account.request;
 
 import com.swifty.bank.server.core.common.constant.Currency;
-import com.swifty.bank.server.core.common.constant.Product;
+import com.swifty.bank.server.core.common.constant.ProductType;
+import com.swifty.bank.server.core.domain.product.Product;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

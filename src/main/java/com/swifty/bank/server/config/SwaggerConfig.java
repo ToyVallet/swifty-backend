@@ -8,15 +8,15 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @OpenAPIDefinition(
-        info = @io.swagger.v3.oas.annotations.info.Info(title = "Swifty Product Project API specification",
-                description = "Swifty Product Project API specification",
+        info = @io.swagger.v3.oas.annotations.info.Info(title = "Swifty ProductType Project API specification",
+                description = "Swifty ProductType Project API specification",
                 version = "v1"))
 public class SwaggerConfig {
     @Bean
     public OpenAPI apiInfo() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Swifty Product Project")
+                        .title("Swifty ProductType Project")
                         .description("API Testing Usage")
                         .version("1.0.0")
                 );

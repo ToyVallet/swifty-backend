@@ -10,16 +10,7 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCu
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
-import com.swifty.bank.server.api.controller.dto.account.response.AccountRegisterResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.CreateSecureKeypadResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.ListUnitedAccountWithCustomerResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.RetrieveBalanceWithCurrencyResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.ReviseUnitedAccountPasswordResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateAccountNicknameResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateDefaultCurrencyResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccountStatusResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.*;
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.core.utils.CookieUtils;
 import com.swifty.bank.server.core.utils.DateUtil;
@@ -361,6 +352,31 @@ public class AccountApiController {
                                 DateUtil.diffInSeconds(DateUtil.now(), JwtUtil.getExpireDate(res.getKeypadToken()))
                         ).toString()
                 )
+                .body(res);
+    }
+
+    @CustomerAuth
+    @GetMapping(value = "/product-list")
+    @Operation(summary = "계좌에 해당되는 상품들의 나열", description = "계좌의 상품인 경우에 해당되는 모든 상품을 리턴한다")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "상품 유형이 계좌인 것들의 묶음",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = ListOfAccountProductResponse.class))
+                    }),
+            @ApiResponse(responseCode = "500", description = "클라이언트의 요청은 유효하나 서버가 처리에 실패한 경우",
+                    content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = MessageResponse.class))
+                    })
+    })
+    public ResponseEntity<ListOfAccountProductResponse> listOfAccountProduct(
+            @CookieValue("access-token") String accessToken
+    ) {
+        ListOfAccountProductResponse res = accountApiService.accountProductList();
+
+        return ResponseEntity
+                .ok()
                 .body(res);
     }
 }

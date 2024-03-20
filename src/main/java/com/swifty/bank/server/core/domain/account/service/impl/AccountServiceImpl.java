@@ -9,6 +9,7 @@ import com.swifty.bank.server.core.domain.account.repository.SubAccountRepositor
 import com.swifty.bank.server.core.domain.account.repository.UnitedAccountRepository;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -18,6 +19,7 @@ import java.util.*;
 public class AccountServiceImpl implements AccountService {
     private final UnitedAccountRepository unitedAccountRepository;
     private final SubAccountRepository subAccountRepository;
+    private final BCryptPasswordEncoder encoder;
     @Override
     public UnitedAccount saveUnitedAccountAndSubAccounts(AccountSaveDto dto) {
         UnitedAccount ua = UnitedAccount.builder()
@@ -69,7 +71,7 @@ public class AccountServiceImpl implements AccountService {
             throw new RequestorAndOwnerOfUnitedAccountIsDifferentException("[ERROR] 계좌의 수정 요청자와 소유자가 다릅니다.");
         }
 
-        ua.updatePassword(dto.getPassword());
+        ua.updatePassword(encoder.encode(dto.getPassword()));
     }
 
     @Override
@@ -145,10 +147,9 @@ public class AccountServiceImpl implements AccountService {
     public List<UnitedAccount> listUnitedAccountWithCustomer(ListUnitedAccountWithCustomerDto dto) {
         List<UnitedAccount> unitedAccounts = dto.getCustomer().getUnitedAccounts();
 
-        if (unitedAccounts.size() == 0) {
-            throw new NoSuchElementException("[ERROR] 등록된 계좌들이 없습니다.");
+        if (unitedAccounts.size() >= 3) {
+            return unitedAccounts.subList(0, 3);
         }
-
         return unitedAccounts;
     }
 

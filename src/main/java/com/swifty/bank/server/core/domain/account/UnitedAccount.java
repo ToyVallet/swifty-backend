@@ -1,10 +1,11 @@
 package com.swifty.bank.server.core.domain.account;
 
-import com.swifty.bank.server.core.common.constant.Product;
+import com.swifty.bank.server.core.common.constant.ProductType;
 import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.domain.BaseEntity;
 import com.swifty.bank.server.core.domain.account.constant.AccountStatus;
 import com.swifty.bank.server.core.domain.customer.Customer;
+import com.swifty.bank.server.core.domain.product.Product;
 import com.swifty.bank.server.exception.common.NonExistOrOverOneResultException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.*;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "tb_united_account")
 public class UnitedAccount extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,6 +32,8 @@ public class UnitedAccount extends BaseEntity {
 
     private String accountNumber;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_uuid", referencedColumnName = "abbreviation")
     private Product product;
 
     private String accountPassword;
@@ -81,9 +85,7 @@ public class UnitedAccount extends BaseEntity {
     public SubAccount findSubAccountByCurrency(Currency currency) {
         List<SubAccount> subAccounts = this.subAccounts
                 .stream()
-                .filter(subAccount -> {
-                    return currency.equals(subAccount.getCurrency( ));
-                })
+                .filter(subAccount -> currency.equals(subAccount.getCurrency( )))
                 .toList();
 
         if (subAccounts.size( ) == 1) {

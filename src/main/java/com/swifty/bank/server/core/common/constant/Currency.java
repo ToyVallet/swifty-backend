@@ -17,4 +17,9 @@ public enum Currency {
     SAR,
     VND,
     MXN;
+
+    public boolean sameCurrency(Currency c) {
+        if (this.toString().equals(c.toString()))   return true;
+        return false;
+    }
 }

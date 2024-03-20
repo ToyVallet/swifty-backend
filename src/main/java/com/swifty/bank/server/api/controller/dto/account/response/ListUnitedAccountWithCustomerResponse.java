@@ -1,6 +1,7 @@
 package com.swifty.bank.server.api.controller.dto.account.response;
 
 import com.swifty.bank.server.core.domain.account.UnitedAccount;
+import com.swifty.bank.server.core.domain.account.dto.UnitedAccountDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,5 +35,5 @@ public class ListUnitedAccountWithCustomerResponse {
                     }        
                     """
     )
-    private List<UnitedAccount> unitedAccounts;
+    private List<UnitedAccountDto> unitedAccounts;
 }

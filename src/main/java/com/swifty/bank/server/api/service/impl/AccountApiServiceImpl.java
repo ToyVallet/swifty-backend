@@ -8,33 +8,19 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCu
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
-import com.swifty.bank.server.api.controller.dto.account.response.AccountRegisterResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.CreateSecureKeypadResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.ListUnitedAccountWithCustomerResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.RetrieveBalanceWithCurrencyResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.ReviseUnitedAccountPasswordResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateAccountNicknameResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateDefaultCurrencyResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccountStatusResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.*;
 import com.swifty.bank.server.api.service.AccountApiService;
+import com.swifty.bank.server.core.common.constant.ProductType;
 import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
 import com.swifty.bank.server.core.common.redis.value.SBoxKey;
-import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
-import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
-import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
-import com.swifty.bank.server.core.domain.account.dto.ListUnitedAccountWithCustomerDto;
-import com.swifty.bank.server.core.domain.account.dto.RetrieveBalanceOfUnitedAccountByCurrencyDto;
-import com.swifty.bank.server.core.domain.account.dto.UpdateDefaultCurrencyDto;
-import com.swifty.bank.server.core.domain.account.dto.UpdateSubAccountStatusDto;
-import com.swifty.bank.server.core.domain.account.dto.UpdateUnitedAccountStatusDto;
-import com.swifty.bank.server.core.domain.account.dto.WithdrawUnitedAccountDto;
+import com.swifty.bank.server.core.domain.account.UnitedAccount;
+import com.swifty.bank.server.core.domain.account.dto.*;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
 import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
 import com.swifty.bank.server.core.domain.keypad.service.dto.SecureKeypadDto;
+import com.swifty.bank.server.core.domain.product.service.ProductService;
 import com.swifty.bank.server.core.utils.JwtUtil;
 import com.swifty.bank.server.core.utils.SBoxUtil;
 import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
@@ -52,6 +38,7 @@ public class AccountApiServiceImpl implements AccountApiService {
     private final AccountService accountService;
     private final CustomerService customerService;
     private final SecureKeypadService secureKeypadService;
+    private final ProductService productService;
 
     private final SBoxKeyRedisService sBoxKeyRedisService;
 
@@ -62,7 +49,8 @@ public class AccountApiServiceImpl implements AccountApiService {
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
             return new AccountRegisterResponse(
-                    false
+                    false,
+                    null
             );
         }
 
@@ -84,13 +72,14 @@ public class AccountApiServiceImpl implements AccountApiService {
                 customer.get()
         );
 
-        accountService.saveUnitedAccountAndSubAccounts(dto);
+        UnitedAccount ua = accountService.saveUnitedAccountAndSubAccounts(dto);
 
         // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
         sBoxKeyRedisService.deleteData(keypadToken);
 
         return new AccountRegisterResponse(
-                true
+                true,
+                ua
         );
     }
 
@@ -327,7 +316,9 @@ public class AccountApiServiceImpl implements AccountApiService {
 
         return new ListUnitedAccountWithCustomerResponse(
                 true,
-                accountService.listUnitedAccountWithCustomer(dto)
+                accountService.listUnitedAccountWithCustomer(dto).stream()
+                        .map(sub -> new UnitedAccountDto(sub))
+                        .toList()
         );
     }
 
@@ -346,6 +337,13 @@ public class AccountApiServiceImpl implements AccountApiService {
 
         return CreateSecureKeypadResponse.builder()
                 .keypad(secureKeypadDto.getShuffledKeypadImages())
+                .build();
+    }
+
+    @Override
+    public ListOfAccountProductResponse accountProductList() {
+        return ListOfAccountProductResponse.builder()
+                .products(productService.findProductByProductType(ProductType.ACCOUNT))
                 .build();
     }
 }
