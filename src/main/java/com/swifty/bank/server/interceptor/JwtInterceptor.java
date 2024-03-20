@@ -9,8 +9,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +26,7 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
-        log.info("interceptor={}",req.getRequestURL().toString());
+        log.info("interceptor={}", req.getRequestURL().toString());
         // 화이트 리스트로 preHandle 관리
         // 프리패스 권한
         if (hasProperAnnotation(handler, PassAuth.class)) {
@@ -54,7 +52,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     private void validateTemporaryAuth(Cookie[] cookies) {
         String temporaryToken = "";
         for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("temporaryToken")) {
+            if (cookie.getName().equals("temporary-token")) {
                 temporaryToken = cookie.getValue();
                 break;
             }
@@ -106,7 +104,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                 JwtUtil.validateToken(token);
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException("Authorization 헤더에 올바른 jwt가 존재하지 않습니다.");
+            throw new IllegalArgumentException("Coockie에 올바른 jwt가 존재하지 않습니다.");
         }
         return cookies;
     }

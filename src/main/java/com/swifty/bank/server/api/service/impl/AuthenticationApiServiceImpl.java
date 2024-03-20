@@ -1,37 +1,44 @@
 package com.swifty.bank.server.api.service.impl;
 
 import com.swifty.bank.server.api.controller.dto.auth.request.CheckLoginAvailabilityRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.CheckVerificationCodeRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.SendVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.auth.request.SignWithFormRequest;
+import com.swifty.bank.server.api.controller.dto.auth.request.StealVerificationCodeRequest;
 import com.swifty.bank.server.api.controller.dto.auth.response.CheckLoginAvailabilityResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.CheckVerificationCodeResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.CreateSecureKeypadResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.LogoutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.ReissueResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.SendVerificationCodeResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignOutResponse;
 import com.swifty.bank.server.api.controller.dto.auth.response.SignWithFormResponse;
+import com.swifty.bank.server.api.controller.dto.auth.response.StealVerificationCodeResponse;
 import com.swifty.bank.server.api.service.AuthenticationApiService;
-import com.swifty.bank.server.core.common.authentication.Auth;
 import com.swifty.bank.server.core.common.authentication.dto.TokenDto;
 import com.swifty.bank.server.core.common.authentication.service.AuthenticationService;
 import com.swifty.bank.server.core.common.redis.service.LogoutAccessTokenRedisService;
-import com.swifty.bank.server.core.common.redis.service.SecureKeypadOrderInverseRedisService;
+import com.swifty.bank.server.core.common.redis.service.OtpRedisService;
+import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
 import com.swifty.bank.server.core.common.redis.service.TemporarySignUpFormRedisService;
+import com.swifty.bank.server.core.common.redis.value.SBoxKey;
 import com.swifty.bank.server.core.common.redis.value.TemporarySignUpForm;
 import com.swifty.bank.server.core.domain.customer.Customer;
-import com.swifty.bank.server.core.domain.customer.constant.Gender;
 import com.swifty.bank.server.core.domain.customer.constant.Nationality;
 import com.swifty.bank.server.core.domain.customer.dto.JoinDto;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
-import com.swifty.bank.server.core.utils.CookieUtils;
+import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
+import com.swifty.bank.server.core.domain.keypad.service.dto.SecureKeypadDto;
+import com.swifty.bank.server.core.domain.sms.service.VerifyService;
 import com.swifty.bank.server.core.utils.JwtUtil;
-
-import java.util.ArrayList;
+import com.swifty.bank.server.core.utils.RandomUtil;
+import com.swifty.bank.server.core.utils.SBoxUtil;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import jakarta.servlet.http.Cookie;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,11 +49,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticationApiServiceImpl implements AuthenticationApiService {
     private final CustomerService customerService;
     private final AuthenticationService authenticationService;
-    private final BCryptPasswordEncoder encoder;
+    private final VerifyService verifyService;
+    private final OtpRedisService otpRedisService;
+    private final SecureKeypadService secureKeypadService;
 
     private final TemporarySignUpFormRedisService temporarySignUpFormRedisService;
     private final LogoutAccessTokenRedisService logoutAccessTokenRedisService;
-    private final SecureKeypadOrderInverseRedisService secureKeypadOrderInverseRedisService;
+    private final SBoxKeyRedisService sBoxKeyRedisService;
 
     @Override
     public CheckLoginAvailabilityResponse checkLoginAvailability(
@@ -90,11 +99,19 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
     @Override
     @Transactional
-    public SignWithFormResponse signUpAndSignIn(String temporaryToken, SignWithFormRequest signWithFormRequest) {
+    public SignWithFormResponse signUpAndSignIn(String temporaryToken, String keypadToken,
+                                                SignWithFormRequest signWithFormRequest) {
         TemporarySignUpForm temporarySignUpForm = temporarySignUpFormRedisService.getData(temporaryToken);
 
         // 비밀번호 복호화
-        String password = decryptPassword(temporaryToken, signWithFormRequest.getPushedOrder());
+        List<Integer> key = sBoxKeyRedisService.getData(keypadToken).getKey();
+        List<Integer> decrypted = SBoxUtil.decrypt(signWithFormRequest.getPushedOrder(), key);
+        String password = String.join("",
+                decrypted
+                        .stream()
+                        .map(Object::toString)
+                        .toList()
+        );
 
         // 비밀번호 규칙 검증
         if (!authenticationService.isValidateSignUpPassword(password,
@@ -121,11 +138,14 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             ) {
                 TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
                 authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
-                temporarySignUpFormRedisService.deleteData(temporaryToken);
 
                 // 기존 Customer의 비밀번호와 deviceId 업데이트
                 customerService.updateDeviceId(customer.getId(), signWithFormRequest.getDeviceId());
                 customerService.updatePassword(customer.getId(), password);
+
+                // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
+                temporarySignUpFormRedisService.deleteData(temporaryToken);
+                sBoxKeyRedisService.deleteData(keypadToken);
 
                 return SignWithFormResponse.builder()
                         .isSuccess(true)
@@ -151,7 +171,10 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
             Customer customer = customerService.join(joinDto);
             TokenDto tokenDto = authenticationService.generateTokenDto(customer.getId());
             authenticationService.saveRefreshTokenInDatabase(tokenDto.getRefreshToken());
+
+            // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
             temporarySignUpFormRedisService.deleteData(temporaryToken);
+            sBoxKeyRedisService.deleteData(keypadToken);
 
             return SignWithFormResponse.builder()
                     .isSuccess(true)
@@ -164,6 +187,73 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
                 .isSuccess(false)
                 .isAvailablePassword(true)
                 .tokens(null)
+                .build();
+    }
+
+    @Override
+    public StealVerificationCodeResponse stealVerificationCode(
+            StealVerificationCodeRequest stealVerificationCodeRequest) {
+        String otp = RandomUtil.generateOtp(6);
+
+        otpRedisService.setData(
+                stealVerificationCodeRequest.getPhoneNumber(),
+                otp,
+                5L,
+                TimeUnit.MINUTES
+        );
+        return StealVerificationCodeResponse.builder()
+                .otp(otp)
+                .build();
+    }
+
+    @Override
+    public SendVerificationCodeResponse sendVerificationCode(SendVerificationCodeRequest sendVerificationCodeRequest) {
+        boolean isSent = verifyService.sendVerificationCode(
+                sendVerificationCodeRequest.getPhoneNumber());
+
+        if (!isSent) {
+            return SendVerificationCodeResponse.builder()
+                    .isSuccess(false)
+                    .build();
+        }
+        return SendVerificationCodeResponse.builder()
+                .isSuccess(true)
+                .build();
+    }
+
+    @Override
+    public CheckVerificationCodeResponse checkVerificationCode(
+            CheckVerificationCodeRequest checkVerificationCodeRequest) {
+        boolean isValidVerificationCode = verifyService.checkVerificationCode(
+                checkVerificationCodeRequest.getPhoneNumber(),
+                checkVerificationCodeRequest.getVerificationCode());
+
+        if (!isValidVerificationCode) {
+            return CheckVerificationCodeResponse.builder()
+                    .isSuccess(false)
+                    .build();
+        }
+        return CheckVerificationCodeResponse.builder()
+                .isSuccess(true)
+                .build();
+    }
+
+    @Override
+    public CreateSecureKeypadResponse createSecureKeypad() {
+        SecureKeypadDto secureKeypadDto = secureKeypadService.createSecureKeypad();
+
+        String keypadToken = secureKeypadService.createKeypadToken();
+        // redis에 섞은 순서에 대한 정보 저장
+        sBoxKeyRedisService.setData(
+                keypadToken,
+                SBoxKey.builder()
+                        .key(secureKeypadDto.getKey())
+                        .build()
+        );
+
+        return CreateSecureKeypadResponse.builder()
+                .keypad(secureKeypadDto.getShuffledKeypadImages())
+                .keypadToken(keypadToken)
                 .build();
     }
 
@@ -193,7 +283,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
 
         logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
         return LogoutResponse.builder()
-                .isSuccessful(true)
+                .isSuccess(true)
                 .build();
     }
 
@@ -205,24 +295,7 @@ public class AuthenticationApiServiceImpl implements AuthenticationApiService {
         customerService.withdrawCustomer(uuid);
         logoutAccessTokenRedisService.setDataIfAbsent(accessToken, "false");
         return SignOutResponse.builder()
-                .wasSignedOut(true)
+                .isSuccess(true)
                 .build();
-    }
-
-    private String decryptPassword(String temporaryToken, List<Integer> pushedOrder) {
-        StringBuilder sb = new StringBuilder();
-        List<Integer> secureKeypadOrderInverse
-                = secureKeypadOrderInverseRedisService.getData(temporaryToken)
-                .getKeypadOrderInverse();
-        // TODO: 비밀번호 길이를 의미하는 상수 어디에 둘 것인가
-        int passwordLength = 6;
-        if (pushedOrder.size() != passwordLength) {
-            throw new IllegalArgumentException("비밀번호 길이가 올바르지 않습니다.");
-        }
-
-        for (int i = 0; i < pushedOrder.size(); i++) {
-            sb.append(secureKeypadOrderInverse.get(pushedOrder.get(i)));
-        }
-        return sb.toString();
     }
 }

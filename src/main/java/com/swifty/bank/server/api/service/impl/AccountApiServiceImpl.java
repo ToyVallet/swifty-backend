@@ -8,10 +8,19 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCu
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
-import com.swifty.bank.server.api.controller.dto.account.response.*;
+import com.swifty.bank.server.api.controller.dto.account.response.AccountRegisterResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.CreateSecureKeypadResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.ListUnitedAccountWithCustomerResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.RetrieveBalanceWithCurrencyResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.ReviseUnitedAccountPasswordResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateAccountNicknameResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateDefaultCurrencyResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccountStatusResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
 import com.swifty.bank.server.api.service.AccountApiService;
-import com.swifty.bank.server.api.service.dto.ResponseResult;
-import com.swifty.bank.server.api.service.dto.Result;
+import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
+import com.swifty.bank.server.core.common.redis.value.SBoxKey;
 import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
 import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
@@ -24,9 +33,13 @@ import com.swifty.bank.server.core.domain.account.dto.WithdrawUnitedAccountDto;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
+import com.swifty.bank.server.core.domain.keypad.service.SecureKeypadService;
+import com.swifty.bank.server.core.domain.keypad.service.dto.SecureKeypadDto;
 import com.swifty.bank.server.core.utils.JwtUtil;
+import com.swifty.bank.server.core.utils.SBoxUtil;
 import com.swifty.bank.server.exception.account.RequestorAndOwnerOfUnitedAccountIsDifferentException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,10 +51,13 @@ import org.springframework.stereotype.Service;
 public class AccountApiServiceImpl implements AccountApiService {
     private final AccountService accountService;
     private final CustomerService customerService;
+    private final SecureKeypadService secureKeypadService;
+
+    private final SBoxKeyRedisService sBoxKeyRedisService;
 
     @Override
-    public AccountRegisterResponse register(String token, AccountRegisterRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public AccountRegisterResponse register(String accessToken, String keypadToken, AccountRegisterRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
@@ -50,9 +66,19 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
         }
 
+        // 비밀번호 복호화
+        List<Integer> key = sBoxKeyRedisService.getData(keypadToken).getKey();
+        List<Integer> decrypted = SBoxUtil.decrypt(req.getPushedOrder(), key);
+        String password = String.join("",
+                decrypted
+                        .stream()
+                        .map(Object::toString)
+                        .toList()
+        );
+
         AccountSaveDto dto = new AccountSaveDto(
                 req.getProduct(),
-                req.getAccountPassword(),
+                password,
                 req.getCurrencies(),
                 req.getDefaultCurrency(),
                 customer.get()
@@ -60,14 +86,17 @@ public class AccountApiServiceImpl implements AccountApiService {
 
         accountService.saveUnitedAccountAndSubAccounts(dto);
 
+        // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
+        sBoxKeyRedisService.deleteData(keypadToken);
+
         return new AccountRegisterResponse(
                 true
         );
     }
 
     @Override
-    public UpdateAccountNicknameResponse updateNickname(String token, ReviseAccountNicknameRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public UpdateAccountNicknameResponse updateNickname(String accessToken, ReviseAccountNicknameRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
@@ -96,8 +125,9 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public ReviseUnitedAccountPasswordResponse updatePassword(String token, ReviseUnitedAccountPasswordRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public ReviseUnitedAccountPasswordResponse updatePassword(String accessToken,
+                                                              ReviseUnitedAccountPasswordRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
@@ -106,9 +136,19 @@ public class AccountApiServiceImpl implements AccountApiService {
             );
         }
 
+        // 비밀번호 복호화
+        List<Integer> key = sBoxKeyRedisService.getData(accessToken).getKey();
+        List<Integer> decrypted = SBoxUtil.decrypt(req.getPushedOrder(), key);
+        String password = String.join("",
+                decrypted
+                        .stream()
+                        .map(Object::toString)
+                        .toList()
+        );
+
         try {
             AccountPasswordUpdateDto dto = new AccountPasswordUpdateDto(
-                    mayCustomer.get(), req.getAccountUuid(), req.getPassword()
+                    mayCustomer.get(), req.getAccountUuid(), password
             );
             accountService.updateUnitedAccountPassword(dto);
         } catch (RequestorAndOwnerOfUnitedAccountIsDifferentException e) {
@@ -123,8 +163,9 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String token, RetrieveBalanceWithCurrencyRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public RetrieveBalanceWithCurrencyResponse retrieveBalanceWithCurrency(String accessToken,
+                                                                           RetrieveBalanceWithCurrencyRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> mayCustomer = customerService.findByUuid(customerUuid);
         if (mayCustomer.isEmpty()) {
@@ -154,8 +195,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public WithdrawUnitedAccountResponse withdraw(String token, WithdrawUnitedAccountRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(token, "customerUuid", UUID.class);
+    public WithdrawUnitedAccountResponse withdraw(String accessToken, WithdrawUnitedAccountRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -181,8 +222,9 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String jwt, UpdateUnitedAccountStatusRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+    public UpdateUnitedAccountStatusResponse updateUnitedAccountStatus(String accessToken,
+                                                                       UpdateUnitedAccountStatusRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -210,8 +252,9 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public UpdateSubAccountStatusResponse updateSubAccountStatus(String jwt, UpdateSubAccountStatusRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+    public UpdateSubAccountStatusResponse updateSubAccountStatus(String accessToken,
+                                                                 UpdateSubAccountStatusRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -240,8 +283,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public UpdateDefaultCurrencyResponse updateDefaultCurrency(String jwt, UpdateDefaultCurrencyRequest req) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+    public UpdateDefaultCurrencyResponse updateDefaultCurrency(String accessToken, UpdateDefaultCurrencyRequest req) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -269,8 +312,8 @@ public class AccountApiServiceImpl implements AccountApiService {
     }
 
     @Override
-    public ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String jwt) {
-        UUID customerUuid = JwtUtil.getValueByKeyWithObject(jwt, "customerUuid", UUID.class);
+    public ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String accessToken) {
+        UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         Optional<Customer> maybeCustomer = customerService.findByUuid(customerUuid);
         if (maybeCustomer.isEmpty()) {
@@ -286,5 +329,23 @@ public class AccountApiServiceImpl implements AccountApiService {
                 true,
                 accountService.listUnitedAccountWithCustomer(dto)
         );
+    }
+
+    @Override
+    public CreateSecureKeypadResponse createSecureKeypad() {
+        SecureKeypadDto secureKeypadDto = secureKeypadService.createSecureKeypad();
+
+        String keypadToken = secureKeypadService.createKeypadToken();
+        // redis에 섞은 순서에 대한 정보 저장
+        sBoxKeyRedisService.setData(
+                keypadToken,
+                SBoxKey.builder()
+                        .key(secureKeypadDto.getKey())
+                        .build()
+        );
+
+        return CreateSecureKeypadResponse.builder()
+                .keypad(secureKeypadDto.getShuffledKeypadImages())
+                .build();
     }
 }

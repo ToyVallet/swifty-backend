@@ -1,25 +1,24 @@
 package com.swifty.bank.server.core.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.swifty.bank.server.core.domain.customer.Customer;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.web.WebAppConfiguration;
-
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.web.WebAppConfiguration;
 
 @ActiveProfiles(profiles = "test")
-@ContextConfiguration(locations = {"classpath:config/application.yaml"})
 @WebAppConfiguration
+@SpringBootTest
 public class JwtUtilTest {
     private static Claims claims;
 
@@ -29,21 +28,21 @@ public class JwtUtilTest {
     }
 
     @Test
-    void generateTokenTest( ) {
+    void generateTokenTest() {
         String generatedToken = JwtUtil.generateToken(claims, new Date());
 
         assertThat(generatedToken.startsWith("ey"));
     }
 
     @Test
-    void removePrefixTest( ) {
+    void removePrefixTest() {
         String rawJwt = "Bearer " + JwtUtil.generateToken(claims, new Date());
 
         assertThat(JwtUtil.removeType(rawJwt).startsWith("ey"));
     }
 
     @Test
-    void getSubjectTest( ) {
+    void getSubjectTest() {
         claims.setSubject("Subject");
         String jwt = JwtUtil.generateToken(claims,
                 new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
@@ -52,7 +51,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void validateTokenTest( ) {
+    void validateTokenTest() {
         String jwt = JwtUtil.generateToken(claims,
                 new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
         ); // 하루 후 Jwt 토큰
@@ -61,7 +60,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void isExpiredToken( ) {
+    void isExpiredToken() {
         String expiredJwt = JwtUtil.generateToken(claims,
                 new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1))
         ); // 하루 후 Jwt 토큰
@@ -71,7 +70,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void isExpiredTrue( ) {
+    void isExpiredTrue() {
         String expiredJwt = JwtUtil.generateToken(claims,
                 new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1))
         ); // 하루 전 Jwt 토큰
@@ -80,7 +79,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void isExpiredFalse( ) {
+    void isExpiredFalse() {
         String notExpiredJwt = JwtUtil.generateToken(claims,
                 new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
         ); // 하루 후 Jwt 토큰
@@ -89,7 +88,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void getValueByKeyWithObjectPerformWell( ) {
+    void getValueByKeyWithObjectPerformWell() {
         UUID customerUuid = UUID.randomUUID();
         final String key = "customerUuid";
         claims.put(key, customerUuid);
@@ -102,7 +101,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void invalidObjectInGetValueByKeyWithObject( ) {
+    void invalidObjectInGetValueByKeyWithObject() {
         assertThatThrownBy(() -> JwtUtil.getValueByKeyWithObject("", "", Customer.class))
                 .isInstanceOf(IllegalArgumentException.class);
     }

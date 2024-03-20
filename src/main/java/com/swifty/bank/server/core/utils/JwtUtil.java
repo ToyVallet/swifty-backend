@@ -41,6 +41,7 @@ public class JwtUtil {
         validateToken(jwt);
 
         Claims claims = getAllClaims(jwt);
+        claims.getExpiration();
         // validate key
         if (!claims.containsKey(key)) {
             throw new IllegalArgumentException("[ERROR] 토큰에 '" + key + "'로 설정된 key가 없습니다");
@@ -54,6 +55,17 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(jwt)
                 .getBody();
+    }
+
+    public static Date getExpireDate(String jwt) {
+        validateToken(jwt);
+
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey.getBytes())
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody()
+                .getExpiration();
     }
 
     /*
