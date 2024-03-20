@@ -6,4 +6,9 @@ public enum Product {
     WIRACLE,
     HELLO,
     YOURIAL;
+
+    public boolean sameProduct(Product p) {
+        if (this.toString().equals(p.toString()))   return true;
+        return false;
+    }
 }
