@@ -152,6 +152,11 @@ public class AccountServiceImpl implements AccountService {
         return unitedAccounts;
     }
 
+    @Override
+    public Optional<UnitedAccount> findOneByUuid(UUID unitedAccountUuid) {
+        return unitedAccountRepository.findById(unitedAccountUuid);
+    }
+
     // 모듈러스 10 알고리즘 참고
     private String generateAccountNumberWithModulus10() {
         String accountNumber = "700";

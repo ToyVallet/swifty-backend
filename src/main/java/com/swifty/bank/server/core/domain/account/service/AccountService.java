@@ -4,8 +4,11 @@ import com.swifty.bank.server.core.domain.account.UnitedAccount;
 import com.swifty.bank.server.core.domain.account.dto.*;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface AccountService {
+    Optional<UnitedAccount> findOneByUuid(UUID unitedAccountUuid);
     public UnitedAccount saveUnitedAccountAndSubAccounts(AccountSaveDto dto);
 
     public void updateUnitedAccountNickname(AccountNicknameUpdateDto nickname);
