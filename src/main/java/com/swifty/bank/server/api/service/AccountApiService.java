@@ -8,16 +8,7 @@ import com.swifty.bank.server.api.controller.dto.account.request.UpdateDefaultCu
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateSubAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.UpdateUnitedAccountStatusRequest;
 import com.swifty.bank.server.api.controller.dto.account.request.WithdrawUnitedAccountRequest;
-import com.swifty.bank.server.api.controller.dto.account.response.AccountRegisterResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.CreateSecureKeypadResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.ListUnitedAccountWithCustomerResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.RetrieveBalanceWithCurrencyResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.ReviseUnitedAccountPasswordResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateAccountNicknameResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateDefaultCurrencyResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateSubAccountStatusResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.UpdateUnitedAccountStatusResponse;
-import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnitedAccountResponse;
+import com.swifty.bank.server.api.controller.dto.account.response.*;
 
 public interface AccountApiService {
     AccountRegisterResponse register(String accessToken, String keypadToken, AccountRegisterRequest req);
@@ -41,4 +32,5 @@ public interface AccountApiService {
     ListUnitedAccountWithCustomerResponse listUnitedAccountWithCustomer(String accessToken);
 
     CreateSecureKeypadResponse createSecureKeypad();
+    ListOfAccountProductResponse accountProductList( );
 }
