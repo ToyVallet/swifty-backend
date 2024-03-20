@@ -9,10 +9,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @NoArgsConstructor
 @Getter
 public class UnitedAccountDto {
+    private UUID unitedAccountUuid;
     private String accountNumber;
     private Product product;
     private String accountPassword;
@@ -22,6 +24,7 @@ public class UnitedAccountDto {
     private List<SubAccountDto> subAccounts;
 
     public UnitedAccountDto(UnitedAccount unitedAccount) {
+        this.unitedAccountUuid = unitedAccount.getUnitedAccountUuid();
         this.accountNumber = unitedAccount.getAccountNumber();
         this.product = unitedAccount.getProduct();
         this.accountPassword = unitedAccount.getAccountPassword();
