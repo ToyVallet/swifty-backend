@@ -21,15 +21,7 @@ import com.swifty.bank.server.api.controller.dto.account.response.WithdrawUnited
 import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
 import com.swifty.bank.server.core.common.redis.value.SBoxKey;
-import com.swifty.bank.server.core.domain.account.dto.AccountNicknameUpdateDto;
-import com.swifty.bank.server.core.domain.account.dto.AccountPasswordUpdateDto;
-import com.swifty.bank.server.core.domain.account.dto.AccountSaveDto;
-import com.swifty.bank.server.core.domain.account.dto.ListUnitedAccountWithCustomerDto;
-import com.swifty.bank.server.core.domain.account.dto.RetrieveBalanceOfUnitedAccountByCurrencyDto;
-import com.swifty.bank.server.core.domain.account.dto.UpdateDefaultCurrencyDto;
-import com.swifty.bank.server.core.domain.account.dto.UpdateSubAccountStatusDto;
-import com.swifty.bank.server.core.domain.account.dto.UpdateUnitedAccountStatusDto;
-import com.swifty.bank.server.core.domain.account.dto.WithdrawUnitedAccountDto;
+import com.swifty.bank.server.core.domain.account.dto.*;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
 import com.swifty.bank.server.core.domain.customer.service.CustomerService;
@@ -327,7 +319,9 @@ public class AccountApiServiceImpl implements AccountApiService {
 
         return new ListUnitedAccountWithCustomerResponse(
                 true,
-                accountService.listUnitedAccountWithCustomer(dto)
+                accountService.listUnitedAccountWithCustomer(dto).stream()
+                        .map(sub -> new UnitedAccountDto(sub))
+                        .toList()
         );
     }
 

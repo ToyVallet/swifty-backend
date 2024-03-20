@@ -18,6 +18,7 @@ import java.util.*;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "tb_united_account")
 public class UnitedAccount extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
