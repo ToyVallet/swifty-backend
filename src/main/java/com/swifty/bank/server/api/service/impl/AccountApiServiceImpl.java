@@ -13,6 +13,7 @@ import com.swifty.bank.server.api.service.AccountApiService;
 import com.swifty.bank.server.core.common.constant.ProductType;
 import com.swifty.bank.server.core.common.redis.service.SBoxKeyRedisService;
 import com.swifty.bank.server.core.common.redis.value.SBoxKey;
+import com.swifty.bank.server.core.domain.account.UnitedAccount;
 import com.swifty.bank.server.core.domain.account.dto.*;
 import com.swifty.bank.server.core.domain.account.service.AccountService;
 import com.swifty.bank.server.core.domain.customer.Customer;
@@ -48,7 +49,8 @@ public class AccountApiServiceImpl implements AccountApiService {
         Optional<Customer> customer = customerService.findByUuid(customerUuid);
         if (customer.isEmpty()) {
             return new AccountRegisterResponse(
-                    false
+                    false,
+                    null
             );
         }
 
@@ -70,13 +72,14 @@ public class AccountApiServiceImpl implements AccountApiService {
                 customer.get()
         );
 
-        accountService.saveUnitedAccountAndSubAccounts(dto);
+        UnitedAccount ua = accountService.saveUnitedAccountAndSubAccounts(dto);
 
         // redis에서 더 이상 필요 없는 임시 보관 데이터 삭제
         sBoxKeyRedisService.deleteData(keypadToken);
 
         return new AccountRegisterResponse(
-                true
+                true,
+                ua
         );
     }
 

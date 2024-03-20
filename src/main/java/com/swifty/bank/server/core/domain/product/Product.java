@@ -1,12 +1,11 @@
 package com.swifty.bank.server.core.domain.product;
 
+import com.swifty.bank.server.core.common.constant.Currency;
 import com.swifty.bank.server.core.common.constant.ProductType;
 import com.swifty.bank.server.core.domain.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -16,4 +15,6 @@ public class Product extends BaseEntity {
     private String abbreviation;
     private String name;
     private ProductType productType;
+    @ElementCollection
+    private List<Currency> currencies;
 }

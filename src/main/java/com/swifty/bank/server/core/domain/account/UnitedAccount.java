@@ -33,7 +33,7 @@ public class UnitedAccount extends BaseEntity {
     private String accountNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_uuid", referencedColumnName = "productUuid")
+    @JoinColumn(name = "product_uuid", referencedColumnName = "abbreviation")
     private Product product;
 
     private String accountPassword;
