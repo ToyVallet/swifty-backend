@@ -359,7 +359,7 @@ public class AccountApiController {
     @GetMapping(value = "/product-list")
     @Operation(summary = "계좌에 해당되는 상품들의 나열", description = "계좌의 상품인 경우에 해당되는 모든 상품을 리턴한다")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "키패드 이미지 리스트",
+            @ApiResponse(responseCode = "200", description = "상품 유형이 계좌인 것들의 묶음",
                     content = {
                             @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = ListOfAccountProductResponse.class))
