@@ -14,7 +14,7 @@ public class TemporarySignUpFormRedisServiceImpl implements TemporarySignUpFormR
     public final String prefix = "[TSF]";
     private final TemporarySignUpFormRedisRepository temporarySignUpFormRedisRepository;
 
-    @Value("${jwt.redis.temporary-token-minutes}")
+    @Value("${jwt.temporary-token-expiration-seconds}")
     private Long timeout;
 
     @Override
@@ -24,12 +24,12 @@ public class TemporarySignUpFormRedisServiceImpl implements TemporarySignUpFormR
 
     @Override
     public void setData(String key, TemporarySignUpForm value) {
-        temporarySignUpFormRedisRepository.setData(prefix + key, value, timeout, TimeUnit.MINUTES);
+        temporarySignUpFormRedisRepository.setData(prefix + key, value, timeout, TimeUnit.SECONDS);
     }
 
     @Override
     public void setData(String key, TemporarySignUpForm value, Long timeout, TimeUnit timeUnit) {
-        temporarySignUpFormRedisRepository.setData(prefix + key, value, timeout, TimeUnit.MINUTES);
+        temporarySignUpFormRedisRepository.setData(prefix + key, value, timeout, timeUnit);
     }
 
     @Override
