@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class LogoutAccessTokenRedisRedisServiceImpl implements LogoutAccessTokenRedisService {
+public class LogoutAccessTokenRedisServiceImpl implements LogoutAccessTokenRedisService {
     public final String prefix = "[LAT]";
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
 
