@@ -33,15 +33,16 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        Cookie[] cookies = extractCookiesFromCurrentRequestHeader();
         // 임시 회원가입 권한
         if (hasProperAnnotation(handler, TemporaryAuth.class)) {
-            validateTemporaryAuth(extractJwtFromCurrentRequestHeader());
+            validateTemporaryAuth(cookies);
             return true;
         }
 
         // 로그인된 일반 고객 권한
         if (hasProperAnnotation(handler, CustomerAuth.class)) {
-            validateCustomerAuth(extractJwtFromCurrentRequestHeader());
+            validateCustomerAuth(cookies);
             return true;
         }
 
@@ -50,35 +51,37 @@ public class JwtInterceptor implements HandlerInterceptor {
     }
 
     private void validateTemporaryAuth(Cookie[] cookies) {
-        String temporaryToken = "";
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("temporary-token")) {
-                temporaryToken = cookie.getValue();
-                break;
-            }
+        Cookie cookie = extractCookieByName(cookies, "temporary-token");
+        if (cookie == null) {
+            throw new IllegalArgumentException("temporary token이 존재하지 않습니다.");
         }
-        if (temporaryToken.isEmpty()) {
-            throw new IllegalArgumentException("temporary token이 아닙니다.");
-        }
+
+        String temporaryToken = cookie.getValue();
+
         JwtUtil.validateToken(temporaryToken);
-        // TemporaryToken인지 검증
+        // subject가 temporary-token인지 검증
         String sub = JwtUtil.getSubject(temporaryToken);
+        if (!sub.equals("temporary-token")) {
+            throw new IllegalArgumentException(temporaryToken + ": temporary token이 아닙니다.");
+        }
     }
 
     private void validateCustomerAuth(Cookie[] cookies) {
-        String accessToken = "";
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("access-token")) {
-                accessToken = cookie.getValue();
-                break;
-            }
-        }
-        if (accessToken.isEmpty()) {
-            throw new IllegalArgumentException("access token이 아닙니다.");
-        }
-        JwtUtil.validateToken(accessToken);
-        String sub = JwtUtil.getSubject(accessToken);
+        Cookie cookie = extractCookieByName(cookies, "access-token");
 
+        if (cookie == null) {
+            throw new IllegalArgumentException("access token이 존재하지 않습니다.");
+        }
+
+        String accessToken = cookie.getValue();
+
+        JwtUtil.validateToken(accessToken);
+        // subject가 access-token인지 검증
+        String sub = JwtUtil.getSubject(accessToken);
+        if (!sub.equals("access-token")) {
+            throw new IllegalArgumentException(accessToken + ": access token이 아닙니다.");
+        }
+        // customerUuid가 존재하는지 검증
         UUID customerUuid = JwtUtil.getValueByKeyWithObject(accessToken, "customerUuid", UUID.class);
 
         String isLoggedOut = logoutAccessTokenRedisService.getData(accessToken);
@@ -95,17 +98,17 @@ public class JwtInterceptor implements HandlerInterceptor {
         return false;
     }
 
-    private Cookie[] extractJwtFromCurrentRequestHeader() {
+    private Cookie[] extractCookiesFromCurrentRequestHeader() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        Cookie[] cookies = request.getCookies();
-        try {
-            for (Cookie cookie : cookies) {
-                String token = JwtUtil.removeType(cookie.getValue());
-                JwtUtil.validateToken(token);
+        return request.getCookies();
+    }
+
+    private Cookie extractCookieByName(Cookie[] cookies, String cookieName) {
+        for (Cookie cookie : cookies) {
+            if (cookieName.equals(cookie.getName())) {
+                return cookie;
             }
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Coockie에 올바른 jwt가 존재하지 않습니다.");
         }
-        return cookies;
+        return null;
     }
 }
