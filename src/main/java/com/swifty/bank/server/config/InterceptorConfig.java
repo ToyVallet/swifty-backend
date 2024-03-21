@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @RequiredArgsConstructor
 @Configuration
-public class JwtInterceptorConfig implements WebMvcConfigurer {
+public class InterceptorConfig implements WebMvcConfigurer {
     private final JwtInterceptor jwtInterceptor;
 
     @Value("${domain}")
@@ -30,5 +30,5 @@ public class JwtInterceptorConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("http://" + domain + ":3000", "http://localhost:3000")
                 .allowCredentials(true);
-        }
+    }
 }
