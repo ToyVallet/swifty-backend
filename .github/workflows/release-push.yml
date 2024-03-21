@@ -4,8 +4,6 @@ name: push on release branch
 on:
   push:
     branches: [ "release/**" ]
-  create:
-    branches: [ "release/**" ]
 
 permissions: write-all
 
