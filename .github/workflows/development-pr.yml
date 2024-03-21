@@ -53,7 +53,7 @@ jobs:
         with:
           files: '**/build/test-results/test/TEST-*.xml'
       
-      # 테스트 실패 시, 실패한 코드 라인에 Check 코멘트를 등록
+      # 테스트 실패 시, 실패한 코드 라인에 Check 코멘트 등록
       - name: Comment to test failed code line
         uses: mikepenz/action-junit-report@v3
         if: always()
